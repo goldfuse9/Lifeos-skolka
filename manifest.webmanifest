@@ -1,0 +1,16 @@
+{
+  "name": "Školka — třída",
+  "short_name": "Školka",
+  "description": "Tablet pro učitelky: docházka, teplota, potíže, úrazy a zprávy rodičům. Prototyp — data zůstávají v tabletu.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#F3F2EC",
+  "theme_color": "#F3F2EC",
+  "lang": "cs",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

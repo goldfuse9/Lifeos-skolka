@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Třída Sluníčka</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#17181A}a:hover{color:#000}
+button,input,textarea{font-family:inherit}
+input::placeholder,textarea::placeholder{color:#8A8C90}
+</style>
+</helmet>
+<div style="width: 1194px; height: 834px; box-sizing: border-box; padding: 22px 24px 24px; background: #F3F2EC; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; flex-direction: column; gap: 18px; overflow: hidden; position: relative">
+<svg width="0" height="0" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
+<defs>
+<symbol id="z-snehulak" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><circle cx="24" cy="35" r="10" fill="#FFFFFF"></circle><circle cx="24" cy="20" r="7" fill="#FFFFFF"></circle><rect x="18" y="5" width="12" height="8" rx="1.5" fill="#E0302B"></rect><rect x="15.5" y="12" width="17" height="3" rx="1.5" fill="#E0302B"></rect><path d="M24 21l5 1.5-5 1z" fill="#F28C28" stroke-width="1"></path></g><circle cx="21.5" cy="19" r="1.3" fill="#17181A"></circle><circle cx="26.5" cy="19" r="1.3" fill="#17181A"></circle><circle cx="24" cy="31" r="1.4" fill="#17181A"></circle><circle cx="24" cy="37" r="1.4" fill="#17181A"></circle></symbol>
+<symbol id="z-jablko" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M24 16c-3-3-12-2-12 8 0 8 5 14 8 14 1.5 0 2.5-1 4-1s2.5 1 4 1c3 0 8-6 8-14 0-10-9-11-12-8z" fill="#E0302B"></path><path d="M24 16c0-3 1-5 3-7" fill="none"></path><path d="M27 12c2-4 7-4 8-3-1 3-5 5-8 3z" fill="#3BA55C"></path></g></symbol>
+<symbol id="z-auticko" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M6 33v-8a3 3 0 0 1 3-3h4l5-8h12l5 8h4a3 3 0 0 1 3 3v8z" fill="#2F6FDB"></path><path d="M19 17h5v5h-8zM27 17h3l3 5h-6z" fill="#CFE3FA"></path><circle cx="15" cy="34" r="4.5" fill="#FFFFFF"></circle><circle cx="33" cy="34" r="4.5" fill="#FFFFFF"></circle></g></symbol>
+<symbol id="z-kytka" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M24 27v14" fill="none"></path><path d="M24 36c-3-4-8-4-9-2 2 3 6 4 9 2z" fill="#3BA55C"></path><circle cx="24" cy="11" r="5" fill="#F06BA8"></circle><circle cx="31.5" cy="16.5" r="5" fill="#F06BA8"></circle><circle cx="28.7" cy="25.5" r="5" fill="#F06BA8"></circle><circle cx="19.3" cy="25.5" r="5" fill="#F06BA8"></circle><circle cx="16.5" cy="16.5" r="5" fill="#F06BA8"></circle><circle cx="24" cy="19" r="4.5" fill="#F7B500"></circle></g></symbol>
+<symbol id="z-micek" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2"><circle cx="24" cy="24" r="15" fill="#2F6FDB"></circle><path d="M10 19c9 4 19 4 28 0v10c-9 4-19 4-28 0z" fill="#FFFFFF"></path></g></symbol>
+<symbol id="z-motyl" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><ellipse cx="15" cy="17" rx="9" ry="8" fill="#F28C28"></ellipse><ellipse cx="33" cy="17" rx="9" ry="8" fill="#F28C28"></ellipse><ellipse cx="17" cy="31" rx="7" ry="6" fill="#F7B500"></ellipse><ellipse cx="31" cy="31" rx="7" ry="6" fill="#F7B500"></ellipse><rect x="22" y="11" width="4" height="27" rx="2" fill="#17181A"></rect></g></symbol>
+<symbol id="z-lodicka" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M7 31h34l-6 9H13z" fill="#2F6FDB"></path><path d="M24 7v24" fill="none"></path><path d="M26 9l11 19H26z" fill="#FFFFFF"></path><path d="M22 13l-9 15h9z" fill="#E0302B"></path></g></symbol>
+<symbol id="z-srdce" viewBox="0 0 48 48"><path d="M24 40C12 31 7 25 7 18a8.5 8.5 0 0 1 17-3 8.5 8.5 0 0 1 17 3c0 7-5 13-17 22z" fill="#F06BA8" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></path></symbol>
+<symbol id="z-hvezda" viewBox="0 0 48 48"><polygon points="24,6 29,18 42,18 32,26 36,39 24,31 12,39 16,26 6,18 19,18" fill="#F7B500" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></polygon></symbol>
+<symbol id="z-tresne" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M16 27c2-9 7-15 14-19M32 27c0-8-1-13-2-19" fill="none"></path><circle cx="16" cy="33" r="7" fill="#C81E3A"></circle><circle cx="32" cy="33" r="7" fill="#C81E3A"></circle></g></symbol>
+<symbol id="z-muchomurka" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><rect x="19" y="23" width="10" height="16" rx="4" fill="#FFFFFF"></rect><path d="M8 25a16 14 0 0 1 32 0z" fill="#E0302B"></path></g><circle cx="17" cy="18" r="2.4" fill="#FFFFFF"></circle><circle cx="27" cy="15" r="2.6" fill="#FFFFFF"></circle><circle cx="33" cy="21" r="1.9" fill="#FFFFFF"></circle><circle cx="23" cy="21.5" r="1.7" fill="#FFFFFF"></circle></symbol>
+<symbol id="z-mesic" viewBox="0 0 48 48"><path d="M30 7a17 17 0 1 0 11 27A14 14 0 0 1 30 7z" fill="#F7B500" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></path></symbol>
+<symbol id="z-domecek" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><rect x="12" y="22" width="24" height="18" fill="#F7B500"></rect><path d="M8 24L24 9l16 15z" fill="#E0302B"></path><rect x="21" y="29" width="7" height="11" fill="#FFFFFF"></rect></g></symbol>
+<symbol id="z-destnik" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M24 24v12a4 4 0 0 1-8 0" fill="none"></path><path d="M6 24a18 16 0 0 1 36 0z" fill="#8B5CF6"></path></g></symbol>
+<symbol id="z-strom" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><rect x="21" y="30" width="6" height="10" fill="#8A5A2B"></rect><path d="M24 6l14 24H10z" fill="#3BA55C"></path></g></symbol>
+<symbol id="z-beruska" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2"><circle cx="24" cy="13" r="6" fill="#17181A"></circle><circle cx="24" cy="27" r="13" fill="#E0302B"></circle><path d="M24 14v26" fill="none"></path></g><circle cx="18" cy="24" r="2.5" fill="#17181A"></circle><circle cx="30" cy="24" r="2.5" fill="#17181A"></circle><circle cx="19" cy="33" r="2.5" fill="#17181A"></circle><circle cx="29" cy="33" r="2.5" fill="#17181A"></circle></symbol>
+<symbol id="z-rybka" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M31 24l11-8v16z" fill="#F28C28"></path><ellipse cx="20" cy="24" rx="13" ry="9" fill="#F28C28"></ellipse></g><circle cx="13" cy="22" r="2" fill="#17181A"></circle></symbol>
+<symbol id="z-balonek" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M24 35c-3 4 3 6 0 10" fill="none" stroke-width="1.5"></path><path d="M22 32h4l-2 3z" fill="#E0302B"></path><ellipse cx="24" cy="19" rx="11" ry="13" fill="#E0302B"></ellipse></g></symbol>
+<symbol id="z-klic" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M22 21h19v6h-3v5h-5v-5h-2v4h-5v-4h-4z" fill="#F7B500"></path><circle cx="15" cy="24" r="9" fill="#F7B500"></circle><circle cx="15" cy="24" r="3.5" fill="#FFFFFF"></circle></g></symbol>
+<symbol id="z-mracek" viewBox="0 0 48 48"><path d="M14 36a8 8 0 0 1 0-16 11 11 0 0 1 21-2 8 8 0 0 1 0 18z" fill="#8EC5F0" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></path></symbol>
+<symbol id="z-mrkev" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M24 16l-6-9M24 16V5M24 16l6-9" fill="none" stroke="#3BA55C" stroke-width="3"></path><path d="M16 16h16l-8 26z" fill="#F28C28"></path></g></symbol>
+<symbol id="z-hruska" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M24 12V6" fill="none"></path><path d="M24 12c-4 0-5 5-5 9-4 3-7 6-7 11a12 9 0 0 0 24 0c0-5-3-8-7-11 0-4-1-9-5-9z" fill="#A8C93A"></path></g></symbol>
+<symbol id="z-zvonek" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><circle cx="24" cy="38" r="3.5" fill="#FFFFFF"></circle><path d="M24 8c-7 0-11 6-11 13v9l-4 5h30l-4-5v-9c0-7-4-13-11-13z" fill="#F7B500"></path></g></symbol>
+<symbol id="z-duha" viewBox="0 0 48 48"><path d="M5 37a19 19 0 0 1 38 0h-6a13 13 0 0 0-26 0z" fill="#E0302B" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></path><path d="M11 37a13 13 0 0 1 26 0h-6a7 7 0 0 0-14 0z" fill="#F7B500" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></path><path d="M17 37a7 7 0 0 1 14 0z" fill="#2F6FDB" stroke="#17181A" stroke-width="2" stroke-linejoin="round"></path></symbol>
+<symbol id="z-hrnek" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round"><path d="M32 19h3a5.5 5.5 0 0 1 0 11h-3v-3h3a2.5 2.5 0 0 0 0-5h-3z" fill="#2F6FDB"></path><path d="M10 15h22v15a8 8 0 0 1-8 8h-6a8 8 0 0 1-8-8z" fill="#2F6FDB"></path></g></symbol>
+<symbol id="z-list" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M10 38C10 18 22 8 40 8c0 18-10 30-30 30z" fill="#3BA55C"></path><path d="M12 36L32 16" fill="none"></path></g></symbol>
+<symbol id="z-slunce" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linecap="round"><path d="M24 4v6M24 38v6M4 24h6M38 24h6M10 10l4 4M34 34l4 4M38 10l-4 4M14 34l-4 4" fill="none"></path><circle cx="24" cy="24" r="9" fill="#F7B500"></circle></g></symbol>
+<symbol id="z-snek" viewBox="0 0 48 48"><g stroke="#17181A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 38h28c4 0 6-3 6-7v-9" fill="#A8C93A"></path><circle cx="22" cy="26" r="11" fill="#F28C28"></circle><path d="M22 26a3 3 0 1 1 3 3 6 6 0 1 1-6-6" fill="none"></path><path d="M40 22l-2-6M40 22l3-5" fill="none"></path></g></symbol>
+</defs>
+</svg>
+
+  <header style="display: flex; align-items: center; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+      <div style="font-size: 13px; font-weight: 600; color: #5A5C60">{{dateLabel}}</div>
+      <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Třída Sluníčka</h1>
+    </div>
+    <button type="button" onClick="{{openDochazka}}" style="height: 52px; padding: 0 8px 0 18px; border-radius: 26px; border: 0; background: #FFFFFF; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #17181A">
+      <span style="font-size: 15px; font-weight: 700">Docházka</span>
+      <span style="height: 38px; padding: 0 14px; border-radius: 19px; background: #F3F2EC; display: flex; align-items: center; gap: 6px">
+        <span style="font-size: 18px; font-weight: 800">{{counts.present}}</span>
+        <span style="font-size: 13px; color: #5A5C60">ve třídě</span>
+        <sc-if value="{{counts.hasExpected}}" hint-placeholder-val="{{true}}">
+          <span style="font-size: 13px; color: #5A5C60">· čekáme {{counts.expected}}</span>
+        </sc-if>
+      </span>
+    </button>
+    <button type="button" style="height: 52px; padding: 0 20px; border-radius: 26px; border: 0; background: #17181A; font-size: 15px; font-weight: 700; color: #FFFFFF; cursor: pointer">Zpráva všem rodičům</button>
+    <div aria-label="Učitelka Petra H." style="width: 52px; height: 52px; border-radius: 26px; background: #F6C6D8; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px">PH</div>
+  </header>
+
+  <section aria-label="Dnes" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+    <div style="{{health.cardStyle}}">
+      <div style="{{health.kickerStyle}}">{{health.kicker}}</div>
+      <sc-if value="{{health.has}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{health.items}}" as="h" hint-placeholder-count="1">
+            <button type="button" onClick="{{h.pick}}" style="min-height: 36px; padding: 0 12px 0 4px; border-radius: 18px; border: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; cursor: pointer; color: #17181A">
+              <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{h.symRef}}"></use></svg>
+              <span style="font-size: 14px; font-weight: 800">{{h.name}}</span>
+              <span style="font-size: 13px; color: #4A3A33">{{h.what}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; color: #4A3A33">{{health.sub}}</div>
+      </sc-if>
+      <sc-if value="{{health.none}}" hint-placeholder-val="{{false}}">
+        <div style="font-size: 17px; font-weight: 800">Všichni v pořádku</div>
+        <div style="font-size: 13px; color: #5A5C60">Dnes žádná teplota ani potíže</div>
+      </sc-if>
+    </div>
+
+    <div style="{{lunch.cardStyle}}">
+      <div style="{{lunch.kickerStyle}}">Oběd · {{lunch.menu}}</div>
+      <sc-if value="{{lunch.has}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{lunch.items}}" as="h" hint-placeholder-count="2">
+            <button type="button" onClick="{{h.pick}}" style="min-height: 36px; padding: 0 12px 0 4px; border-radius: 18px; border: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; cursor: pointer; color: #17181A">
+              <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{h.symRef}}"></use></svg>
+              <span style="font-size: 14px; font-weight: 800">{{h.name}}</span>
+              <span style="font-size: 13px; color: #4A4330">{{h.what}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; color: #4A4330">Náhradní oběd · ostatní děti v pořádku</div>
+      </sc-if>
+      <sc-if value="{{lunch.none}}" hint-placeholder-val="{{false}}">
+        <div style="font-size: 17px; font-weight: 800">V pořádku pro všechny</div>
+        <div style="font-size: 13px; color: #5A5C60">Nikdo z přítomných nemá alergii na dnešní oběd</div>
+      </sc-if>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 96px; box-sizing: border-box">
+      <div style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Dnes vyzvedává jinak</div>
+      <sc-if value="{{pickups.has}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{pickups.items}}" as="h" hint-placeholder-count="2">
+            <button type="button" onClick="{{h.pick}}" style="min-height: 36px; padding: 0 12px 0 4px; border-radius: 18px; border: 0; background: #EEF4FB; display: flex; align-items: center; gap: 6px; cursor: pointer; color: #17181A">
+              <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{h.symRef}}"></use></svg>
+              <span style="font-size: 14px; font-weight: 800">{{h.name}}</span>
+              <span style="font-size: 13px; color: #33465C">{{h.what}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; color: #5A5C60">Ohlášeno rodiči v aplikaci</div>
+      </sc-if>
+      <sc-if value="{{pickups.none}}" hint-placeholder-val="{{false}}">
+        <div style="font-size: 17px; font-weight: 800">Všichni jako obvykle</div>
+      </sc-if>
+    </div>
+  </section>
+
+  <div style="display: flex; gap: 20px; flex-grow: 1; min-height: 0">
+
+    <section aria-label="Děti" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Děti</h2>
+        <span style="font-size: 13px; color: #5A5C60">Klepněte na dítě pro rychlý zápis</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{kids}}" as="kid" hint-placeholder-count="28">
+          <button type="button" onClick="{{kid.pick}}" aria-label="{{kid.name}}" aria-pressed="{{kid.selected}}" style="{{kid.tileStyle}}">
+            <span style="{{kid.avatarStyle}}"><svg width="44" height="44" viewBox="0 0 48 48" aria-hidden="true"><use href="{{kid.symRef}}"></use></svg></span>
+            <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap">{{kid.name}}</span>
+            <sc-if value="{{kid.hasBadge}}" hint-placeholder-val="{{false}}">
+              <span style="{{kid.badgeStyle}}">{{kid.badge}}</span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <aside aria-label="Vybrané dítě" style="width: 340px; flex-shrink: 0; background: #FFFFFF; border-radius: 26px; padding: 18px 18px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="{{sel.bigAvatarStyle}}"><svg width="56" height="56" viewBox="0 0 48 48" aria-hidden="true"><use href="{{sel.symRef}}"></use></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+          <div style="font-size: 20px; font-weight: 800">{{sel.name}}</div>
+          <div style="font-size: 13px; color: #5A5C60">Značka: {{sel.symName}}</div>
+          <div style="font-size: 13px; color: #3A3C40; font-weight: 600">{{sel.stateLine}}</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <sc-for list="{{sel.facts}}" as="f" hint-placeholder-count="3">
+          <div style="{{f.style}}">
+            <span style="font-weight: 700; flex-shrink: 0">{{f.label}}</span>
+            <span>{{f.value}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-height: 0">
+        <div style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Dnes</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0">
+          <sc-for list="{{sel.log}}" as="row" hint-placeholder-count="2">
+            <div style="display: flex; gap: 10px; font-size: 14px; align-items: flex-start">
+              <span style="font-weight: 700; width: 42px; flex-shrink: 0">{{row.t}}</span>
+              <span style="{{row.dotStyle}}"></span>
+              <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span style="color: #17181A; font-weight: 600">{{row.title}}</span>
+                <sc-if value="{{row.hasSub}}" hint-placeholder-val="{{false}}">
+                  <span style="color: #5A5C60; font-size: 13px">{{row.sub}}</span>
+                </sc-if>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{sel.canLog}}" hint-placeholder-val="{{true}}">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button type="button" onClick="{{open.teplota}}" style="height: 60px; border: 0; border-radius: 18px; background: #FDE6DC; font-size: 15px; font-weight: 800; color: #17181A; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+            Teplota
+          </button>
+          <button type="button" onClick="{{open.uraz}}" style="height: 60px; border: 0; border-radius: 18px; background: #F6C6D8; font-size: 15px; font-weight: 800; color: #17181A; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+            Úraz
+          </button>
+          <button type="button" onClick="{{open.symptomy}}" style="height: 60px; border: 0; border-radius: 18px; background: #E2F5F9; font-size: 15px; font-weight: 800; color: #17181A; cursor: pointer">Není mu dobře</button>
+          <button type="button" onClick="{{open.poznamka}}" style="height: 60px; border: 0; border-radius: 18px; background: #D7F26B; font-size: 15px; font-weight: 800; color: #17181A; cursor: pointer">Poznámka</button>
+        </div>
+        <div style="font-size: 12px; color: #5A5C60; text-align: center">Rodiče dostanou upozornění hned po uložení</div>
+      </sc-if>
+      <sc-if value="{{sel.cantLog}}" hint-placeholder-val="{{false}}">
+        <button type="button" onClick="{{sel.arrive}}" style="height: 60px; border: 0; border-radius: 18px; background: #17181A; color: #FFFFFF; font-size: 15px; font-weight: 800; cursor: pointer">{{sel.arriveLabel}}</button>
+      </sc-if>
+    </aside>
+  </div>
+
+  <!-- ============================================================ DOCHÁZKA -->
+  <sc-if value="{{doch.open}}" hint-placeholder-val="{{false}}">
+    <div role="dialog" aria-label="Docházka" style="position: absolute; inset: 0; background: #F3F2EC; padding: 22px 24px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; z-index: 5">
+      <header style="display: flex; align-items: center; gap: 14px">
+        <button type="button" onClick="{{close}}" aria-label="Zavřít docházku" style="width: 52px; height: 52px; border-radius: 26px; border: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+        </button>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+          <div style="font-size: 13px; font-weight: 600; color: #5A5C60">{{dateLabel}} · Třída Sluníčka</div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Docházka</h1>
+        </div>
+        <div role="tablist" aria-label="Filtr" style="display: flex; gap: 6px; padding: 4px; border-radius: 26px; background: #E4E3DC">
+          <sc-for list="{{doch.filters}}" as="f" hint-placeholder-count="5">
+            <button type="button" role="tab" aria-selected="{{f.on}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.label}} <span style="font-weight: 800">{{f.n}}</span></button>
+          </sc-for>
+        </div>
+      </header>
+
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-content: start; flex-grow: 1; min-height: 0; overflow-y: auto">
+        <sc-for list="{{doch.kids}}" as="k" hint-placeholder-count="28">
+          <button type="button" onClick="{{k.tap}}" aria-label="{{k.aria}}" style="{{k.tileStyle}}">
+            <span style="{{k.avatarStyle}}"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><use href="{{k.symRef}}"></use></svg></span>
+            <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap">{{k.name}}</span>
+            <span style="{{k.statusStyle}}">{{k.status}}</span>
+            <span style="font-size: 11px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{k.detail}}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; background: #FFFFFF; border-radius: 20px; padding: 12px 18px">
+        <span style="font-size: 14px; color: #3A3C40; flex-grow: 1">Klepnutím zapíšete příchod, dalším klepnutím odchod. Omluvenky posílají rodiče z aplikace.</span>
+        <sc-if value="{{doch.hasUndo}}" hint-placeholder-val="{{false}}">
+          <button type="button" onClick="{{doch.undo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1.5px solid #D9D7CE; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #17181A; cursor: pointer">Vrátit: {{doch.undoLabel}}</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ VRSTVY ZÁPISU -->
+  <sc-if value="{{sheet.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 6">
+      <div role="dialog" aria-label="{{sheet.title}}" style="width: 760px; max-height: 790px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 18px 20px 14px; border-bottom: 1px solid #F0EFEA">
+          <span style="width: 56px; height: 56px; border-radius: 28px; background: #F3F2EC; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="46" height="46" viewBox="0 0 48 48" aria-hidden="true"><use href="{{sel.symRef}}"></use></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+            <div style="font-size: 13px; font-weight: 600; color: #5A5C60">{{sheet.kicker}}</div>
+            <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.01em">{{sel.name}}</div>
+          </div>
+          <sc-if value="{{sel.hasAllergy}}" hint-placeholder-val="{{true}}">
+            <span style="font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 16px; background: #FBF0C9; color: #5C4300">Alergie: {{sel.allergyText}}</span>
+          </sc-if>
+          <button type="button" onClick="{{close}}" aria-label="Zavřít" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #F3F2EC; display: flex; align-items: center; justify-content: center; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 18px 24px 8px; display: flex; flex-direction: column; gap: 18px">
+
+          <!-- TEPLOTA -->
+          <sc-if value="{{sheet.isTeplota}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+              <label for="teplota-pole" style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Naměřená teplota</label>
+              <div style="display: flex; align-items: center; gap: 18px">
+                <button type="button" onClick="{{tep.minus}}" aria-label="Snížit o 0,1" style="width: 64px; height: 64px; border-radius: 32px; border: 0; background: #F3F2EC; font-size: 28px; font-weight: 700; color: #17181A; cursor: pointer">−</button>
+                <div style="{{tep.boxStyle}}">
+                  <input id="teplota-pole" type="text" inputmode="decimal" autocomplete="off" placeholder="37,0" value="{{tep.text}}" onInput="{{tep.onText}}" onChange="{{tep.onText}}" style="width: 150px; border: 0; background: transparent; font-size: 56px; font-weight: 800; letter-spacing: -0.02em; text-align: right; color: #17181A; outline: none; padding: 0">
+                  <span style="font-size: 32px; font-weight: 700; color: #3A3C40">°C</span>
+                </div>
+                <button type="button" onClick="{{tep.plus}}" aria-label="Zvýšit o 0,1" style="width: 64px; height: 64px; border-radius: 32px; border: 0; background: #F3F2EC; font-size: 28px; font-weight: 700; color: #17181A; cursor: pointer">+</button>
+              </div>
+              <div aria-live="polite" style="{{tep.verdictStyle}}">{{tep.verdict}}</div>
+              <div style="display: flex; gap: 8px">
+                <sc-for list="{{tep.quick}}" as="q" hint-placeholder-count="4">
+                  <button type="button" onClick="{{q.pick}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #EEEEEC; background: #FFFFFF; font-size: 14px; font-weight: 600; color: #3A3C40; cursor: pointer">{{q.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Kde měřeno</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{tep.methods}}" as="c" hint-placeholder-count="3">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- NENÍ MU DOBŘE — stejné jako zápis příznaků v LifeOS -->
+          <sc-if value="{{sheet.isSymptomy}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 11px; font-weight: 600; color: #514F57; text-transform: uppercase; letter-spacing: 0.08em">{{sym.question}}</div>
+              <div role="radiogroup" aria-label="Jak se cítí" style="display: flex; justify-content: center; gap: 22px">
+                <sc-for list="{{sym.faces}}" as="m" hint-placeholder-count="5">
+                  <button type="button" onClick="{{m.pick}}" role="radio" aria-checked="{{m.selected}}" aria-label="{{m.label}}" style="width: 64px; height: 64px; box-sizing: border-box; border: 2px solid {{m.ring}}; border-radius: 32px; padding: 0; background: {{m.tint}}; color: {{m.color}}; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: {{m.opacity}}; transform: scale({{m.scale}})">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="9" cy="10" r="0.9" fill="currentColor"></circle><circle cx="15" cy="10" r="0.9" fill="currentColor"></circle><path d="{{m.mouth}}"></path></svg>
+                  </button>
+                </sc-for>
+              </div>
+              <div aria-hidden="true" style="text-align: center; font-size: {{sym.moodNameSize}}px; line-height: 20px; font-weight: {{sym.moodNameWeight}}; color: {{sym.moodNameFg}}">{{sym.moodName}}</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #F2F1EF; padding-top: 14px">
+              <div style="display: flex; align-items: baseline; justify-content: space-between">
+                <span style="font-size: 11px; font-weight: 600; color: #514F57; text-transform: uppercase; letter-spacing: 0.08em">Potíže</span>
+                <span style="font-size: 11px; color: #514F57">můžete vybrat víc</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{sym.chips}}" as="c" hint-placeholder-count="12">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.fg}}; display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer">
+                    <sc-if value="{{c.selected}}" hint-placeholder-val="{{false}}">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 5 5L19 7"></path></svg>
+                    </sc-if>
+                    {{c.label}}
+                  </button>
+                </sc-for>
+              </div>
+              <sc-if value="{{sym.showTemp}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; background: #FDE6DC">
+                  <label for="sym-teplota" style="font-size: 14px; font-weight: 700; color: #4A3A33; flex-grow: 1">Naměřená teplota</label>
+                  <input id="sym-teplota" type="text" inputmode="decimal" autocomplete="off" placeholder="např. 38,4" value="{{sym.tempText}}" onInput="{{sym.onTemp}}" onChange="{{sym.onTemp}}" style="width: 120px; height: 44px; border-radius: 12px; border: 1px solid #F2C3AE; background: #FFFFFF; font-size: 20px; font-weight: 800; text-align: right; padding: 0 10px; color: #17181A">
+                  <span style="font-size: 16px; font-weight: 700; color: #4A3A33">°C</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{sym.showInt}}" hint-placeholder-val="{{false}}">
+                <div style="font-size: 12px; font-weight: 600; color: #514F57; margin-top: 4px">Jak silná je bolest celkově</div>
+                <div role="radiogroup" aria-label="Intenzita" style="display: flex; gap: 6px">
+                  <sc-for list="{{sym.ints}}" as="i" hint-placeholder-count="3">
+                    <button type="button" onClick="{{i.pick}}" role="radio" aria-checked="{{i.selected}}" style="flex: 1 1 0; min-height: 44px; border-radius: 22px; border: 1px solid {{i.border}}; background: {{i.bg}}; color: {{i.fg}}; font-size: 14px; font-weight: 600; cursor: pointer">{{i.label}}</button>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{sym.hasRed}}" hint-placeholder-val="{{false}}">
+                <div role="note" style="padding: 10px 12px; border-radius: 14px; background: #FDECEC; color: #8E1B1B; font-size: 14px; line-height: 19px"><b style="font-weight: 700">Dušnost nebo modrání rtů?</b> Nečekejte a volejte 155.</div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- ÚRAZ -->
+          <sc-if value="{{sheet.isUraz}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Kde na těle</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{uraz.areas}}" as="c" hint-placeholder-count="7">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{uraz.showSide}}" hint-placeholder-val="{{true}}">
+                <div style="display: flex; gap: 8px">
+                  <sc-for list="{{uraz.sides}}" as="c" hint-placeholder-count="2">
+                    <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Co se stalo</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{uraz.whats}}" as="c" hint-placeholder-count="6">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Ošetření <span style="font-weight: 500; color: #5A5C60">— můžete vybrat víc</span></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{uraz.cares}}" as="c" hint-placeholder-count="5">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Kde se to stalo</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{uraz.places}}" as="c" hint-placeholder-count="4">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- POZNÁMKA -->
+          <sc-if value="{{sheet.isPoznamka}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Rychle</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{note.chips}}" as="c" hint-placeholder-count="6">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label for="poznamka-pole" style="font-size: 15px; font-weight: 800">Vlastními slovy <span style="font-weight: 500; color: #5A5C60">— nepovinné</span></label>
+              <textarea id="poznamka-pole" rows="3" placeholder="Např. dnes si sám oblékl bundu" value="{{note.text}}" onInput="{{note.onText}}" onChange="{{note.onText}}" style="border-radius: 18px; border: 1px solid #E4E3DC; padding: 14px 16px; font-size: 16px; resize: none; color: #17181A"></textarea>
+            </div>
+          </sc-if>
+
+          <!-- JAK RYCHLE — u teploty, potíží a úrazu -->
+          <sc-if value="{{sheet.hasUrgency}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Rodiče</div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+                <sc-for list="{{urgencies}}" as="u" hint-placeholder-count="2">
+                  <button type="button" onClick="{{u.pick}}" role="radio" aria-checked="{{u.on}}" style="{{u.style}}">
+                    <span style="font-size: 15px; font-weight: 800">{{u.label}}</span>
+                    <span style="font-size: 13px; color: #4A4C50">{{u.sub}}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="flex-shrink: 0; padding: 12px 24px 18px; border-top: 1px solid #EEEEEC">
+          <div aria-live="polite" style="padding: 0 2px 10px; font-size: 14px; line-height: 19px; color: {{sheet.summaryFg}}"><span style="color: #5A5C60">{{sheet.summaryLabel}}</span>{{sheet.summary}}</div>
+          <div style="display: flex; gap: 8px">
+            <button type="button" onClick="{{close}}" style="flex-grow: 1; min-height: 56px; border: 1px solid #EEEEEC; border-radius: 28px; background: #F7F7F6; color: #17181A; font-size: 15px; font-weight: 700; cursor: pointer">Zrušit</button>
+            <button type="button" onClick="{{sheet.save}}" aria-disabled="{{sheet.cantSave}}" style="flex-grow: 2; min-height: 56px; border: 0; border-radius: 28px; background: {{sheet.saveBg}}; color: {{sheet.saveFg}}; font-size: 15px; font-weight: 800; cursor: pointer">{{sheet.saveLabel}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
+    <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #17181A; color: #FFFFFF; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    /* Jedna deska = jeden stav. Docházka, zápisy, oběd i vyzvedávání čtou
+       totéž pole dětí, takže zápis teploty se hned ukáže v kartě nahoře,
+       na dlaždici dítěte i v jeho dni. */
+    var R = [
+      // id, jméno, značka, název značky, alergie, obvykle vyzvedává
+      ['oliver', 'Oliver N.', 'snehulak', 'sněhulák', ['arašídy'], 'máma, táta'],
+      ['ema', 'Ema K.', 'jablko', 'jablíčko', ['mléko'], 'máma'],
+      ['jonas', 'Jonáš P.', 'auticko', 'autíčko', ['mléko'], 'táta'],
+      ['mia', 'Mia S.', 'kytka', 'kytička', [], 'máma'],
+      ['adam', 'Adam V.', 'micek', 'míček', [], 'máma'],
+      ['ella', 'Ella M.', 'motyl', 'motýl', [], 'máma, táta'],
+      ['matyas', 'Matyáš H.', 'lodicka', 'lodička', [], 'táta'],
+      ['sofie', 'Sofie R.', 'srdce', 'srdíčko', ['vejce'], 'máma'],
+      ['david', 'David L.', 'hvezda', 'hvězdička', [], 'máma'],
+      ['anna', 'Anna B.', 'tresne', 'třešničky', ['lepek'], 'děda Karel'],
+      ['tobias', 'Tobiáš Č.', 'muchomurka', 'muchomůrka', [], 'máma'],
+      ['viktorie', 'Viktorie D.', 'mesic', 'měsíček', [], 'táta'],
+      ['jakub', 'Jakub F.', 'domecek', 'domeček', [], 'máma'],
+      ['natalie', 'Natálie G.', 'destnik', 'deštník', [], 'máma, táta'],
+      ['lukas', 'Lukáš J.', 'strom', 'stromeček', ['pyl'], 'máma'],
+      ['eliska', 'Eliška Ch.', 'beruska', 'beruška', [], 'táta'],
+      ['filip', 'Filip O.', 'rybka', 'rybička', [], 'máma'],
+      ['julie', 'Julie T.', 'balonek', 'balónek', [], 'máma'],
+      ['sebastian', 'Sebastián U.', 'klic', 'klíček', [], 'babička'],
+      ['amalie', 'Amálie Z.', 'mracek', 'mráček', [], 'táta'],
+      ['ondrej', 'Ondřej Š.', 'mrkev', 'mrkvička', [], 'máma'],
+      ['rozalie', 'Rozálie Ž.', 'hruska', 'hruška', [], 'máma, táta'],
+      ['vojtech', 'Vojtěch E.', 'zvonek', 'zvoneček', [], 'táta'],
+      ['emilie', 'Emílie I.', 'duha', 'duha', [], 'máma'],
+      ['kristof', 'Kryštof A.', 'hrnek', 'hrníček', [], 'máma'],
+      ['laura', 'Laura W.', 'list', 'lístek', [], 'táta'],
+      ['samuel', 'Samuel Y.', 'slunce', 'sluníčko', [], 'máma'],
+      ['karolina', 'Karolína N.', 'snek', 'šnek', [], 'máma']
+    ];
+    var omluveni = { ella: 'nachlazení · omluveno 6:52', tobias: 'dovolená · omluveno včera', filip: 'u lékaře · omluveno 7:05', emilie: 'nachlazení · omluveno 6:31' };
+    var cekame = { samuel: true, karolina: true };
+    var kids = R.map(function (r, i) {
+      var h = 7 + Math.floor((15 + i * 4) / 60), m = (15 + i * 4) % 60;
+      var k = {
+        id: r[0], name: r[1], sym: r[2], symName: r[3], allergies: r[4], usualPickup: r[5],
+        pickupToday: null, att: 'present', arrived: h + ':' + (m < 10 ? '0' : '') + m, left: null, excuse: '',
+        temp: null, unwell: null, log: []
+      };
+      if (omluveni[k.id]) { k.att = 'excused'; k.arrived = null; k.excuse = omluveni[k.id]; }
+      if (cekame[k.id]) { k.att = 'expected'; k.arrived = null; }
+      if (k.arrived) k.log.push({ t: k.arrived, type: 'dochazka', title: 'Příchod', sub: '' });
+      return k;
+    });
+    var byId = {};
+    kids.forEach(function (k) { byId[k.id] = k; });
+    byId.oliver.arrived = '8:05';
+    byId.oliver.log = [
+      { t: '8:05', type: 'dochazka', title: 'Příchod', sub: 'Přivedl táta' },
+      { t: '10:12', type: 'teplota', title: 'Teplota 38,4 °C', sub: 'Na čele · rodiče viděli 10:14' }
+    ];
+    byId.oliver.temp = { value: 38.4, t: '10:12' };
+    byId.mia.pickupToday = { who: 'babička Věra', when: 'po spaní', note: 'ohlášeno 7:41' };
+    byId.mia.log.push({ t: '7:41', type: 'vyzvedani', title: 'Vyzvedává babička Věra', sub: 'Ohlásila máma v aplikaci' });
+    byId.adam.pickupToday = { who: 'teta Lucie', when: 'po obědě', note: 'ohlášeno 7:58' };
+    byId.adam.log.push({ t: '7:58', type: 'vyzvedani', title: 'Vyzvedává teta Lucie po obědě', sub: 'Ohlásila máma v aplikaci' });
+    this.kids = kids;
+    this.byId = byId;
+    this.menu = { name: 'Rizoto se sýrem', allergens: ['mléko', 'lepek'] };
+    this.state = { picked: 'oliver', sheet: null, dochFilter: 'all', undo: null, toast: null, f: {} };
+  }
+
+  now() {
+    var d = new Date();
+    return d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+  }
+
+  showToast(text) {
+    var self = this;
+    this.setState({ toast: text });
+    clearTimeout(this._t);
+    this._t = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+  }
+
+  /* Formulář vrstvy. Každá vrstva začíná od nuly — kromě toho, co je
+     rozumné předvyplnit (u teploty poslední hodnota, u úrazu nic). */
+  openSheet(kind) {
+    var k = this.byId[this.state.picked];
+    var f = {};
+    if (kind === 'teplota') f = { text: k.temp ? String(k.temp.value).replace('.', ',') : '', method: 'Čelo', urg: null };
+    if (kind === 'symptomy') f = { mood: null, sel: [], int: 0, tempText: '', urg: null };
+    if (kind === 'uraz') f = { area: null, side: null, what: null, care: [], place: null, urg: 'info' };
+    if (kind === 'poznamka') f = { chips: [], text: '' };
+    this.setState({ sheet: kind, f: f });
+  }
+
+  setF(patch) { this.setState({ f: Object.assign({}, this.state.f, patch) }); }
+
+  parseTemp(t) {
+    var v = parseFloat(String(t || '').replace(',', '.').replace(/[^0-9.]/g, ''));
+    return isNaN(v) ? null : v;
+  }
+
+  fmt(v) { return v.toFixed(1).replace('.', ','); }
+
+  addLog(k, entry) {
+    k.log.push(entry);
+  }
+
+  renderVals() {
+    var self = this, st = this.state, f = st.f || {};
+    var DNY = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
+    var MES = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+    var D = new Date();
+    var dateLabel = DNY[D.getDay()] + ' ' + D.getDate() + '. ' + MES[D.getMonth()];
+    var kids = this.kids;
+    var menu = this.menu;
+    var here = function (k) { return k.att === 'present'; };
+    var lunchHit = function (k) {
+      return k.allergies.filter(function (a) { return menu.allergens.indexOf(a) !== -1; });
+    };
+    var feverish = function (k) { return k.temp && k.temp.value >= 37.5; };
+    var pick = function (id) { return function () { self.setState({ picked: id, sheet: null }); }; };
+
+    /* -------------------------------------------------- horní karty */
+    var hItems = kids.filter(function (k) { return here(k) && (feverish(k) || k.unwell); }).map(function (k) {
+      return { name: k.name, symRef: '#z-' + k.sym, pick: pick(k.id),
+        what: feverish(k) ? self.fmt(k.temp.value) + ' °C · ' + k.temp.t : k.unwell };
+    });
+    var health = {
+      has: hItems.length > 0, none: hItems.length === 0, items: hItems,
+      kicker: hItems.length ? 'Zdraví · sledujeme' : 'Zdraví',
+      sub: 'Rodiče upozorněni',
+      cardStyle: 'border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 96px; box-sizing: border-box; background: ' + (hItems.length ? '#FDE6DC' : '#FFFFFF'),
+      kickerStyle: 'font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: ' + (hItems.length ? '#9A3412' : '#5A5C60')
+    };
+
+    var lItems = kids.filter(function (k) { return k.att !== 'excused' && k.att !== 'left' && lunchHit(k).length; }).map(function (k) {
+      return { name: k.name, symRef: '#z-' + k.sym, pick: pick(k.id), what: 'bez ' + lunchHit(k).map(function (a) { return a === 'mléko' ? 'mléka' : (a === 'lepek' ? 'lepku' : a); }).join(', ') };
+    });
+    var lunch = {
+      has: lItems.length > 0, none: lItems.length === 0, items: lItems, menu: menu.name,
+      cardStyle: 'border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 96px; box-sizing: border-box; background: ' + (lItems.length ? '#FBF0C9' : '#FFFFFF'),
+      kickerStyle: 'font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (lItems.length ? '#7A5A00' : '#5A5C60')
+    };
+
+    var pItems = kids.filter(function (k) { return k.pickupToday && k.att !== 'excused' && k.att !== 'left'; }).map(function (k) {
+      return { name: k.name, symRef: '#z-' + k.sym, pick: pick(k.id), what: k.pickupToday.who + ' · ' + k.pickupToday.when };
+    });
+    var pickups = { has: pItems.length > 0, none: pItems.length === 0, items: pItems };
+
+    /* -------------------------------------------------- dlaždice */
+    var counts = { present: 0, expected: 0, excused: 0, left: 0 };
+    kids.forEach(function (k) { counts[k.att]++; });
+    counts.hasExpected = counts.expected > 0;
+
+    var badgeFor = function (k) {
+      if (k.att === 'excused') return ['omluven', '#E4E3DC', '#4A4C50'];
+      if (k.att === 'expected') return ['čekáme', '#E4E3DC', '#4A4C50'];
+      if (k.att === 'left') return ['odešel ' + k.left, '#E4E3DC', '#4A4C50'];
+      if (feverish(k)) return [self.fmt(k.temp.value) + ' °C', '#FDE6DC', '#9A3412'];
+      if (k.unwell) return ['není mu dobře', '#E2F5F9', '#0B6F83'];
+      if (lunchHit(k).length) return ['jiný oběd', '#FBF0C9', '#5C4300'];
+      if (k.pickupToday) return [k.pickupToday.who.split(' ')[0], '#EEF4FB', '#33465C'];
+      return null;
+    };
+    var tiles = kids.map(function (k) {
+      var b = badgeFor(k), isSel = k.id === st.picked, away = k.att !== 'present';
+      return {
+        id: k.id, name: k.name, symRef: '#z-' + k.sym, selected: isSel, pick: pick(k.id),
+        hasBadge: !!b, badge: b ? b[0] : '',
+        badgeStyle: b ? 'font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; white-space: nowrap; background: ' + b[1] + '; color: ' + b[2] : '',
+        tileStyle: 'height: 118px; padding: 8px 4px; box-sizing: border-box; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; cursor: pointer; min-width: 0; overflow: hidden; '
+          + 'background: ' + (away ? 'transparent' : '#FFFFFF') + '; '
+          + 'border: ' + (isSel ? '2px solid #17181A' : (away ? '2px dashed #CFCDC4' : '2px solid transparent')),
+        avatarStyle: 'width: 58px; height: 58px; border-radius: 29px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #F3F2EC; ' + (away ? 'filter: grayscale(1); opacity: 0.55' : '')
+      };
+    });
+
+    /* -------------------------------------------------- vybrané dítě */
+    var s = this.byId[st.picked] || kids[0];
+    var hit = lunchHit(s);
+    var facts = [];
+    var fact = function (label, value, bg, fg) {
+      facts.push({ label: label, value: value, style: 'font-size: 13px; padding: 8px 12px; border-radius: 14px; display: flex; gap: 6px; line-height: 18px; background: ' + bg + '; color: ' + fg });
+    };
+    if (s.allergies.length) fact('Alergie', s.allergies.join(', '), '#FBF0C9', '#5C4300');
+    if (s.att !== 'excused') {
+      if (hit.length) fact('Oběd', 'náhrada — dnes obsahuje ' + hit.join(', '), '#FBF0C9', '#5C4300');
+      else fact('Oběd', 'v pořádku', '#EAF6D3', '#2F5212');
+    }
+    if (s.pickupToday) fact('Vyzvedává', s.pickupToday.who + ' · ' + s.pickupToday.when + ' (' + s.pickupToday.note + ')', '#EEF4FB', '#33465C');
+    else fact('Vyzvedává', s.usualPickup + ' (obvykle)', '#F3F2EC', '#3A3C40');
+
+    var DOT = { dochazka: '#7FB23A', teplota: '#E0662B', symptom: '#0E8FA8', uraz: '#D9467E', poznamka: '#8A8C90', vyzvedani: '#2F6FDB' };
+    var log = s.log.slice().reverse().map(function (e) {
+      return { t: e.t, title: e.title, sub: e.sub, hasSub: !!e.sub,
+        dotStyle: 'width: 8px; height: 8px; border-radius: 4px; margin-top: 6px; flex-shrink: 0; background: ' + (DOT[e.type] || '#8A8C90') };
+    });
+    if (!log.length) log = [{ t: '—', title: s.att === 'excused' ? 'Omluveno rodiči' : 'Dnes bez záznamu', sub: s.excuse, hasSub: !!s.excuse, dotStyle: 'width: 8px; height: 8px; border-radius: 4px; margin-top: 6px; flex-shrink: 0; background: #CFCDC4' }];
+
+    var stateLine = s.att === 'present' ? 'Ve třídě od ' + s.arrived
+      : s.att === 'expected' ? 'Ještě nedorazil'
+      : s.att === 'left' ? 'Odešel v ' + s.left
+      : 'Dnes doma — ' + s.excuse.split(' · ')[0];
+    var arrive = function () {
+      s.att = 'present'; s.arrived = self.now(); s.left = null;
+      self.addLog(s, { t: s.arrived, type: 'dochazka', title: 'Příchod', sub: '' });
+      self.showToast(s.name + ' — příchod zapsán');
+    };
+    var sel = {
+      name: s.name, symRef: '#z-' + s.sym, symName: s.symName, stateLine: stateLine, facts: facts, log: log,
+      hasAllergy: s.allergies.length > 0, allergyText: s.allergies.join(', '),
+      canLog: s.att === 'present', cantLog: s.att !== 'present', arrive: arrive,
+      arriveLabel: s.att === 'left' ? 'Vrátit do třídy' : 'Zapsat příchod',
+      bigAvatarStyle: 'width: 72px; height: 72px; border-radius: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #F3F2EC; ' + (s.att !== 'present' ? 'filter: grayscale(1); opacity: 0.6' : '')
+    };
+
+    /* -------------------------------------------------- docházka */
+    var FILTERS = [['all', 'Všichni'], ['present', 'Ve třídě'], ['expected', 'Čekáme'], ['excused', 'Omluveni'], ['left', 'Odešli']];
+    var filter = st.dochFilter;
+    var doch = {
+      open: st.sheet === 'dochazka',
+      filters: FILTERS.map(function (x) {
+        var on = filter === x[0];
+        return { label: x[1], n: x[0] === 'all' ? kids.length : counts[x[0]], on: on,
+          pick: function () { self.setState({ dochFilter: x[0] }); },
+          style: 'height: 44px; padding: 0 16px; border-radius: 22px; border: 0; font-size: 14px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '700' : '500') };
+      }),
+      hasUndo: !!st.undo, undoLabel: st.undo ? st.undo.label : '',
+      undo: function () {
+        var u = st.undo; if (!u) return;
+        var k = self.byId[u.id];
+        Object.assign(k, u.before);
+        k.log.pop();
+        self.setState({ undo: null });
+      },
+      kids: kids.filter(function (k) { return filter === 'all' || k.att === filter; }).map(function (k) {
+        var status, detail, sBg, sFg, next;
+        if (k.att === 'present') { status = 've třídě'; detail = 'od ' + k.arrived; sBg = '#EAF6D3'; sFg = '#2F5212'; next = 'left'; }
+        else if (k.att === 'expected') { status = 'čekáme'; detail = 'ještě nedorazil'; sBg = '#E4E3DC'; sFg = '#3A3C40'; next = 'present'; }
+        else if (k.att === 'left') { status = 'odešel ' + k.left; detail = k.pickupToday ? k.pickupToday.who : k.usualPickup; sBg = '#E4E3DC'; sFg = '#3A3C40'; next = 'present'; }
+        else { status = 'omluven'; detail = k.excuse.split(' · ')[0]; sBg = '#F3F2EC'; sFg = '#5A5C60'; next = 'present'; }
+        var away = k.att !== 'present';
+        return {
+          name: k.name, symRef: '#z-' + k.sym, status: status, detail: detail,
+          aria: k.name + ', ' + status,
+          statusStyle: 'font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 10px; white-space: nowrap; background: ' + sBg + '; color: ' + sFg,
+          tileStyle: 'height: 128px; padding: 8px 6px; box-sizing: border-box; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 0; overflow: hidden; '
+            + 'background: ' + (k.att === 'excused' ? 'transparent' : '#FFFFFF') + '; border: ' + (k.att === 'expected' ? '2px dashed #B9B7AE' : (k.att === 'excused' ? '2px dashed #D9D7CE' : '2px solid transparent')),
+          avatarStyle: 'width: 50px; height: 50px; border-radius: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #F3F2EC; ' + (away ? 'filter: grayscale(1); opacity: 0.55' : ''),
+          tap: function () {
+            var before = { att: k.att, arrived: k.arrived, left: k.left };
+            var t = self.now(), label;
+            if (next === 'present') {
+              k.att = 'present'; k.arrived = k.arrived || t; k.left = null;
+              if (before.att === 'left') { self.addLog(k, { t: t, type: 'dochazka', title: 'Zpět ve třídě', sub: '' }); label = k.name + ' zpět'; }
+              else { k.arrived = t; self.addLog(k, { t: t, type: 'dochazka', title: 'Příchod', sub: before.att === 'excused' ? 'Přišel i přes omluvenku' : '' }); label = k.name + ' příchod'; }
+            } else {
+              k.att = 'left'; k.left = t;
+              self.addLog(k, { t: t, type: 'dochazka', title: 'Odchod', sub: 'Vyzvedává ' + (k.pickupToday ? k.pickupToday.who : k.usualPickup) });
+              label = k.name + ' odchod';
+            }
+            self.setState({ undo: { id: k.id, before: before, label: label } });
+          }
+        };
+      })
+    };
+
+    /* -------------------------------------------------- vrstvy zápisu */
+    var kind = st.sheet;
+    var chip = function (on) {
+      return 'height: 52px; padding: 0 20px; border-radius: 26px; font-size: 15px; font-weight: 700; cursor: pointer; '
+        + (on ? 'background: #17181A; color: #FFFFFF; border: 2px solid #17181A' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E4E3DC');
+    };
+    var single = function (key, list) {
+      return list.map(function (label) {
+        var on = f[key] === label;
+        return { label: label, on: on, style: chip(on), pick: function () { var o = {}; o[key] = on ? null : label; self.setF(o); } };
+      });
+    };
+    var multi = function (key, list) {
+      return list.map(function (label) {
+        var cur = f[key] || [], on = cur.indexOf(label) !== -1;
+        return { label: label, on: on, style: chip(on), pick: function () {
+          var o = {}; o[key] = on ? cur.filter(function (x) { return x !== label; }) : cur.concat([label]); self.setF(o);
+        } };
+      });
+    };
+
+    // Teplota
+    var tv = this.parseTemp(f.text);
+    var tValid = tv != null && tv >= 34 && tv <= 43;
+    var tep = {
+      text: f.text || '',
+      onText: function (e) { self.setF({ text: e.target.value }); },
+      minus: function () { var v = self.parseTemp(self.state.f.text); self.setF({ text: self.fmt((v == null ? 37.0 : v) - 0.1) }); },
+      plus: function () { var v = self.parseTemp(self.state.f.text); self.setF({ text: self.fmt((v == null ? 37.0 : v) + 0.1) }); },
+      quick: [37.5, 38.0, 38.5, 39.0].map(function (v) { return { label: self.fmt(v), pick: function () { self.setF({ text: self.fmt(v) }); } }; }),
+      methods: single('method', ['Čelo', 'Ucho', 'Podpaží']),
+      verdict: tv == null ? 'Napište hodnotu, nebo upravte tlačítky' : !tValid ? 'Tahle hodnota nevypadá správně (34–43 °C)' : tv >= 38 ? 'Horečka' : tv >= 37.5 ? 'Zvýšená teplota' : 'Bez teploty',
+      verdictStyle: 'font-size: 16px; font-weight: 800; padding: 6px 14px; border-radius: 14px; '
+        + (tv == null ? 'color: #5A5C60; font-weight: 500' : !tValid ? 'background: #FDECEC; color: #8E1B1B' : tv >= 38 ? 'background: #FDE6DC; color: #9A3412' : tv >= 37.5 ? 'background: #FBF0C9; color: #5C4300' : 'background: #EAF6D3; color: #2F5212'),
+      boxStyle: 'display: flex; align-items: baseline; gap: 6px; padding: 8px 22px; border-radius: 22px; border: 2px solid ' + (tv != null && !tValid ? '#E06666' : '#E4E3DC')
+    };
+
+    // Není mu dobře — stejné odrážky a tváře jako v LifeOS, aby zápis
+    // ze školky padl do osy dítěte jako běžný „Zápis příznaků“.
+    var SYM_MOODS = [
+      { label: 'Velmi špatně', title: 'Cítí se velmi špatně', mouth: 'M8 16.6c1.1-1.5 2.5-2.3 4-2.3s2.9.8 4 2.3', color: '#C2413A', tint: '#FBE4E2' },
+      { label: 'Špatně', title: 'Cítí se špatně', mouth: 'M8.6 16c1-.8 2.1-1.2 3.4-1.2s2.4.4 3.4 1.2', color: '#C8661C', tint: '#FCEBDD' },
+      { label: 'Ujde to', title: 'Cítí se ujde to', mouth: 'M8.8 15.2h6.4', color: '#514F57', tint: '#F1F0EE' },
+      { label: 'Dobře', title: 'Cítí se dobře', mouth: 'M8.6 14.4c1 .9 2.1 1.3 3.4 1.3s2.4-.4 3.4-1.3', color: '#B97300', tint: '#FDF1D8' },
+      { label: 'Výborně', title: 'Cítí se výborně', mouth: 'M8 14c1.1 1.7 2.5 2.6 4 2.6s2.9-.9 4-2.6', color: '#E07A0B', tint: '#FFE7C7' }
+    ];
+    var SYM_ITEMS = ['Bolest hlavy', 'Teplota', 'Únava', 'Kašel', 'Rýma', 'Bolest v krku', 'Bolest břicha', 'Nevolnost', 'Zvracení', 'Průjem', 'Bolest ucha', 'Vyrážka', 'Dušnost'];
+    var SYM_INT = ['Mírné', 'Střední', 'Silné'];
+    var symSel = f.sel || [];
+    var painful = function (x) { return /bolest/i.test(x); };
+    var chipOn = function (on) { return on ? { bg: '#FFF1E0', fg: '#7A4300', border: '#F7B56A' } : { bg: '#FFFFFF', fg: '#17161A', border: '#EEEEEC' }; };
+    var hasMood = f.mood != null;
+    var symTv = this.parseTemp(f.tempText);
+    var symParts = [];
+    if (hasMood) symParts.push(SYM_MOODS[f.mood].title);
+    if (symSel.length) symParts.push(symSel.map(function (x) { return x === 'Teplota' && symTv ? 'teplota ' + self.fmt(symTv) + ' °C' : x.toLowerCase(); }).join(', ') + (f.int && symSel.some(painful) ? ' (' + SYM_INT[f.int - 1].toLowerCase() + ')' : ''));
+    var sym = {
+      question: 'Jak se ' + s.name.split(' ')[0] + ' cítí?',
+      faces: SYM_MOODS.map(function (m, i) {
+        var on = f.mood === i;
+        return { label: m.label, mouth: m.mouth, color: m.color, tint: m.tint, selected: on,
+          ring: on ? '#F7931E' : 'transparent', scale: on ? 1.1 : 1, opacity: hasMood && !on ? 0.5 : 1,
+          pick: function () { self.setF({ mood: self.state.f.mood === i ? null : i }); } };
+      }),
+      moodName: hasMood ? SYM_MOODS[f.mood].label : 'Klepnutím vyberte',
+      moodNameSize: hasMood ? 16 : 14, moodNameWeight: hasMood ? 700 : 400, moodNameFg: hasMood ? '#17161A' : '#514F57',
+      chips: SYM_ITEMS.map(function (it) {
+        var on = symSel.indexOf(it) !== -1, cs = chipOn(on);
+        return { label: it, selected: on, bg: cs.bg, fg: cs.fg, border: cs.border,
+          pick: function () { self.setF({ sel: on ? symSel.filter(function (x) { return x !== it; }) : symSel.concat([it]) }); } };
+      }),
+      showTemp: symSel.indexOf('Teplota') !== -1,
+      tempText: f.tempText || '',
+      onTemp: function (e) { self.setF({ tempText: e.target.value }); },
+      showInt: symSel.some(painful),
+      ints: SYM_INT.map(function (lab, i) {
+        var on = f.int === i + 1;
+        return { label: lab, selected: on, bg: on ? '#17161A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#17161A', border: on ? '#17161A' : '#EEEEEC',
+          pick: function () { self.setF({ int: on ? 0 : i + 1 }); } };
+      }),
+      hasRed: symSel.indexOf('Dušnost') !== -1
+    };
+
+    // Úraz
+    var paired = f.area === 'Ruka' || f.area === 'Koleno' || f.area === 'Noha';
+    var areaLabel = f.area ? ((paired && f.side ? f.side.toLowerCase() + ' ' : '') + f.area.toLowerCase()) : '';
+    var PLACE = { 'Třída': 've třídě', 'Zahrada': 'na zahradě', 'Umývárna': 'v umývárně', 'Vycházka': 'na vycházce' };
+    var uraz = {
+      areas: single('area', ['Hlava', 'Obličej', 'Ruka', 'Koleno', 'Noha', 'Trup', 'Záda']),
+      showSide: paired,
+      sides: single('side', f.area === 'Koleno' ? ['Levé', 'Pravé'] : ['Levá', 'Pravá']),
+      whats: single('what', ['Upadl', 'Narazil se', 'Strkanice', 'Kousnutí', 'Štípnutí', 'Jiné']),
+      cares: multi('care', ['Studený obklad', 'Vyčištěno', 'Náplast', 'Dezinfekce', 'Bez ošetření']),
+      places: single('place', ['Třída', 'Zahrada', 'Umývárna', 'Vycházka'])
+    };
+
+    // Poznámka
+    var note = {
+      chips: multi('chips', ['Spal po obědě', 'Nespal', 'Snědl celý oběd', 'Snědl půlku', 'Nejedl', 'Převlékli jsme ho']),
+      text: f.text || '',
+      onText: function (e) { self.setF({ text: e.target.value }); }
+    };
+
+    // Rodiče — u teploty se „musí přijet“ předvybere samo od 38 °C
+    var urgDefault = kind === 'teplota' ? (tValid && tv >= 38 ? 'call' : 'info')
+      : kind === 'symptomy' ? ((symTv && symTv >= 38) || (hasMood && f.mood <= 0) || sym.hasRed ? 'call' : 'info') : 'info';
+    var urg = f.urg || urgDefault;
+    var urgencies = [
+      { id: 'info', label: 'Jen informovat', sub: 'Upozornění do aplikace' },
+      { id: 'call', label: 'Musí přijet', sub: 'Upozornění + zavoláme' }
+    ].map(function (u) {
+      var on = urg === u.id;
+      var bg = on ? (u.id === 'call' ? '#FDE6DC' : '#EAF6D3') : '#F3F2EC';
+      return { label: u.label, sub: u.sub, on: on, pick: function () { self.setF({ urg: u.id }); },
+        style: 'min-height: 64px; padding: 10px 16px; border-radius: 18px; text-align: left; display: flex; flex-direction: column; gap: 2px; cursor: pointer; color: #17181A; background: ' + bg + '; border: 2px solid ' + (on ? '#17181A' : bg) };
+    });
+
+    // Souhrn + uložení
+    var summary = '', canSave = false, saveLabel = 'Uložit a poslat rodičům', kicker = '', title = '';
+    if (kind === 'teplota') {
+      kicker = 'Teplota · ' + this.now(); title = 'Teplota';
+      canSave = tValid;
+      summary = tValid ? 'Teplota ' + self.fmt(tv) + ' °C · ' + ({ 'Čelo': 'na čele', 'Ucho': 'v uchu', 'Podpaží': 'v podpaží' })[f.method || 'Čelo'] + (urg === 'call' ? ' · prosíme, přijeďte' : '') : '';
+      if (!canSave) saveLabel = 'Napište teplotu';
+    }
+    if (kind === 'symptomy') {
+      kicker = 'Není mu dobře · ' + this.now(); title = 'Není mu dobře';
+      canSave = hasMood || symSel.length > 0;
+      summary = symParts.join(' · ') + (canSave && urg === 'call' ? ' · prosíme, přijeďte' : '');
+      if (!canSave) saveLabel = 'Vyberte, jak se cítí, nebo potíž';
+    }
+    if (kind === 'uraz') {
+      kicker = 'Úraz · ' + this.now(); title = 'Úraz';
+      canSave = !!(f.area && f.what) && (!paired || !!f.side);
+      summary = canSave ? f.what + ' — ' + areaLabel + (f.place ? ' · ' + PLACE[f.place] : '') + (f.care && f.care.length ? ' · ' + f.care.join(', ').toLowerCase() : '') : '';
+      if (!canSave) saveLabel = !f.area ? 'Vyberte, kde na těle' : (paired && !f.side) ? 'Vyberte stranu' : 'Vyberte, co se stalo';
+      else saveLabel = 'Uložit, poslat rodičům a do knihy úrazů';
+    }
+    if (kind === 'poznamka') {
+      kicker = 'Poznámka · ' + this.now(); title = 'Poznámka';
+      var parts = (f.chips || []).slice();
+      if (f.text && f.text.trim()) parts.push(f.text.trim());
+      canSave = parts.length > 0;
+      summary = parts.join(' · ');
+      if (!canSave) saveLabel = 'Vyberte nebo napište poznámku';
+    }
+    var save = function () {
+      if (!canSave) return;
+      var t = self.now(), k = s;
+      var sub = urg === 'call' ? 'Rodiče upozorněni a voláme' : 'Rodiče upozorněni';
+      if (kind === 'teplota') {
+        k.temp = { value: tv, t: t };
+        self.addLog(k, { t: t, type: 'teplota', title: 'Teplota ' + self.fmt(tv) + ' °C', sub: ({ 'Čelo': 'Na čele', 'Ucho': 'V uchu', 'Podpaží': 'V podpaží' })[f.method || 'Čelo'] + ' · ' + sub.toLowerCase() });
+        if (tv < 37.5 && k.unwell === 'teplota') k.unwell = null;
+      }
+      if (kind === 'symptomy') {
+        if (symSel.indexOf('Teplota') !== -1 && symTv && symTv >= 34 && symTv <= 43) {
+          k.temp = { value: symTv, t: t };
+        }
+        var short = symSel.length ? symSel.slice(0, 2).join(', ').toLowerCase() : SYM_MOODS[f.mood].label.toLowerCase();
+        var good = hasMood && f.mood >= 3 && !symSel.length;
+        k.unwell = good ? null : short;
+        self.addLog(k, { t: t, type: 'symptom', title: hasMood ? SYM_MOODS[f.mood].title : 'Zápis příznaků', sub: (symParts.slice(hasMood ? 1 : 0).join(' · ') || '') + (symParts.length > (hasMood ? 1 : 0) ? ' · ' : '') + sub.toLowerCase() });
+      }
+      if (kind === 'uraz') {
+        self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'zapsáno do knihy úrazů' });
+      }
+      if (kind === 'poznamka') {
+        self.addLog(k, { t: t, type: 'poznamka', title: summary, sub: '' });
+      }
+      self.setState({ sheet: null, f: {} });
+      self.showToast('Odesláno rodičům: ' + k.name + (kind === 'uraz' ? ' · v knize úrazů' : ''));
+    };
+
+    var sheet = {
+      open: !!kind && kind !== 'dochazka', title: title, kicker: kicker,
+      isTeplota: kind === 'teplota', isSymptomy: kind === 'symptomy', isUraz: kind === 'uraz', isPoznamka: kind === 'poznamka',
+      hasUrgency: kind === 'teplota' || kind === 'symptomy' || kind === 'uraz',
+      summaryLabel: summary ? 'Rodiče uvidí: ' : '',
+      summary: summary || 'Zatím nic nevybráno',
+      summaryFg: summary ? '#17181A' : '#5A5C60',
+      save: save, cantSave: !canSave, saveLabel: saveLabel,
+      saveBg: canSave ? '#17181A' : '#F3F2EC', saveFg: canSave ? '#FFFFFF' : '#5A5C60'
+    };
+
+    return {
+      dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
+      kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
+      toast: { show: !!st.toast, text: st.toast || '' },
+      openDochazka: function () { self.setState({ sheet: 'dochazka', undo: null }); },
+      close: function () { self.setState({ sheet: null, f: {} }); },
+      open: {
+        teplota: function () { self.openSheet('teplota'); },
+        symptomy: function () { self.openSheet('symptomy'); },
+        uraz: function () { self.openSheet('uraz'); },
+        poznamka: function () { self.openSheet('poznamka'); }
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

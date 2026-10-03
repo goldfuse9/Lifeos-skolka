@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Školka</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F3F2EC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Školka">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  /* Jen skořápka. Vzhled je celý v desce z plátna a tenhle soubor do něj
+     nemluví — jediná výjimka je roztažení desky z 1194×834 na skutečnou
+     obrazovku tabletu. */
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #F3F2EC;
+    overscroll-behavior: none;
+  }
+  #deska { min-height: 100dvh; }
+
+  /* Deska je nakreslená na 1194×834 (iPad na šířku). Vnitřek je pružný
+     (flex, grid, absolute inset:0), takže stačí přebít rozměry kořene. */
+  #deska > div {
+    width: 100% !important;
+    min-width: 1024px;
+    height: 100dvh !important;
+    min-height: 700px;
+  }
+
+  #nacitam {
+    position: fixed; inset: 0; display: flex;
+    align-items: center; justify-content: center;
+    font: 15px/1.4 system-ui, sans-serif; color: #5A5C60;
+  }
+  #nacitam[hidden] { display: none; }
+
+  #chyba {
+    margin: 0; padding: 24px;
+    font: 15px/1.5 system-ui, sans-serif; color: #7A4300;
+    background: #FFF1E0;
+  }
+  #chyba[hidden] { display: none; }
+</style>
+</head>
+<body>
+
+<div id="deska" role="application" aria-label="Školka"></div>
+<p id="nacitam">Načítám…</p>
+<pre id="chyba" hidden></pre>
+
+<script src="dc.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>
