@@ -285,6 +285,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <sc-if value="{{k.hasClsDot}}" hint-placeholder-val="{{false}}">
               <span style="{{k.clsDotStyle}}"></span>
             </sc-if>
+            <sc-if value="{{k.ppv}}" hint-placeholder-val="{{false}}">
+              <span title="Povinné předškolní vzdělávání" style="position: absolute; top: 8px; left: 8px; padding: 1px 6px; border-radius: 8px; background: #E8EFFD; color: #27407A; font-size: 10px; font-weight: 800; letter-spacing: 0.04em">PPV</span>
+            </sc-if>
             <span style="{{k.avatarStyle}}"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><use href="{{k.symRef}}"></use></svg></span>
             <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap">{{k.name}}</span>
             <span style="{{k.statusStyle}}">{{k.status}}</span>
@@ -294,11 +297,64 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </div>
 
       <div style="display: flex; align-items: center; gap: 16px; background: #FFFFFF; border-radius: 20px; padding: 12px 18px">
-        <span style="font-size: 14px; color: #3A3C40; flex-grow: 1">Klepnutím zapíšete příchod, dalším klepnutím odchod. Omluvenky posílají rodiče z aplikace.</span>
+        <span style="font-size: 14px; color: #3A3C40; flex-grow: 1">Klepnutím zapíšete příchod, dalším klepnutím odchod. Omluvenky posílají rodiče z aplikace. U dětí s <b style="font-weight: 800; color: #27407A">PPV</b> musí být každá absence omluvená.</span>
         <sc-if value="{{doch.hasUndo}}" hint-placeholder-val="{{false}}">
           <button type="button" onClick="{{doch.undo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1.5px solid #D9D7CE; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #17181A; cursor: pointer">Vrátit: {{doch.undoLabel}}</button>
         </sc-if>
       </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ TŘÍDNÍ KNIHA
+       Denní zápis podle § 28 školského zákona: téma, co se dělalo, poučení
+       o bezpečnosti. Docházka se bere sama z docházky — nic se nepřepisuje. -->
+  <sc-if value="{{tab.isKniha}}" hint-placeholder-val="{{false}}">
+    <div style="flex-grow: 1; min-height: 0; display: flex; gap: 20px">
+      <section aria-label="Dnešní zápis" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 26px; padding: 20px 22px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; overflow-y: auto">
+        <div style="display: flex; align-items: baseline; gap: 12px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Třídní kniha · {{kn.dateText}}</h2>
+          <span style="font-size: 14px; color: #5A5C60">{{kn.clsName}}</span>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 8px; font-size: 15px; font-weight: 800">Téma
+          <input id="kniha-tema" type="text" placeholder="Např. Podzim na zahradě" value="{{kn.theme}}" onInput="{{kn.onTheme}}" onChange="{{kn.onTheme}}" style="height: 52px; border-radius: 16px; border: 1px solid #E4E3DC; padding: 0 16px; font-size: 16px; font-weight: 500; color: #17181A">
+        </label>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 15px; font-weight: 800">Co jsme dělali</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{kn.acts}}" as="c" hint-placeholder-count="9">
+              <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 15px; font-weight: 800">Poučení o bezpečnosti <span style="font-weight: 500; color: #5A5C60">— před vycházkou, výletem nebo novou činností</span></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{kn.safety}}" as="c" hint-placeholder-count="6">
+              <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding: 12px 14px; border-radius: 16px; background: #F3F2EC; font-size: 14px; line-height: 20px; color: #3A3C40">
+          <b style="font-weight: 800">Docházka se zapíše sama:</b> {{kn.att}}
+        </div>
+        <div style="margin-top: auto; display: flex; align-items: center; gap: 14px">
+          <span style="font-size: 14px; color: #5A5C60; flex-grow: 1">{{kn.footer}}</span>
+          <button type="button" onClick="{{kn.save}}" aria-disabled="{{kn.cantSave}}" style="{{kn.saveStyle}}">{{kn.saveLabel}}</button>
+        </div>
+      </section>
+
+      <aside aria-label="Předchozí dny" style="width: 380px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 800">Předchozí dny</h2>
+        <sc-for list="{{kn.past}}" as="p" hint-placeholder-count="3">
+          <div style="background: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+            <span style="display: flex; gap: 8px; align-items: baseline"><span style="font-size: 15px; font-weight: 800; flex-grow: 1">{{p.date}}</span><span style="font-size: 12px; color: #5A5C60">{{p.att}}</span></span>
+            <span style="font-size: 14px; font-weight: 700">{{p.theme}}</span>
+            <span style="font-size: 13px; color: #3A3C40">{{p.acts}}</span>
+            <span style="font-size: 13px; color: #27407A">{{p.safety}}</span>
+            <span style="font-size: 12px; color: #5A5C60">{{p.by}}</span>
+          </div>
+        </sc-for>
+      </aside>
     </div>
   </sc-if>
 
@@ -651,6 +707,18 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                   <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
                 </sc-for>
               </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="font-size: 15px; font-weight: 800">Kdo to viděl <span style="font-weight: 500; color: #5A5C60">— svědek do knihy úrazů</span></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{uraz.witnesses}}" as="c" hint-placeholder-count="3">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div role="note" style="padding: 12px 14px; border-radius: 16px; background: #F3F2EC; color: #3A3C40; font-size: 14px; line-height: 20px">
+              <b style="font-weight: 800">Kniha úrazů č. {{uraz.no}}</b> · zapisuje {{uraz.by}} · {{uraz.when}}<br>
+              Když bude {{uraz.kidName}} kvůli úrazu chybět 2 a více dní, ředitelka vyplní záznam pro ČŠI a pojišťovnu.
             </div>
           </sc-if>
 
@@ -1037,14 +1105,41 @@ class Component extends DCLogic {
     berusky.concat(motylci).forEach(function (k) { byId[k.id] = k; });
 
     this.kids = kids;
+    var self0 = this;
+    var day = function (n) { var d = new Date(); d.setDate(d.getDate() + n); return self0.iso(d); };
     this.byId = byId;
     this.menu = { name: 'Rizoto se sýrem', allergens: ['mléko', 'lepek'] };
 
+    /* Povinné předškolní vzdělávání (PPV) — děti, kterým bylo 5 let do 31. 8.
+       Jejich absence musí být omluvená; neomluvenou řeší ředitelka. */
+    ['oliver', 'adam', 'david', 'tobias', 'jakub', 'lukas', 'filip', 'sebastian', 'samuel', 'karolina'].forEach(function (id) { byId[id].ppv = true; });
+    motylci.forEach(function (k, i) { if (i < 13) k.ppv = true; });
+    kids.forEach(function (k) { k.ppv = !!k.ppv; });
+
+    /* Kdo je přihlášená a kdo ještě učí ve třídě (svědci úrazu). */
+    this.me = 'Petra Horáková';
+    this.staff = {
+      slunicka: ['Alena Benešová', 'Tomáš Roubal'],
+      berusky: ['Jana Králová', 'Marta Svobodová', 'Věra Nová'],
+      motylci: ['Lucie Malá']
+    };
+    /* Kniha úrazů je pro celou školku jedna; čísluje se průběžně za rok. */
+    this.urazNo = 3;
+
+    /* Třídní kniha — denní zápis. Docházka se do něj bere sama. */
+    var back = function (n) { var d = new Date(); while (n > 0) { d.setDate(d.getDate() - 1); if (d.getDay() % 6) n--; } return self0.iso(d); };
+    var kn = function (n, theme, acts, safety) { return { date: back(n), theme: theme, acts: acts, safety: safety, by: 'Petra Horáková', present: 22 + (n % 3), absent: 6 - (n % 3) }; };
+    this.kniha = {
+      slunicka: [
+        kn(1, 'Podzim na zahradě', ['Ranní kruh', 'Výtvarná činnost', 'Pobyt venku'], ['Pobyt na zahradě']),
+        kn(2, 'Podzim na zahradě', ['Ranní kruh', 'Pohybové hry', 'Vycházka'], ['Vycházka — chůze ve dvojicích']),
+        kn(3, 'Kaštánci', ['Ranní kruh', 'Pracovní činnost', 'Zpěv'], ['Práce s nůžkami'])
+      ]
+    };
+
     /* -------------------------------------------- fotky, akce, schůzky
        Ukázková data. Datumy jsou vztažené k dnešku, ať ukázka nestárne. */
-    var day = function (n) { var d = new Date(); d.setDate(d.getDate() + n); return self0.iso(d); };
-    var self0 = this;
-    var demo = function (n, from) {
+        var demo = function (n, from) {
       var out = [];
       for (var i = 0; i < n; i++) out.push({ id: 'd' + from + '-' + i, url: '', demo: (from + i) % 6 });
       return out;
@@ -1074,7 +1169,8 @@ class Component extends DCLogic {
       picked: 'oliver', sheet: null, dochFilter: 'all', undo: null, toast: null, f: {},
       tab: 'trida', viewCls: 'slunicka', merge: null,
       move: false, movePick: [], moveTo: null, moveDur: 'dnes',
-      dlg: null, df: {}, albumId: null, viewer: null, akceSel: null
+      dlg: null, df: {}, albumId: null, viewer: null, akceSel: null,
+      kn: null
     };
   }
 
@@ -1120,7 +1216,7 @@ class Component extends DCLogic {
     var f = {};
     if (kind === 'teplota') f = { text: k.temp ? String(k.temp.value).replace('.', ',') : '', method: 'Čelo', urg: null };
     if (kind === 'symptomy') f = { mood: null, sel: [], int: 0, tempText: '', urg: null };
-    if (kind === 'uraz') f = { area: null, side: null, what: null, care: [], place: null, urg: 'info' };
+    if (kind === 'uraz') f = { area: null, side: null, what: null, care: [], place: null, witness: null, urg: 'info' };
     if (kind === 'poznamka') f = { chips: [], text: '' };
     this.setState({ sheet: kind, f: f, picked: k.id });
   }
@@ -1317,14 +1413,14 @@ class Component extends DCLogic {
       kids: kids.filter(function (k) { return filter === 'all' || k.att === filter; }).map(function (k) {
         var status, detail, sBg, sFg, next;
         if (k.att === 'present') { status = 've třídě'; detail = 'od ' + k.arrived; sBg = '#EAF6D3'; sFg = '#2F5212'; next = 'left'; }
-        else if (k.att === 'expected') { status = 'čekáme'; detail = 'ještě nedorazil'; sBg = '#E4E3DC'; sFg = '#3A3C40'; next = 'present'; }
+        else if (k.att === 'expected') { status = 'čekáme'; detail = k.ppv ? 'PPV · bez omluvenky' : 'ještě nedorazil'; sBg = k.ppv ? '#FDE6DC' : '#E4E3DC'; sFg = k.ppv ? '#9A3412' : '#3A3C40'; next = 'present'; }
         else if (k.att === 'left') { status = 'odešel ' + k.left; detail = k.pickupToday ? k.pickupToday.who : k.usualPickup; sBg = '#E4E3DC'; sFg = '#3A3C40'; next = 'present'; }
         else { status = 'omluven'; detail = k.excuse.split(' · ')[0]; sBg = '#F3F2EC'; sFg = '#5A5C60'; next = 'present'; }
         var away = k.att !== 'present';
         var dot = clsDot(k);
         return {
-          name: k.name, symRef: '#z-' + k.sym, status: status, detail: detail,
-          aria: k.name + ', ' + status,
+          name: k.name, symRef: '#z-' + k.sym, status: status, detail: detail, ppv: k.ppv,
+          aria: k.name + (k.ppv ? ' (povinné předškolní)' : '') + ', ' + status,
           hasClsDot: !!dot, clsDotStyle: dot || '',
           statusStyle: 'font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 10px; white-space: nowrap; background: ' + sBg + '; color: ' + sFg,
           tileStyle: 'position: relative; height: 128px; padding: 8px 6px; box-sizing: border-box; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 0; overflow: hidden; '
@@ -1440,8 +1536,10 @@ class Component extends DCLogic {
       showSide: paired,
       sides: single('side', f.area === 'Koleno' ? ['Levé', 'Pravé'] : ['Levá', 'Pravá']),
       whats: single('what', ['Upadl', 'Narazil se', 'Strkanice', 'Kousnutí', 'Štípnutí', 'Jiné']),
-      cares: multi('care', ['Studený obklad', 'Vyčištěno', 'Náplast', 'Dezinfekce', 'Bez ošetření']),
-      places: single('place', ['Třída', 'Zahrada', 'Umývárna', 'Vycházka'])
+      cares: multi('care', ['Studený obklad', 'Vyčištěno', 'Náplast', 'Dezinfekce', 'K lékaři', 'Bez ošetření']),
+      places: single('place', ['Třída', 'Zahrada', 'Umývárna', 'Vycházka']),
+      witnesses: single('witness', (self.staff[s.todayCls || s.cls] || []).concat(['Nikdo další'])),
+      no: (this.urazNo + 1) + '/' + new Date().getFullYear(), by: this.me, when: 'dnes ' + this.now(), kidName: s.name.split(' ')[0]
     };
 
     // Poznámka
@@ -1513,7 +1611,8 @@ class Component extends DCLogic {
         self.addLog(k, { t: t, type: 'symptom', title: hasMood ? SYM_MOODS[f.mood].title : 'Zápis příznaků', sub: (symParts.slice(hasMood ? 1 : 0).join(' · ') || '') + (symParts.length > (hasMood ? 1 : 0) ? ' · ' : '') + sub.toLowerCase() });
       }
       if (kind === 'uraz') {
-        self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'zapsáno do knihy úrazů' });
+        self.urazNo++;
+        self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'kniha úrazů č. ' + self.urazNo + (f.witness && f.witness !== 'Nikdo další' ? ' · svědek ' + f.witness : '') });
       }
       if (kind === 'poznamka') {
         self.addLog(k, { t: t, type: 'poznamka', title: summary, sub: '' });
@@ -1563,8 +1662,49 @@ class Component extends DCLogic {
         + (on ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #5A5C60');
     };
 
+
+    /* -------------------------------------------------- třídní kniha */
+    var knList = this.kniha[home] || (this.kniha[home] = []);
+    var todayIso = this.iso(new Date());
+    var knSaved = knList.filter(function (e) { return e.date === todayIso; })[0] || null;
+    var knF = st.kn || (knSaved ? { theme: knSaved.theme, acts: knSaved.acts.slice(), safety: knSaved.safety.slice() } : { theme: knList[0] ? knList[0].theme : '', acts: ['Ranní kruh'], safety: [] });
+    var knChip = function (on) { return 'height: 44px; padding: 0 16px; border-radius: 22px; font-size: 14px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #17181A; color: #FFFFFF; border: 2px solid #17181A' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E4E3DC'); };
+    var knToggle = function (key, list) {
+      return list.map(function (x) {
+        var on = knF[key].indexOf(x) !== -1;
+        return { label: x, on: on, style: knChip(on), pick: function () {
+          var n = Object.assign({}, knF); n[key] = on ? knF[key].filter(function (y) { return y !== x; }) : knF[key].concat([x]); n.dirty = true;
+          self.setState({ kn: n });
+        } };
+      });
+    };
+    var cz = function (iso) { var d = self.parseIso(iso); return ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'][d.getDay()] + ' ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
+    var knOk = !!(knF.theme && knF.theme.trim()) && knF.acts.length > 0;
+    var knClean = knSaved && !knF.dirty;
+    var kn = {
+      dateText: cz(todayIso), clsName: clsById[home].name,
+      theme: knF.theme, onTheme: function (e) { self.setState({ kn: Object.assign({}, knF, { theme: e.target.value, dirty: true }) }); },
+      acts: knToggle('acts', ['Ranní kruh', 'Řízená činnost', 'Výtvarná činnost', 'Pracovní činnost', 'Pohybové hry', 'Zpěv a hudba', 'Předmatematika', 'Grafomotorika', 'Pobyt venku', 'Vycházka']),
+      safety: knToggle('safety', ['Vycházka — chůze ve dvojicích', 'Pobyt na zahradě', 'Tělocvična', 'Práce s nůžkami', 'Výlet', 'Před prázdninami']),
+      att: counts.present + ' přítomno · ' + counts.excused + ' omluveno' + (counts.expected ? ' · ' + counts.expected + ' zatím nedorazilo' : '') + (counts.left ? ' · ' + counts.left + ' už odešlo' : ''),
+      footer: knClean ? 'Uloženo · zapsala ' + knSaved.by : 'Zapisuje ' + this.me,
+      cantSave: !knOk || knClean,
+      saveLabel: knClean ? 'Zapsáno' : !knOk ? 'Napište téma a činnost' : knSaved ? 'Uložit změny' : 'Zapsat do třídní knihy',
+      saveStyle: 'height: 52px; padding: 0 24px; border: 0; border-radius: 26px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (knOk && !knClean ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #5A5C60'),
+      save: function () {
+        if (!knOk || knClean) return;
+        var entry = { date: todayIso, theme: knF.theme.trim(), acts: knF.acts.slice(), safety: knF.safety.slice(), by: self.me, present: counts.present, absent: counts.excused + counts.expected };
+        self.kniha[home] = [entry].concat(knList.filter(function (e) { return e.date !== todayIso; }));
+        self.setState({ kn: null });
+        self.showToast('Zapsáno do třídní knihy');
+      },
+      past: knList.filter(function (e) { return e.date !== todayIso; }).map(function (e) {
+        return { date: cz(e.date), theme: e.theme, acts: e.acts.join(' · '), safety: e.safety.length ? 'Poučení: ' + e.safety.join(', ').toLowerCase() : 'Bez poučení', by: e.by, att: e.present + ' přítomno · ' + e.absent + ' chybělo' };
+      })
+    };
+
     /* -------------------------------------------------- záložky */
-    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']];
+    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']];
     var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '' };
     var tabs = TABS.map(function (t) {
       var on = st.tab === t[0];
@@ -1573,7 +1713,7 @@ class Component extends DCLogic {
         pick: function () { self.setState({ tab: t[0], undo: null, move: t[0] === 'trida' ? self.state.move : false, albumId: t[0] === 'fotky' ? self.state.albumId : null }); },
         style: 'height: 44px; padding: 0 16px; border-radius: 22px; border: 0; font-size: 15px; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600') };
     });
-    var tab = { isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
+    var tab = { isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
 
     /* -------------------------------------------------- přesun dětí */
     var movePicked = st.movePick.map(function (id) { return self.byId[id]; }).filter(Boolean);
@@ -1653,7 +1793,7 @@ class Component extends DCLogic {
           var pres = inC.filter(here).length;
           return { name: c.name, meta: c.teacher + ' · ' + pres + ' z ' + inC.length + ' ve třídě', dotStyle: dotStyle(c.color, 14),
             isShown: c.id === home, canShow: c.id !== home,
-            show: function () { self.setState({ viewCls: c.id, dlg: null, df: {}, move: false, movePick: [], albumId: null, akceSel: null }); self.showToast('Třída ' + c.name); } };
+            show: function () { self.setState({ viewCls: c.id, dlg: null, df: {}, move: false, movePick: [], albumId: null, akceSel: null, kn: null }); self.showToast('Třída ' + c.name); } };
         }),
         merged: merged, notMerged: !merged,
         mergedText: merged ? view.short + (st.merge.from === 'Hned' ? '' : ' ' + st.merge.from.toLowerCase()) : '',
@@ -1965,7 +2105,7 @@ class Component extends DCLogic {
     return {
       dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
       kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
-      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint,
+      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn,
       dlg: dlg, gal: gal, viewer: viewer, akce: akce, meet: meet, kons: kons,
       openTridy: openDlg('tridy', { from: 'Od 14:00', with: [] }),
       toast: { show: !!st.toast, text: st.toast || '' },

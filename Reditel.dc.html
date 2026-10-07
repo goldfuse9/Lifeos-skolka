@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Ředitelna školky</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#17181A}a:hover{color:#000}
+button,input,textarea,select{font-family:inherit}
+input::placeholder,textarea::placeholder{color:#8A8C90}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F3F2EC; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; overflow: hidden; position: relative">
+
+  <!-- ============================================================ MENU -->
+  <nav aria-label="Ředitelna" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid #E4E3DC">
+    <div style="padding: 0 10px 18px; display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{{school.name}}</span>
+      <span style="font-size: 13px; color: #5A5C60">Ředitelna · {{year}}</span>
+    </div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <button type="button" onClick="{{n.pick}}" aria-current="{{n.current}}" style="{{n.style}}">
+        <span style="flex-grow: 1; text-align: left">{{n.label}}</span>
+        <sc-if value="{{n.hasCount}}" hint-placeholder-val="{{true}}">
+          <span style="{{n.countStyle}}">{{n.count}}</span>
+        </sc-if>
+      </button>
+    </sc-for>
+    <div style="flex-grow: 1"></div>
+    <a href="Trida.dc.html" style="min-height: 48px; padding: 0 14px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; text-decoration: none; color: #17181A">Aplikace pro učitelky <span aria-hidden="true">→</span></a>
+    <div style="padding: 10px 10px 0; display: flex; align-items: center; gap: 10px">
+      <span style="width: 40px; height: 40px; border-radius: 20px; background: #D7F26B; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px">IP</span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 14px; font-weight: 700">Ivana Pokorná</span><span style="font-size: 12px; color: #5A5C60">ředitelka</span></span>
+    </div>
+  </nav>
+
+  <main style="flex-grow: 1; min-width: 0; box-sizing: border-box; padding: 24px 28px; display: flex; flex-direction: column; gap: 18px">
+    <header style="display: flex; align-items: center; gap: 14px; min-height: 52px">
+      <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+        <span style="font-size: 13px; font-weight: 600; color: #5A5C60">{{page.kicker}}</span>
+        <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">{{page.title}}</h1>
+      </div>
+      <sc-if value="{{page.hasAction}}" hint-placeholder-val="{{true}}">
+        <button type="button" onClick="{{page.action}}" style="height: 48px; padding: 0 20px; border-radius: 24px; border: 0; background: #17181A; color: #FFFFFF; font-size: 15px; font-weight: 800; cursor: pointer">{{page.actionLabel}}</button>
+      </sc-if>
+    </header>
+
+    <!-- ========================================================== PŘEHLED -->
+    <sc-if value="{{is.prehled}}" hint-placeholder-val="{{true}}">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <button type="button" onClick="{{s.go}}" style="{{s.style}}">
+            <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{s.label}}</span>
+            <span style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em">{{s.value}}</span>
+            <span style="font-size: 13px; color: {{s.subFg}}">{{s.sub}}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <section aria-label="Vyžaduje pozornost" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
+          <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800">Vyžaduje pozornost</h2>
+          <sc-for list="{{todo}}" as="t" hint-placeholder-count="4">
+            <div style="{{t.style}}">
+              <span style="{{t.dotStyle}}"></span>
+              <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+                <span style="font-size: 15px; font-weight: 800">{{t.title}}</span>
+                <span style="font-size: 13px; color: #3A3C40">{{t.sub}}</span>
+              </span>
+              <button type="button" onClick="{{t.go}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #FFFFFF; font-size: 14px; font-weight: 800; color: #17181A; cursor: pointer; flex-shrink: 0">{{t.action}}</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{todoNone}}" hint-placeholder-val="{{false}}">
+            <div style="font-size: 15px; color: #5A5C60">Vše v pořádku.</div>
+          </sc-if>
+        </section>
+        <section aria-label="Třídy dnes" style="width: 420px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800">Třídy dnes</h2>
+          <sc-for list="{{classesToday}}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 18px; background: #F3F2EC">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span style="{{c.dotStyle}}"></span>
+                <span style="font-size: 16px; font-weight: 800; flex-grow: 1">{{c.name}}</span>
+                <span style="font-size: 14px; font-weight: 700">{{c.present}} / {{c.total}}</span>
+              </div>
+              <div style="height: 8px; border-radius: 4px; background: #E4E3DC; overflow: hidden"><div style="{{c.barStyle}}"></div></div>
+              <span style="font-size: 13px; color: #5A5C60">{{c.teachers}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== DĚTI -->
+    <sc-if value="{{is.deti}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <input type="search" aria-label="Hledat dítě" placeholder="Hledat jméno…" value="{{deti.q}}" onInput="{{deti.onQ}}" onChange="{{deti.onQ}}" style="height: 44px; width: 240px; border-radius: 22px; border: 1px solid #E4E3DC; padding: 0 16px; font-size: 15px; background: #FFFFFF; color: #17181A">
+        <sc-for list="{{deti.filters}}" as="f" hint-placeholder-count="4">
+          <button type="button" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}"><sc-if value="{{f.hasDot}}" hint-placeholder-val="{{false}}"><span style="{{f.dotStyle}}"></span></sc-if>{{f.label}}</button>
+        </sc-for>
+        <span style="flex-grow: 1"></span>
+        <button type="button" onClick="{{deti.toggleMissing}}" aria-pressed="{{deti.onlyMissing}}" style="{{deti.missingStyle}}">Jen s chybějícími údaji · {{deti.missingCount}}</button>
+      </div>
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <section aria-label="Kartotéka dětí" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 108px 64px 44px minmax(0, 1.3fr) 84px; gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #F0EFEA">
+            <span>Dítě</span><span>Třída</span><span>Věk</span><span>PPV</span><span>Zákonný zástupce</span><span>Matrika</span>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+            <sc-for list="{{deti.rows}}" as="r" hint-placeholder-count="10">
+              <button type="button" onClick="{{r.open}}" style="{{r.style}}">
+                <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.id}}</span></span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 14px"><span style="{{r.dotStyle}}"></span>{{r.cls}}</span>
+                <span style="font-size: 14px">{{r.age}}</span>
+                <span style="font-size: 13px; font-weight: 800; color: #27407A">{{r.ppv}}</span>
+                <span style="font-size: 14px; color: #3A3C40; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.parent}}</span>
+                <span style="{{r.stateStyle}}">{{r.state}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+
+        <!-- Karta dítěte. Chybějící údaje jsou rovnou pole k vyplnění —
+             nic dalšího se neotevírá. -->
+        <sc-if value="{{kid.open}}" hint-placeholder-val="{{false}}">
+          <aside aria-label="Karta dítěte" style="width: 480px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+            <div style="padding: 18px 20px 14px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid #F0EFEA">
+              <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+                <span style="font-size: 22px; font-weight: 800">{{kid.name}}</span>
+                <span style="font-size: 14px; color: #3A3C40">{{kid.line}}</span>
+                <sc-if value="{{kid.hasMissing}}" hint-placeholder-val="{{true}}">
+                  <span style="align-self: flex-start; margin-top: 4px; padding: 5px 10px; border-radius: 10px; background: #FDE6DC; color: #9A3412; font-size: 12px; line-height: 16px; font-weight: 800">Do matriky chybí: {{kid.missingText}}</span>
+                </sc-if>
+              </div>
+              <button type="button" onClick="{{kid.close}}" aria-label="Zavřít kartu" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F2EC; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              </button>
+            </div>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 16px">
+              <sc-for list="{{kid.sections}}" as="sec" hint-placeholder-count="5">
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <div style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{sec.title}}</div>
+                  <sc-for list="{{sec.rows}}" as="f" hint-placeholder-count="3">
+                    <div style="display: flex; gap: 12px; align-items: center; min-height: 34px">
+                      <span style="{{f.labelStyle}}">{{f.label}}</span>
+                      <sc-if value="{{f.isText}}" hint-placeholder-val="{{true}}">
+                        <span style="{{f.valueStyle}}">{{f.value}}</span>
+                      </sc-if>
+                      <sc-if value="{{f.isInput}}" hint-placeholder-val="{{false}}">
+                        <input type="text" aria-label="{{f.label}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="flex-grow: 1; min-width: 0; height: 38px; border-radius: 12px; border: 2px solid #F2C3AE; padding: 0 12px; font-size: 14px; color: #17181A; background: #FFF8F4">
+                      </sc-if>
+                      <sc-if value="{{f.isChips}}" hint-placeholder-val="{{false}}">
+                        <span style="display: flex; flex-wrap: wrap; gap: 6px">
+                          <sc-for list="{{f.chips}}" as="c" hint-placeholder-count="2">
+                            <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                          </sc-for>
+                        </span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </aside>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== UČITELÉ -->
+    <sc-if value="{{is.ucitele}}" hint-placeholder-val="{{false}}">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; flex-grow: 1; min-height: 0; overflow-y: auto; padding: 2px">
+        <sc-for list="{{teachers}}" as="t" hint-placeholder-count="6">
+          <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <span style="{{t.avatarStyle}}">{{t.initials}}</span>
+              <span style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+                <span style="font-size: 16px; font-weight: 800">{{t.name}}</span>
+                <span style="font-size: 13px; color: #5A5C60">{{t.role}} · {{t.contact}}</span>
+              </span>
+              <sc-if value="{{t.invited}}" hint-placeholder-val="{{false}}">
+                <span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FBF0C9; color: #5C4300; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center">Pozvánka</span>
+              </sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Třídy</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{t.classes}}" as="c" hint-placeholder-count="3">
+                  <button type="button" onClick="{{c.toggle}}" aria-pressed="{{c.on}}" style="{{c.style}}"><span style="{{c.dotStyle}}"></span>{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== TŘÍDY -->
+    <sc-if value="{{is.tridy}}" hint-placeholder-val="{{false}}">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; flex-grow: 1; min-height: 0; overflow-y: auto; padding: 2px">
+        <sc-for list="{{classCards}}" as="c" hint-placeholder-count="3">
+          <div style="background: #FFFFFF; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="{{c.dotStyle}}"></span>
+              <span style="font-size: 20px; font-weight: 800; flex-grow: 1">{{c.name}}</span>
+              <span style="font-size: 13px; font-weight: 700; color: #3A3C40">{{c.code}}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+              <div style="padding: 10px 12px; border-radius: 14px; background: #F3F2EC"><div style="font-size: 20px; font-weight: 800">{{c.count}}</div><div style="font-size: 12px; color: #5A5C60">z {{c.capacity}} míst</div></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #E8EFFD"><div style="font-size: 20px; font-weight: 800">{{c.ppv}}</div><div style="font-size: 12px; color: #27407A">povinné PV</div></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #F3F2EC"><div style="font-size: 20px; font-weight: 800">{{c.ages}}</div><div style="font-size: 12px; color: #5A5C60">věk</div></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Druh provozu</span>
+              <div style="display: flex; gap: 6px">
+                <sc-for list="{{c.provoz}}" as="p" hint-placeholder-count="2">
+                  <button type="button" onClick="{{p.pick}}" aria-pressed="{{p.on}}" style="{{p.style}}">{{p.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Učitelé — klepnutím přiřadíte</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{c.teachers}}" as="t" hint-placeholder-count="4">
+                  <button type="button" onClick="{{t.toggle}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{c.warn}}" hint-placeholder-val="{{false}}">
+                <span style="font-size: 13px; font-weight: 700; color: #9A3412">{{c.warnText}}</span>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== MATRIKA -->
+    <sc-if value="{{is.matrika}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+          <section aria-label="Sběr dat" style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+              <h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Sběr dat ze školní matriky</h2>
+              <sc-for list="{{mat.dates}}" as="d" hint-placeholder-count="2">
+                <button type="button" onClick="{{d.pick}}" aria-pressed="{{d.on}}" style="{{d.style}}">{{d.label}}</button>
+              </sc-for>
+            </div>
+            <div style="font-size: 15px; color: #3A3C40">{{mat.deadline}}</div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+              <div style="padding: 12px; border-radius: 16px; background: #F3F2EC"><div style="font-size: 24px; font-weight: 800">{{mat.total}}</div><div style="font-size: 13px; color: #3A3C40; font-weight: 700">dětí k datu</div></div>
+              <div style="padding: 12px; border-radius: 16px; background: #EAF6D3"><div style="font-size: 24px; font-weight: 800">{{mat.ok}}</div><div style="font-size: 13px; color: #2F5212; font-weight: 700">v pořádku</div></div>
+              <div style="{{mat.errBoxStyle}}"><div style="font-size: 24px; font-weight: 800">{{mat.errCount}}</div><div style="font-size: 13px; font-weight: 700">s chybou</div></div>
+            </div>
+          </section>
+
+          <section aria-label="Kontrola" style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800">Kontrola před odevzdáním</h2>
+            <sc-for list="{{mat.errors}}" as="e" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 8px 6px 14px; border-radius: 14px; background: #FFF4EE">
+                <span style="font-size: 15px; font-weight: 800; width: 190px; flex-shrink: 0">{{e.name}}</span>
+                <span style="font-size: 14px; color: #3A3C40; flex-grow: 1">{{e.problem}}</span>
+                <button type="button" onClick="{{e.fix}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #FFFFFF; font-size: 14px; font-weight: 800; color: #17181A; cursor: pointer">Doplnit</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{mat.noErrors}}" hint-placeholder-val="{{false}}">
+              <div style="font-size: 15px; color: #2F5212; font-weight: 700">Všechny údaje jsou v pořádku.</div>
+            </sc-if>
+          </section>
+
+          <section aria-label="Údaje školy" style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+            <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800">Údaje školy pro MŠMT</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px">
+              <sc-for list="{{mat.schoolFields}}" as="f" hint-placeholder-count="6">
+                <label style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #5A5C60">{{f.label}}
+                  <input type="text" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="height: 42px; border-radius: 12px; border: 1px solid #E4E3DC; padding: 0 12px; font-size: 15px; color: #17181A">
+                </label>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap">
+              <span style="font-size: 13px; color: #5A5C60; margin-right: 6px">Rozlišení</span>
+              <sc-for list="{{mat.rozliseni}}" as="r" hint-placeholder-count="3">
+                <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.on}}" style="{{r.style}}">{{r.label}}</button>
+              </sc-for>
+            </div>
+          </section>
+        </div>
+
+        <aside aria-label="Export" style="width: 440px; flex-shrink: 0; background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800">Export pro MŠMT</h2>
+          <button type="button" onClick="{{mat.build}}" style="{{mat.buildStyle}}">{{mat.buildLabel}}</button>
+          <sc-if value="{{mat.hasFiles}}" hint-placeholder-val="{{false}}">
+            <sc-for list="{{mat.files}}" as="x" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: 14px; background: #F3F2EC">
+                <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0">
+                  <span style="font-size: 14px; font-weight: 800">{{x.name}}</span>
+                  <span style="font-size: 12px; color: #5A5C60">{{x.meta}}</span>
+                </span>
+                <button type="button" onClick="{{x.preview}}" style="height: 38px; padding: 0 12px; border-radius: 19px; border: 0; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Náhled</button>
+                <button type="button" onClick="{{x.download}}" style="height: 38px; padding: 0 12px; border-radius: 19px; border: 0; background: #17181A; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Stáhnout</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{mat.hasPreview}}" hint-placeholder-val="{{false}}">
+              <pre style="margin: 0; padding: 12px; border-radius: 14px; background: #17181A; color: #E8E8E3; font-size: 11px; line-height: 16px; overflow: auto; max-height: 260px; white-space: pre">{{mat.preview}}</pre>
+            </sc-if>
+          </sc-if>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; background: #E8EFFD; color: #27407A; font-size: 14px; line-height: 20px">
+            <span style="font-weight: 800">Jak odevzdat</span>
+            <span>1. Přihlaste se na matrika.msmt.cz (RED_IZO a heslo).</span>
+            <span>2. Nahrajte soubory, nebo nastavte API token.</span>
+            <span>3. Projděte chybový protokol a sestavy M 1a, pak odešlete.</span>
+            <span style="color: #3A4E7A">Na zkoušku jde vše nahrát na profa.msmt.cz. Jména dětí se nepředávají.</span>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== KNIHA ÚRAZŮ -->
+    <sc-if value="{{is.urazy}}" hint-placeholder-val="{{false}}">
+      <section aria-label="Kniha úrazů" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+        <div style="display: grid; grid-template-columns: 60px 110px minmax(0, 1.2fr) minmax(0, 2fr) minmax(0, 1.4fr) 120px 200px; gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #F0EFEA">
+          <span>Č.</span><span>Kdy</span><span>Dítě</span><span>Co se stalo</span><span>Ošetření</span><span>Zapsala</span><span>Záznam pro ČŠI</span>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+          <sc-for list="{{urazy}}" as="u" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 60px 110px minmax(0, 1.2fr) minmax(0, 2fr) minmax(0, 1.4fr) 120px 200px; gap: 12px; padding: 14px 20px; align-items: center; border-bottom: 1px solid #F3F2EC; font-size: 14px">
+              <span style="font-weight: 800">{{u.no}}</span>
+              <span>{{u.when}}</span>
+              <span style="display: flex; flex-direction: column"><span style="font-weight: 700">{{u.child}}</span><span style="font-size: 12px; color: #5A5C60">{{u.cls}}</span></span>
+              <span>{{u.what}}</span>
+              <span>{{u.care}}</span>
+              <span>{{u.by}}</span>
+              <span>
+                <sc-if value="{{u.needsRecord}}" hint-placeholder-val="{{false}}">
+                  <button type="button" onClick="{{u.record}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 0; background: #F28C28; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Vyplnit do {{u.deadline}}</button>
+                </sc-if>
+                <sc-if value="{{u.recordDone}}" hint-placeholder-val="{{false}}">
+                  <span style="font-size: 13px; font-weight: 800; color: #2F5212">Odesláno {{u.doneAt}}</span>
+                </sc-if>
+                <sc-if value="{{u.noRecord}}" hint-placeholder-val="{{true}}">
+                  <span style="font-size: 13px; color: #5A5C60">Není potřeba</span>
+                </sc-if>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding: 12px 20px; font-size: 13px; color: #5A5C60; border-top: 1px solid #F0EFEA">Úrazy zapisují učitelky na tabletu. Když dítě kvůli úrazu chybí aspoň 2 dny, vyplňte záznam o úrazu — odchází ČŠI a zdravotní pojišťovně do 5. dne dalšího měsíce. Kniha se archivuje 10 let.</div>
+      </section>
+    </sc-if>
+  </main>
+
+  <!-- ============================================================ FORMULÁŘE -->
+  <sc-if value="{{dlg.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 6">
+      <div role="dialog" aria-label="{{dlg.title}}" style="width: 640px; max-height: 820px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 20px 20px 14px 24px; border-bottom: 1px solid #F0EFEA">
+          <div style="font-size: 24px; font-weight: 800; flex-grow: 1">{{dlg.title}}</div>
+          <button type="button" onClick="{{dlg.close}}" aria-label="Zavřít" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #F3F2EC; display: flex; align-items: center; justify-content: center; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 18px 24px; display: flex; flex-direction: column; gap: 16px">
+          <sc-for list="{{dlg.inputs}}" as="f" hint-placeholder-count="3">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">{{f.label}}
+              <input type="{{f.type}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="height: 52px; border-radius: 14px; border: 1px solid #E4E3DC; padding: 0 14px; font-size: 17px; font-weight: 500; color: #17181A">
+              <sc-if value="{{f.hasHint}}" hint-placeholder-val="{{false}}">
+                <span style="{{f.hintStyle}}">{{f.hint}}</span>
+              </sc-if>
+            </label>
+          </sc-for>
+          <sc-for list="{{dlg.choices}}" as="g" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 15px; font-weight: 800">{{g.label}}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{g.chips}}" as="c" hint-placeholder-count="3">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex-shrink: 0; padding: 12px 24px 18px; border-top: 1px solid #EEEEEC; display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 14px; color: {{dlg.summaryFg}}">{{dlg.summary}}</span>
+          <div style="display: flex; gap: 8px">
+            <button type="button" onClick="{{dlg.close}}" style="flex-grow: 1; min-height: 56px; border: 1px solid #EEEEEC; border-radius: 28px; background: #F7F7F6; color: #17181A; font-size: 15px; font-weight: 700; cursor: pointer">Zrušit</button>
+            <button type="button" onClick="{{dlg.save}}" aria-disabled="{{dlg.cantSave}}" style="{{dlg.saveStyle}}">{{dlg.saveLabel}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
+    <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #17181A; color: #FFFFFF; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var self = this;
+    var t = new Date();
+    this.today = t;
+    // Školní rok začíná 1. 9.; povinné předškolní vzdělávání mají děti,
+    // které do 31. 8. před jeho začátkem dosáhly 5 let.
+    this.syStart = t.getMonth() >= 8 ? t.getFullYear() : t.getFullYear() - 1;
+
+    this.school = { name: 'MŠ Sluníčko', izo: '600012345', redizo: '600054321', cast: '01', nazev: 'Mateřská škola Sluníčko, Praha 6', provoz: 'C', doba: '10,5', kontakt: 'Ivana Pokorná, 220 123 456', rozliseni: 'bez' };
+    this.classes = [
+      { id: 'slunicka', name: 'Sluníčka', code: 'SLU', color: '#F7B500', capacity: 28, provoz: 'C' },
+      { id: 'berusky', name: 'Berušky', code: 'BER', color: '#E0302B', capacity: 20, provoz: 'C' },
+      { id: 'motylci', name: 'Motýlci', code: 'MOT', color: '#2F6FDB', capacity: 20, provoz: 'C' }
+    ];
+    this.teachers = [
+      { id: 't1', name: 'Ivana Pokorná', role: 'Ředitelka', email: 'reditelka@ms-slunicko.cz', classes: [] },
+      { id: 't2', name: 'Petra Horáková', role: 'Učitelka', email: 'horakova@ms-slunicko.cz', classes: ['slunicka'] },
+      { id: 't3', name: 'Alena Benešová', role: 'Učitelka', email: 'benesova@ms-slunicko.cz', classes: ['slunicka'] },
+      { id: 't8', name: 'Tomáš Roubal', role: 'Asistent pedagoga', email: 'roubal@ms-slunicko.cz', classes: ['slunicka'] },
+      { id: 't4', name: 'Jana Králová', role: 'Učitelka', email: 'kralova@ms-slunicko.cz', classes: ['berusky'] },
+      { id: 't5', name: 'Marta Svobodová', role: 'Učitelka', email: 'svobodova@ms-slunicko.cz', classes: ['berusky'] },
+      { id: 't9', name: 'Věra Nová', role: 'Chůva', email: 'nova@ms-slunicko.cz', classes: ['berusky'] },
+      { id: 't6', name: 'Lucie Malá', role: 'Učitelka', email: 'mala@ms-slunicko.cz', classes: ['motylci'] }
+    ];
+
+    var FEMALE = /(a|e|ie|ína|ná|ová|ská|cká|á)$/;
+    var SLU = ['Oliver Novák', 'Ema Králová', 'Jonáš Procházka', 'Mia Svobodová', 'Adam Veselý', 'Ella Marková', 'Matyáš Horák', 'Sofie Růžičková', 'David Lang', 'Anna Benešová', 'Tobiáš Černý', 'Viktorie Dvořáková', 'Jakub Fiala', 'Natálie Grohová', 'Lukáš Jelínek', 'Eliška Chalupová', 'Filip Oliva', 'Julie Tichá', 'Sebastián Urban', 'Amálie Zemanová', 'Ondřej Šimek', 'Rozálie Žáková', 'Vojtěch Exner', 'Emílie Ivanová', 'Kryštof Adámek', 'Laura Wagnerová', 'Samuel Yilmaz', 'Karolína Nováková'];
+    var BER = ['Tomáš Bureš', 'Klára Dušková', 'Šimon Fišer', 'Adéla Gregorová', 'Max Hájek', 'Nela Jandová', 'Daniel Kubát', 'Zuzana Lišková', 'Patrik Mach', 'Hugo Říha', 'Marie Sýkorová', 'Josef Toman', 'Barbora Urbanová', 'Leo Vacek', 'Tereza Zíková', 'Václav Opletal', 'Lucie Pešková', 'Ema Nedomová'];
+    var MOT = ['Antonín Adam', 'Bára Bartošová', 'Kryštof Cibulka', 'Dominika Dolejší', 'Eda Erben', 'Františka Fialová', 'Gabriel Golda', 'Hana Holubová', 'Ivan Ivanenko', 'Jitka Jirásková', 'Kamil Kos', 'Linda Lukešová', 'Marek Mráz', 'Nikola Nováková', 'Ota Ondráček', 'Pavla Pátková'];
+    var STREETS = ['Bělohorská', 'Dejvická', 'Na Petřinách', 'Bubenečská', 'Evropská', 'Liboc', 'Vokovická', 'Na Hutích'];
+    var PARENTS_M = ['Jan', 'Petr', 'Martin', 'Tomáš', 'Pavel', 'Jakub', 'Lukáš', 'Michal'];
+    var PARENTS_F = ['Lenka', 'Petra', 'Jana', 'Kateřina', 'Lucie', 'Veronika', 'Martina', 'Tereza'];
+    var surnameF = function (s) { return /ová$|á$/.test(s) ? s : (/ý$/.test(s) ? s.slice(0, -1) + 'á' : /ek$/.test(s) ? s.slice(0, -2) + 'ková' : s + 'ová'); };
+    var kids = [];
+    var mk = function (cls, names, yearFrom, idx0) {
+      names.forEach(function (full, i) {
+        var n = idx0 + i;
+        var parts = full.split(' ');
+        var female = FEMALE.test(parts[0]) && !/^(Tomáš|Lukáš|Matyáš|Jonáš|Tobiáš|Kamil|Hugo|Ota|Eda|Nikola)$/.test(parts[0]) || /^(Mia|Sofie|Rozálie|Natálie|Julie|Amálie|Emílie|Viktorie|Marie|Lucie|Laura)$/.test(parts[0]);
+        var birth = new Date(yearFrom + (n % 2), (n * 5) % 12, 1 + (n * 7) % 27);
+        var k = {
+          id: 'k' + n, first: parts[0], last: parts[1], cls: cls, female: female,
+          birth: birth,
+          rc: self.makeRc(birth, female, n * 37 + 11),
+          foreignCode: '',
+          obcan: 'CZ', obec: 'Praha 6', adresa: STREETS[n % STREETS.length] + ' ' + (10 + n * 3),
+          spad: n % 7 !== 3,
+          zahajeni: (self.syStart - (cls === 'berusky' ? 0 : 1)) + '-09-01', duvod: n % 9 === 4 ? 'Přestup z jiné MŠ' : 'Nástup',
+          provoz: 'C', zpusob: 'Pravidelná docházka', odklad: false,
+          zastupce: (n % 2 ? PARENTS_F[n % 8] + ' ' + surnameF(parts[1]) : PARENTS_M[n % 8] + ' ' + parts[1].replace(/ová$/, '').replace(/á$/, 'ý')),
+          telefon: '7' + (20 + (n * 13) % 79) + ' ' + (100 + (n * 37) % 899) + ' ' + (100 + (n * 53) % 899),
+          email: '', pojistovna: n % 3 ? '111' : '207',
+          ockovani: true, alergie: '', svp: '', po: '', zvj: '',
+          souhlasFoto: true, oml: n % 4, neoml: 0
+        };
+        kids.push(k);
+      });
+    };
+    mk('slunicka', SLU, this.syStart - 5, 0);
+    mk('berusky', BER, this.syStart - 3, 100);
+    mk('motylci', MOT, this.syStart - 6, 200);
+    var by = {};
+    kids.forEach(function (k) { by[k.first + ' ' + k.last] = k; });
+    // Ukázkové stavy, aby kontrola měla co ukázat
+    by['Oliver Novák'].alergie = 'arašídy';
+    by['Ema Králová'].alergie = 'mléko';
+    by['Filip Oliva'].souhlasFoto = false;
+    by['Laura Wagnerová'].souhlasFoto = false;
+    by['Hugo Říha'].souhlasFoto = false;
+    by['Hugo Říha'].po = '2. stupeň · PPP Praha 6';
+    by['Samuel Yilmaz'].obcan = 'TR';
+    by['Samuel Yilmaz'].zvj = 'Dostatečná';
+    by['Ivan Ivanenko'].obcan = 'UA';
+    by['Ivan Ivanenko'].rc = '';
+    by['Ivan Ivanenko'].foreignCode = self.foreignCode(by['Ivan Ivanenko'].birth, 1);
+    by['Ivan Ivanenko'].zvj = 'Nedostatečná';
+    by['Ivan Ivanenko'].duvod = 'Příchod ze zahraničí';
+    by['Ota Ondráček'].zpusob = 'Individuální vzdělávání (§ 34b)';
+    by['Gabriel Golda'].odklad = true;
+    by['Karolína Nováková'].neoml = 3;
+    by['Sebastián Urban'].obec = '';
+    by['Sebastián Urban'].adresa = '';
+    by['Klára Dušková'].telefon = '';
+    by['Eda Erben'].duvod = '';
+    by['Tomáš Bureš'].rc = by['Tomáš Bureš'].rc.slice(0, -1) + ((+by['Tomáš Bureš'].rc.slice(-1) + 3) % 10);
+    by['Max Hájek'].ockovani = false;
+    this.kids = kids;
+    this.by = by;
+
+    this.urazy = [
+      { no: 1, date: this.iso(this.addDays(t, -19)), child: 'Matyáš Horák', what: 'Pád z průlezky na zahradě — naražené zápěstí', care: 'Studený obklad, rodiče odvezli k lékaři', by: 'Petra Horáková', absent: 3, record: this.iso(this.addDays(t, -14)) },
+      { no: 2, date: this.iso(this.addDays(t, -4)), child: 'Leo Vacek', what: 'Kousnutí od kamaráda — ruka', care: 'Vyčištěno, dezinfekce', by: 'Jana Králová', absent: 0, record: null },
+      { no: 3, date: this.iso(this.addDays(t, -2)), child: 'Kamil Kos', what: 'Upadl na vycházce — tržná rána na bradě', care: 'Ošetřeno, převoz k lékaři (2 stehy)', by: 'Lucie Malá', absent: 2, record: null }
+    ];
+
+    this.state = { page: 'prehled', q: '', clsFilter: 'all', onlyMissing: false, kidId: null, editKeys: [], dlg: null, df: {}, matDate: 'podzim', files: null, previewIdx: null, toast: null };
+  }
+
+  /* ------------------------------------------------------------ pomocné */
+  iso(d) { return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate(); }
+  addDays(d, n) { var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+  cz(d) { return d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear(); }
+  pad(n, l) { var s = String(n); while (s.length < l) s = '0' + s; return s; }
+
+  /* Rodné číslo: RRMMDD/XXXX, u dívek měsíc + 50, celé číslo dělitelné 11. */
+  makeRc(birth, female, seed) {
+    var yy = birth.getFullYear() % 100, mm = birth.getMonth() + 1 + (female ? 50 : 0), dd = birth.getDate();
+    var base = (yy * 10000 + mm * 100 + dd) * 10000;
+    var x = seed % 9000 + 100;
+    while ((base + x) % 11 !== 0) x++;
+    return this.pad(yy, 2) + this.pad(mm, 2) + this.pad(dd, 2) + '/' + this.pad(x, 4);
+  }
+
+  /* Dítě bez českého RČ: kód školy podle pokynů MŠMT (datum narození + X + pořadí). */
+  foreignCode(birth, n) {
+    return this.pad(birth.getFullYear() % 100, 2) + this.pad(birth.getMonth() + 1, 2) + this.pad(birth.getDate(), 2) + 'X' + this.pad(n, 3);
+  }
+
+  /* Rozbor RČ: platnost, datum narození, pohlaví. */
+  rcInfo(rc) {
+    var s = String(rc || '').replace(/\s|\//g, '');
+    if (!/^\d{9,10}$/.test(s)) return { ok: false, why: 'má 9–10 číslic' };
+    var yy = +s.slice(0, 2), mm = +s.slice(2, 4), dd = +s.slice(4, 6);
+    var female = false;
+    if (mm > 70) { mm -= 70; female = true; } else if (mm > 50) { mm -= 50; female = true; } else if (mm > 20) mm -= 20;
+    var year = s.length === 9 ? 1900 + yy : (yy < 54 ? 2000 + yy : 1900 + yy);
+    var d = new Date(year, mm - 1, dd);
+    if (d.getMonth() !== mm - 1 || d.getDate() !== dd) return { ok: false, why: 'neplatné datum' };
+    if (s.length === 10) {
+      var num = +s, r = +s.slice(0, 9) % 11;
+      if (num % 11 !== 0 && !(r === 10 && s[9] === '0')) return { ok: false, why: 'nesedí kontrolní číslice' };
+    }
+    return { ok: true, birth: d, female: female };
+  }
+
+  age(birth) {
+    var t = this.today, a = t.getFullYear() - birth.getFullYear();
+    if (t.getMonth() < birth.getMonth() || (t.getMonth() === birth.getMonth() && t.getDate() < birth.getDate())) a--;
+    return a;
+  }
+
+  ppv(k) {
+    var limit = new Date(this.syStart - 5, 7, 31);
+    return k.birth <= limit && !k.ended;
+  }
+
+  /* Co chybí do matriky — stejná pravidla jako kontrola na matrika.msmt.cz
+     (tady zjednodušeně, přesná kontrola proběhne na straně MŠMT). */
+  missing(k) {
+    var m = [];
+    if (!k.rc && !k.foreignCode) m.push(['rc', 'rodné číslo']);
+    else if (k.rc && !this.rcInfo(k.rc).ok) m.push(['rc', 'neplatné rodné číslo (' + this.rcInfo(k.rc).why + ')']);
+    if (!k.obcan) m.push(['obcan', 'státní občanství']);
+    if (!k.obec) m.push(['obec', 'obec trvalého pobytu']);
+    if (!k.adresa) m.push(['adresa', 'adresa']);
+    if (!k.zahajeni) m.push(['zahajeni', 'datum zahájení']);
+    if (!k.duvod) m.push(['duvod', 'kód zahájení vzdělávání']);
+    if (!k.zastupce) m.push(['zastupce', 'zákonný zástupce']);
+    if (!k.telefon) m.push(['telefon', 'telefon zástupce']);
+    if (k.obcan && k.obcan !== 'CZ' && !k.zvj) m.push(['zvj', 'znalost češtiny']);
+    if (this.ppv(k) && !k.zpusob) m.push(['zpusob', 'způsob plnění PPV']);
+    return m;
+  }
+
+  showToast(text) {
+    var self = this;
+    this.setState({ toast: text });
+    clearTimeout(this._t);
+    this._t = setTimeout(function () { self.setState({ toast: null }); }, 2800);
+  }
+
+  setDF(p) { this.setState({ df: Object.assign({}, this.state.df, p) }); }
+
+  /* XML pro MŠMT. Soubory podle pokynů: M{IZO}_{část}.xml, + „a“ (SVP)
+     a „b“ (podpůrná opatření, jen k 30. 9.). Pojmenování prvků je náhled
+     podle popisu struktury MŠMT — před ostrým odevzdáním se ověří na
+     testovacím serveru profa.msmt.cz. Jména dětí se nepředávají. */
+  buildXml() {
+    var self = this, s = this.school, st = this.state;
+    var date = st.matDate === 'podzim' ? this.syStart + '-09-30' : (this.syStart + 1) + '-03-31';
+    var esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    var OBC = { CZ: '203', SK: '703', UA: '804', TR: '792', DE: '276', VN: '704' };
+    var CLS = {};
+    this.classes.forEach(function (c) { CLS[c.id] = c; });
+    var head = function (kind) {
+      return '<?xml version="1.0" encoding="UTF-8"?>\n'
+        + '<!-- Náhled exportu školní matriky MŠ (' + kind + ') · rozhodné datum ' + date + ' · ověřit na profa.msmt.cz -->\n'
+        + '<MATRIKA_MS IZO="' + esc(s.izo) + '" RED_IZO="' + esc(s.redizo) + '" CAST="' + esc(s.cast) + '" ROZHODNE_DATUM="' + date + '" VYTVORENO="' + self.iso(self.today) + '">\n'
+        + '  <SKOLA NAZEV="' + esc(s.nazev) + '" PROVOZ="' + esc(s.provoz) + '" DOBA_PROVOZU="' + esc(String(s.doba).replace(',', '.')) + '" ROZLISENI="' + esc(s.rozliseni) + '" KONTAKT="' + esc(s.kontakt) + '"/>\n';
+    };
+    var idOf = function (k) { return k.rc ? k.rc.replace('/', '') : k.foreignCode; };
+    var main = head('všechny děti');
+    var a = head('děti se SVP'), b = head('podpůrná opatření');
+    var na = 0, nb = 0;
+    var dd = function (n) { return n === 1 ? '1 dítě' : n + (n >= 2 && n <= 4 ? ' děti' : ' dětí'); };
+    var inRef = function (k) { return !k.ended && (!k.zahajeni || k.zahajeni <= date); };
+    var count = 0;
+    this.kids.filter(inRef).forEach(function (k) {
+      count++;
+      main += '  <DITE>\n'
+        + '    <RODC>' + esc(idOf(k)) + '</RODC>\n'
+        + '    <POHLAVI>' + (k.female ? 'Z' : 'M') + '</POHLAVI>\n'
+        + '    <DAT_NAROZ>' + self.iso(k.birth) + '</DAT_NAROZ>\n'
+        + '    <STPR>' + esc(OBC[k.obcan] || k.obcan) + '</STPR>\n'
+        + '    <OBECB>' + esc(k.obec) + '</OBECB>\n'
+        + '    <SP_OBVOD>' + (k.spad ? 'A' : 'N') + '</SP_OBVOD>\n'
+        + '    <TRIDA>' + esc(CLS[k.cls].code) + '</TRIDA>\n'
+        + '    <PROVOZ>' + esc(k.provoz || CLS[k.cls].provoz) + '</PROVOZ>\n'
+        + '    <ZAHAJ_DAT>' + esc(k.zahajeni) + '</ZAHAJ_DAT>\n'
+        + '    <ZAHAJ>' + esc(k.duvod) + '</ZAHAJ>\n'
+        + (self.ppv(k) ? '    <ZPUSOB>' + esc(k.zpusob) + '</ZPUSOB>\n' : '')
+        + (k.odklad ? '    <ODKLAD>A</ODKLAD>\n' : '')
+        + (k.zvj ? '    <ZVJ>' + esc(k.zvj) + '</ZVJ>\n' : '')
+        + '    <OML_D>' + k.oml + '</OML_D>\n'
+        + '    <NEOML_D>' + k.neoml + '</NEOML_D>\n'
+        + '  </DITE>\n';
+      if (k.svp) { na++; a += '  <DITE><RODC>' + esc(idOf(k)) + '</RODC><SVP>' + esc(k.svp) + '</SVP></DITE>\n'; }
+      if (k.po && st.matDate === 'podzim') { nb++; b += '  <DITE><RODC>' + esc(idOf(k)) + '</RODC><PO>' + esc(k.po) + '</PO></DITE>\n'; }
+    });
+    main += '</MATRIKA_MS>\n'; a += '</MATRIKA_MS>\n'; b += '</MATRIKA_MS>\n';
+    var base = 'M' + s.izo + '_' + s.cast;
+    var files = [{ name: base + '.xml', meta: dd(count), text: main }];
+    if (na) files.push({ name: base + 'a.xml', meta: dd(na) + ' se SVP', text: a });
+    if (nb) files.push({ name: base + 'b.xml', meta: dd(nb) + ' s podpůrnými opatřeními', text: b });
+    return files;
+  }
+
+  download(file) {
+    try {
+      var blob = new Blob([file.text], { type: 'application/xml' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      this.showToast('Staženo: ' + file.name);
+    } catch (e) {
+      this.showToast('Stažení tady nejde — použijte náhled');
+    }
+  }
+
+  renderVals() {
+    var self = this, st = this.state, df = st.df || {};
+    var CL = this.classes, clsById = {};
+    CL.forEach(function (c) { clsById[c.id] = c; });
+    var kids = this.kids.filter(function (k) { return !k.ended; });
+    var dot = function (c, size) { return 'width: ' + (size || 10) + 'px; height: ' + (size || 10) + 'px; border-radius: 6px; flex-shrink: 0; display: inline-block; background: ' + c; };
+    var chip = function (on, small) {
+      return 'height: ' + (small ? 34 : 44) + 'px; padding: 0 ' + (small ? 12 : 16) + 'px; border-radius: 22px; font-size: ' + (small ? 13 : 14) + 'px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; '
+        + (on ? 'background: #17181A; color: #FFFFFF; border: 2px solid #17181A' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E4E3DC');
+    };
+    var bigBtn = function (on) { return 'flex-grow: 2; min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (on ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #5A5C60'); };
+    var go = function (page, extra) { return function () { self.setState(Object.assign({ page: page }, extra || {})); }; };
+    var nDeti = function (n) { return n === 1 ? '1 dítě' : n + (n >= 2 && n <= 4 ? ' děti' : ' dětí'); };
+    var openKid = function (k) { return function () { self.setState({ page: 'deti', kidId: k.id, editKeys: self.missing(k).map(function (m) { return m[0]; }) }); }; };
+
+    var errKids = kids.filter(function (k) { return self.missing(k).length > 0; });
+    /* Do sběru patří jen děti, které k rozhodnému datu (30. 9. / 31. 3.) už chodily. */
+    var refIso = st.matDate === 'podzim' ? this.syStart + '-09-30' : (this.syStart + 1) + '-03-31';
+    var matKids = kids.filter(function (k) { return !k.zahajeni || k.zahajeni <= refIso; });
+    var matErr = matKids.filter(function (k) { return self.missing(k).length > 0; });
+    var nChyb = function (n, acc) { return n + ' ' + (n === 1 ? (acc ? 'chybu' : 'chyba') : n <= 4 ? 'chyby' : 'chyb'); };
+    var ppvKids = kids.filter(function (k) { return self.ppv(k); });
+    var neoml = ppvKids.filter(function (k) { return k.neoml > 0; });
+    var urazPending = this.urazy.filter(function (u) { return u.absent >= 2 && !u.record; });
+
+    /* -------------------------------------------------- menu */
+    var NAV = [
+      ['prehled', 'Přehled', ''], ['deti', 'Děti', kids.length], ['ucitele', 'Učitelé', this.teachers.length],
+      ['tridy', 'Třídy', CL.length], ['matrika', 'Matrika MŠMT', matErr.length ? matErr.length : ''], ['urazy', 'Kniha úrazů', urazPending.length ? urazPending.length : '']
+    ];
+    var nav = NAV.map(function (n) {
+      var on = st.page === n[0];
+      var warn = (n[0] === 'matrika' || n[0] === 'urazy') && n[2] !== '';
+      return {
+        label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
+        countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
+          + (warn ? 'background: #F28C28; color: #FFFFFF' : 'background: ' + (on ? '#F3F2EC' : '#E4E3DC') + '; color: #3A3C40'),
+        pick: go(n[0], { kidId: null }),
+        style: 'min-height: 48px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
+      };
+    });
+    var is = { prehled: st.page === 'prehled', deti: st.page === 'deti', ucitele: st.page === 'ucitele', tridy: st.page === 'tridy', matrika: st.page === 'matrika', urazy: st.page === 'urazy' };
+
+    var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
+    var today = this.today;
+    var todayLabel = DNY[today.getDay()].charAt(0).toUpperCase() + DNY[today.getDay()].slice(1) + ' ' + this.cz(today);
+    var deadline = st.matDate === 'podzim' ? '15. 10. ' + this.syStart : '15. 4. ' + (this.syStart + 1);
+    var PAGES = {
+      prehled: [todayLabel, 'Přehled', '', null],
+      deti: ['Kartotéka podle školní matriky', 'Děti', '+ Přidat dítě', function () { self.setState({ dlg: 'dite', df: { cls: 'slunicka', start: self.iso(today) } }); }],
+      ucitele: ['Pedagogové a další pracovníci', 'Učitelé', '+ Přidat učitele', function () { self.setState({ dlg: 'ucitel', df: { role: 'Učitelka', classes: [] } }); }],
+      tridy: ['Školní rok ' + this.syStart + '/' + (this.syStart + 1), 'Třídy', '+ Nová třída', function () { self.setState({ dlg: 'trida', df: { color: '#3BA55C', capacity: '24' } }); }],
+      matrika: ['Předávání individuálních údajů · vyhl. 364/2005 Sb.', 'Matrika MŠMT', '', null],
+      urazy: ['Evidence úrazů dětí · vyhl. 64/2005 Sb.', 'Kniha úrazů', '', null]
+    };
+    var P = PAGES[st.page];
+    var page = { kicker: P[0], title: P[1], hasAction: !!P[2], actionLabel: P[2], action: P[3] || function () {} };
+
+    /* -------------------------------------------------- přehled */
+    // Docházka „dnes“ je v ředitelně ukázková (skutečná přijde z tabletů tříd).
+    var present = function (c) { var n = kids.filter(function (k) { return k.cls === c.id; }).length; return Math.max(0, n - (c.id === 'slunicka' ? 6 : c.id === 'berusky' ? 2 : 1)); };
+    var presentAll = CL.reduce(function (a, c) { return a + present(c); }, 0);
+    var capAll = CL.reduce(function (a, c) { return a + c.capacity; }, 0);
+    var statCard = function (bg) { return 'border: 0; text-align: left; cursor: pointer; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #17181A; background: ' + bg; };
+    var stats = [
+      { label: 'Dnes ve školce', value: presentAll + ' / ' + kids.length, sub: 'z ' + CL.length + ' tříd', subFg: '#5A5C60', style: statCard('#FFFFFF'), go: go('tridy') },
+      { label: 'Povinné předškolní', value: String(ppvKids.length), sub: neoml.length ? nDeti(neoml.length) + ' s neomluvenou absencí' : 'bez neomluvené absence', subFg: neoml.length ? '#9A3412' : '#2F5212', style: statCard('#E8EFFD'), go: go('deti', { clsFilter: 'ppv' }) },
+      { label: 'Matrika k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.'), value: matErr.length ? nChyb(matErr.length) : 'Hotovo', sub: 'odevzdat do ' + deadline, subFg: matErr.length ? '#9A3412' : '#2F5212', style: statCard(matErr.length ? '#FDE6DC' : '#EAF6D3'), go: go('matrika') },
+      { label: 'Obsazenost', value: kids.length + ' / ' + capAll, sub: (capAll - kids.length) + ' volných míst', subFg: '#5A5C60', style: statCard('#FFFFFF'), go: go('tridy') }
+    ];
+    var todoItem = function (bg, dotC, title, sub, action, fn) { return { title: title, sub: sub, action: action, go: fn, dotStyle: dot(dotC, 12), style: 'display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 16px; border-radius: 18px; background: ' + bg }; };
+    var todo = [];
+    if (matErr.length) todo.push(todoItem('#FFF4EE', '#F28C28', 'Matrika: ' + nDeti(matErr.length) + ' s chybějícími údaji', 'Sběr k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.') + ', odevzdání do ' + deadline + ' na matrika.msmt.cz', 'Opravit', go('matrika')));
+    urazPending.forEach(function (u) {
+      var d = new Date(u.date); var dl = new Date(d.getFullYear(), d.getMonth() + 1, 5);
+      todo.push(todoItem('#FFF4EE', '#E0302B', 'Záznam o úrazu: ' + u.child, 'Chybí ' + u.absent + ' dny po úrazu ' + self.cz(d) + ' — ČŠI a pojišťovně do ' + self.cz(dl), 'Vyplnit', go('urazy')));
+    });
+    neoml.forEach(function (k) { todo.push(todoItem('#F3F2EC', '#2F6FDB', 'Neomluvená absence: ' + k.first + ' ' + k.last, k.neoml + ' dny · povinné předškolní vzdělávání — ověřte s rodiči', 'Karta', openKid(k))); });
+    var noPhoto = kids.filter(function (k) { return !k.souhlasFoto; });
+    if (noPhoto.length) todo.push(todoItem('#F3F2EC', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — učitelky to vidí v galerii', 'Seznam', go('deti')));
+    var noVax = kids.filter(function (k) { return !k.ockovani && !self.ppv(k); });
+    noVax.forEach(function (k) { todo.push(todoItem('#F3F2EC', '#8A8C90', 'Chybí doklad o očkování: ' + k.first + ' ' + k.last, 'Dítě mimo povinné předškolní vzdělávání musí mít doklad o očkování', 'Karta', openKid(k))); });
+    CL.forEach(function (c) {
+      var ped = self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && (t.role === 'Učitelka'); }).length;
+      if (ped < 2) todo.push(todoItem('#F3F2EC', c.color, 'Třída ' + c.name + ': jen ' + ped + ' učitelka', 'Celodenní provoz obvykle potřebuje dvě — přiřaďte v Učitelích', 'Přiřadit', go('tridy')));
+    });
+    var classesToday = CL.map(function (c) {
+      var tot = kids.filter(function (k) { return k.cls === c.id; }).length, p = present(c);
+      return { name: c.name, present: p, total: tot, dotStyle: dot(c.color, 12),
+        teachers: self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1; }).map(function (t) { return t.name; }).join(', ') || 'bez učitelky',
+        barStyle: 'height: 100%; border-radius: 4px; width: ' + (tot ? Math.round(p / tot * 100) : 0) + '%; background: ' + c.color };
+    });
+
+    /* -------------------------------------------------- děti */
+    var q = (st.q || '').toLowerCase();
+    var FILTERS = [['all', 'Všechny', null], ['ppv', 'Povinné PV', null]].concat(CL.map(function (c) { return [c.id, c.name, c.color]; }));
+    var list = kids.filter(function (k) {
+      if (st.clsFilter === 'ppv' && !self.ppv(k)) return false;
+      if (st.clsFilter !== 'all' && st.clsFilter !== 'ppv' && k.cls !== st.clsFilter) return false;
+      if (st.onlyMissing && !self.missing(k).length) return false;
+      return !q || (k.first + ' ' + k.last).toLowerCase().indexOf(q) !== -1;
+    });
+    var deti = {
+      q: st.q || '', onQ: function (e) { self.setState({ q: e.target.value }); },
+      filters: FILTERS.map(function (f) { var on = st.clsFilter === f[0]; return { label: f[1], on: on, style: chip(on, true), hasDot: !!f[2], dotStyle: f[2] ? dot(f[2]) : '', pick: function () { self.setState({ clsFilter: f[0] }); } }; }),
+      onlyMissing: st.onlyMissing, missingCount: errKids.length,
+      missingStyle: chip(st.onlyMissing, true).replace('#17181A; color: #FFFFFF; border: 2px solid #17181A', '#F28C28; color: #FFFFFF; border: 2px solid #F28C28'),
+      toggleMissing: function () { self.setState({ onlyMissing: !self.state.onlyMissing }); },
+      rows: list.map(function (k) {
+        var miss = self.missing(k), on = st.kidId === k.id;
+        return {
+          name: k.first + ' ' + k.last, id: k.rc ? 'RČ ' + k.rc : (k.foreignCode ? 'kód ' + k.foreignCode : 'bez RČ'),
+          cls: clsById[k.cls].name, dotStyle: dot(clsById[k.cls].color),
+          age: self.age(k.birth) + ' let'.replace(' let', self.age(k.birth) < 5 ? ' roky' : ' let'),
+          ppv: self.ppv(k) ? 'PPV' : '',
+          parent: k.zastupce || '—',
+          state: miss.length ? 'chybí ' + miss.length : 'v pořádku',
+          stateStyle: 'justify-self: start; height: 26px; padding: 0 10px; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; ' + (miss.length ? 'background: #FDE6DC; color: #9A3412' : 'background: #EAF6D3; color: #2F5212'),
+          open: openKid(k),
+          style: 'width: 100%; display: grid; grid-template-columns: minmax(0, 2fr) 108px 64px 44px minmax(0, 1.3fr) 84px; gap: 12px; align-items: center; padding: 10px 20px; border: 0; border-bottom: 1px solid #F3F2EC; text-align: left; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F2EC' : '#FFFFFF')
+        };
+      })
+    };
+
+    /* -------------------------------------------------- karta dítěte */
+    var K = st.kidId ? this.kids.filter(function (k) { return k.id === st.kidId; })[0] : null;
+    var kid = { open: !!K && is.deti, close: function () { self.setState({ kidId: null, editKeys: [] }); } };
+    if (K) {
+      var miss = this.missing(K);
+      var edit = st.editKeys || [];
+      var upd = function (key) { return function (e) { K[key] = e.target.value; self.forceUpdate(); }; };
+      var txt = function (label, key, value, ph) {
+        if (edit.indexOf(key) !== -1) return { label: label, isInput: true, value: K[key] || '', ph: ph || '', onInput: upd(key) };
+        return { label: label, isText: true, value: value || '—', valueStyle: 'font-size: 14px; font-weight: 600; color: ' + (value ? '#17181A' : '#9A3412') };
+      };
+      var chips = function (label, key, opts) {
+        return { label: label, key: key, isChips: true, chips: opts.map(function (o) { var on = K[key] === o; return { label: o, on: on, style: chip(on, true), pick: function () { K[key] = o; self.forceUpdate(); } }; }) };
+      };
+      var info = K.rc ? this.rcInfo(K.rc) : null;
+      var age = this.age(K.birth);
+      kid.name = K.first + ' ' + K.last;
+      kid.line = clsById[K.cls].name + ' · ' + age + (age < 5 ? ' roky' : ' let') + ' · nar. ' + this.cz(K.birth) + (this.ppv(K) ? ' · povinné předškolní vzdělávání' : '');
+      kid.hasMissing = miss.length > 0;
+      kid.missingText = miss.map(function (m) { return m[1]; }).join(', ');
+      kid.sections = [
+        { title: 'Osobní údaje', rows: [
+          txt('Rodné číslo', 'rc', K.rc ? K.rc + (info && !info.ok ? ' — ' + info.why : '') : (K.foreignCode ? 'bez RČ · kód ' + K.foreignCode : ''), 'RRMMDD/XXXX'),
+          { label: 'Pohlaví', isText: true, value: K.female ? 'dívka' : 'chlapec', valueStyle: 'font-size: 14px; font-weight: 600' },
+          chips('Státní občanství', 'obcan', ['CZ', 'SK', 'UA', 'jiné']),
+          txt('Trvalý pobyt', 'adresa', K.adresa, 'Ulice a číslo'),
+          txt('Obec', 'obec', K.obec, 'Např. Praha 6'),
+          { label: 'Spádový obvod', isChips: true, chips: [['Ano', true], ['Ne', false]].map(function (o) { var on = K.spad === o[1]; return { label: o[0], on: on, style: chip(on, true), pick: function () { K.spad = o[1]; self.forceUpdate(); } }; }) }
+        ] },
+        { title: 'Vzdělávání', rows: [
+          { label: 'Třída', isChips: true, chips: CL.map(function (c) { var on = K.cls === c.id; return { label: c.name, on: on, style: chip(on, true), pick: function () { K.cls = c.id; self.forceUpdate(); self.showToast(K.first + ' přeřazen' + (K.female ? 'a' : '') + ' do třídy ' + c.name); } }; }) },
+          txt('Zahájení vzdělávání', 'zahajeni', K.zahajeni ? self.cz(new Date(K.zahajeni)) : '', 'RRRR-MM-DD'),
+          chips('Kód zahájení', 'duvod', ['Nástup', 'Přestup z jiné MŠ', 'Příchod ze zahraničí']),
+          this.ppv(K) ? chips('Plnění PPV', 'zpusob', ['Pravidelná docházka', 'Individuální vzdělávání (§ 34b)', 'Vzdělávání v zahraničí']) : { label: 'Plnění PPV', isText: true, value: 'netýká se (mladší 5 let)', valueStyle: 'font-size: 14px; color: #5A5C60' },
+          { label: 'Odklad školní docházky', isText: true, value: K.odklad ? 'ano' : 'ne', valueStyle: 'font-size: 14px; font-weight: 600' },
+          { label: 'Absence (2. pololetí)', isText: true, value: K.oml + ' omluvených · ' + K.neoml + ' neomluvených dnů', valueStyle: 'font-size: 14px; font-weight: 600; color: ' + (K.neoml ? '#9A3412' : '#17181A') }
+        ] },
+        { title: 'Zákonní zástupci', rows: [
+          txt('Jméno', 'zastupce', K.zastupce, 'Jméno a příjmení'),
+          txt('Telefon', 'telefon', K.telefon, '777 123 456'),
+          { label: 'Adresa pro doručování', isText: true, value: K.adresa ? 'stejná jako trvalý pobyt' : '—', valueStyle: 'font-size: 14px; font-weight: 600' }
+        ] },
+        { title: 'Zdraví (jen pro školku)', rows: [
+          { label: 'Zdravotní pojišťovna', isText: true, value: K.pojistovna, valueStyle: 'font-size: 14px; font-weight: 600' },
+          { label: 'Doklad o očkování', isText: true, value: K.ockovani ? 'doložen' : (this.ppv(K) ? 'nevyžaduje se (PPV)' : 'chybí'), valueStyle: 'font-size: 14px; font-weight: 600; color: ' + (!K.ockovani && !this.ppv(K) ? '#9A3412' : '#17181A') },
+          { label: 'Alergie', isText: true, value: K.alergie || 'žádné', valueStyle: 'font-size: 14px; font-weight: 600' }
+        ] },
+        { title: 'Podpora a souhlasy', rows: [
+          { label: 'Podpůrná opatření', isText: true, value: K.po || 'žádná', valueStyle: 'font-size: 14px; font-weight: 600' },
+          { label: 'Znalost češtiny', isText: true, value: K.zvj || (K.obcan === 'CZ' ? 'netýká se' : '—'), valueStyle: 'font-size: 14px; font-weight: 600' },
+          { label: 'Souhlas s focením', isChips: true, chips: [['Ano', true], ['Ne', false]].map(function (o) { var on = K.souhlasFoto === o[1]; return { label: o[0], on: on, style: chip(on, true), pick: function () { K.souhlasFoto = o[1]; self.forceUpdate(); } }; }) }
+        ] }
+      ];
+      if (K.obcan !== 'CZ') kid.sections[4].rows[1] = chips('Znalost češtiny', 'zvj', ['Dostatečná', 'Nedostatečná']);
+      /* Chybějící volba (kód zahájení, způsob plnění PPV…) má popisek oranžově. */
+      var missKeys = miss.map(function (m) { return m[0]; });
+      kid.sections.forEach(function (sec) { sec.rows.forEach(function (r) {
+        var bad = r.isChips && r.key && missKeys.indexOf(r.key) !== -1;
+        r.labelStyle = 'width: 150px; flex-shrink: 0; font-size: 13px; ' + (bad ? 'color: #C2410C; font-weight: 800' : 'color: #5A5C60');
+      }); });
+    }
+
+    /* -------------------------------------------------- učitelé */
+    var initials = function (n) { return n.split(' ').map(function (p) { return p.charAt(0); }).join('').slice(0, 2).toUpperCase(); };
+    var AV = ['#F6C6D8', '#C9E4F5', '#D7F26B', '#FBE2B5', '#D9D2F4', '#C8EBD9'];
+    var teachers = this.teachers.map(function (t, i) {
+      return {
+        name: t.name, role: t.role, contact: t.email, initials: initials(t.name), invited: !!t.invited,
+        avatarStyle: 'width: 48px; height: 48px; border-radius: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; background: ' + AV[i % AV.length],
+        classes: CL.map(function (c) {
+          var on = t.classes.indexOf(c.id) !== -1;
+          return { label: c.name, on: on, style: chip(on, true), dotStyle: dot(c.color),
+            toggle: function () {
+              t.classes = on ? t.classes.filter(function (x) { return x !== c.id; }) : t.classes.concat([c.id]);
+              self.forceUpdate();
+              self.showToast(t.name + (on ? ' už neučí ' : ' nově učí ') + 've třídě ' + c.name);
+            } };
+        })
+      };
+    });
+
+    /* -------------------------------------------------- třídy */
+    var classCards = CL.map(function (c) {
+      var ck = kids.filter(function (k) { return k.cls === c.id; });
+      var ages = ck.map(function (k) { return self.age(k.birth); });
+      var ped = self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && t.role === 'Učitelka'; }).length;
+      return {
+        name: c.name, code: c.code, dotStyle: dot(c.color, 14), count: ck.length, capacity: c.capacity,
+        ppv: ck.filter(function (k) { return self.ppv(k); }).length,
+        ages: ages.length ? Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) : '—',
+        provoz: [['C', 'Celodenní'], ['P', 'Polodenní']].map(function (p) { var on = c.provoz === p[0]; return { label: p[1], on: on, style: chip(on, true), pick: function () { c.provoz = p[0]; self.forceUpdate(); } }; }),
+        teachers: self.teachers.filter(function (t) { return t.role !== 'Ředitelka'; }).map(function (t) {
+          var on = t.classes.indexOf(c.id) !== -1;
+          return { label: t.name + (t.role !== 'Učitelka' ? ' · ' + t.role.toLowerCase() : ''), on: on, style: chip(on, true),
+            toggle: function () { t.classes = on ? t.classes.filter(function (x) { return x !== c.id; }) : t.classes.concat([c.id]); self.forceUpdate(); } };
+        }),
+        warn: ped < 2 || ck.length > c.capacity,
+        warnText: ck.length > c.capacity ? 'Překročená kapacita třídy' : 'Chybí druhá učitelka'
+      };
+    });
+
+    /* -------------------------------------------------- matrika */
+    var errors = [];
+    matErr.forEach(function (k) { errors.push({ name: k.first + ' ' + k.last, problem: 'Chybí: ' + self.missing(k).map(function (m) { return m[1]; }).join(', '), fix: openKid(k) }); });
+    var sch = this.school;
+    var schField = function (label, key) { return { label: label, value: sch[key], onInput: function (e) { sch[key] = e.target.value; self.forceUpdate(); } }; };
+    var files = st.files || [];
+    var canBuild = matErr.length === 0;
+    var mat = {
+      dates: [['podzim', 'K 30. 9. ' + this.syStart], ['jaro', 'K 31. 3. ' + (this.syStart + 1)]].map(function (d) { var on = st.matDate === d[0]; return { label: d[1], on: on, style: chip(on, true), pick: function () { self.setState({ matDate: d[0], files: null, previewIdx: null }); } }; }),
+      deadline: st.matDate === 'podzim'
+        ? 'Stav k 30. 9. — odevzdat do 15. 10., opravy do 22. 10. Podpůrná opatření se předávají jen na podzim.'
+        : 'Stav k 31. 3. — jarní sběr. Omluvené a neomluvené dny se předávají za uplynulé pololetí.',
+      total: matKids.length, ok: matKids.length - matErr.length, errCount: matErr.length,
+      errBoxStyle: 'padding: 12px; border-radius: 16px; ' + (matErr.length ? 'background: #FDE6DC; color: #9A3412' : 'background: #F3F2EC; color: #3A3C40'),
+      errors: errors, noErrors: errors.length === 0,
+      schoolFields: [schField('IZO pracoviště', 'izo'), schField('RED_IZO', 'redizo'), schField('Číslo části školy', 'cast'), schField('Název (podle rejstříku)', 'nazev'), schField('Průměrná doba provozu (h/den)', 'doba'), schField('Kontaktní osoba', 'kontakt')],
+      rozliseni: [['bez', 'Bez rozlišení'], ['lesni', 'Lesní MŠ'], ['firemni', 'Firemní MŠ']].map(function (r) { var on = sch.rozliseni === r[0]; return { label: r[1], on: on, style: chip(on, true), pick: function () { sch.rozliseni = r[0]; self.forceUpdate(); } }; }),
+      buildLabel: canBuild ? 'Vytvořit soubory XML' : 'Nejdřív opravte ' + nChyb(matErr.length, true),
+      buildStyle: 'min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (canBuild ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #5A5C60'),
+      build: function () {
+        if (!canBuild) { self.showToast('Doplňte chybějící údaje — MŠMT by soubor vrátilo'); return; }
+        self.setState({ files: self.buildXml(), previewIdx: 0 });
+        self.showToast('Soubory připravené k nahrání na matrika.msmt.cz');
+      },
+      hasFiles: files.length > 0,
+      files: files.map(function (f, i) { return { name: f.name, meta: f.meta + ' · ' + Math.max(1, Math.round(f.text.length / 1024)) + ' kB', preview: function () { self.setState({ previewIdx: i }); }, download: function () { self.download(f); } }; }),
+      hasPreview: st.previewIdx != null && !!files[st.previewIdx],
+      preview: st.previewIdx != null && files[st.previewIdx] ? files[st.previewIdx].text.split('\n').slice(0, 40).join('\n') + (files[st.previewIdx].text.split('\n').length > 40 ? '\n  …' : '') : ''
+    };
+
+    /* -------------------------------------------------- kniha úrazů */
+    var byName = this.by;
+    var urazy = this.urazy.slice().sort(function (a, b) { return b.no - a.no; }).map(function (u) {
+      var d = new Date(u.date), k = byName[u.child];
+      var dl = new Date(d.getFullYear(), d.getMonth() + 1, 5);
+      var needs = u.absent >= 2;
+      return {
+        no: u.no + '/' + self.syStart, when: self.cz(d), child: u.child, cls: k ? clsById[k.cls].name : '', what: u.what, care: u.care, by: u.by,
+        needsRecord: needs && !u.record, recordDone: needs && !!u.record, noRecord: !needs,
+        deadline: dl.getDate() + '. ' + (dl.getMonth() + 1) + '.', doneAt: u.record ? self.cz(new Date(u.record)) : '',
+        record: function () { u.record = self.iso(self.today); self.forceUpdate(); self.showToast('Záznam o úrazu připraven — ČŠI, pojišťovně a rodičům'); }
+      };
+    });
+
+    /* -------------------------------------------------- formuláře */
+    var dk = st.dlg;
+    var dlg = { open: !!dk, close: function () { self.setState({ dlg: null, df: {} }); }, inputs: [], choices: [], summary: '', canSave: false, saveLabel: '', title: '' };
+    var inp = function (label, key, ph, type, hint, hintBad) {
+      return { label: label, type: type || 'text', ph: ph || '', value: df[key] || '', onInput: function (e) { var o = {}; o[key] = e.target.value; self.setDF(o); },
+        hasHint: !!hint, hint: hint || '', hintStyle: 'font-size: 13px; font-weight: 600; color: ' + (hintBad ? '#9A3412' : '#2F5212') };
+    };
+    var group = function (label, key, opts, multi) {
+      return { label: label, chips: opts.map(function (o) {
+        var val = o[0], on = multi ? (df[key] || []).indexOf(val) !== -1 : df[key] === val;
+        return { label: o[1], on: on, style: chip(on), pick: function () {
+          var p = {};
+          if (multi) { var cur = df[key] || []; p[key] = on ? cur.filter(function (x) { return x !== val; }) : cur.concat([val]); } else p[key] = val;
+          self.setDF(p);
+        } };
+      }) };
+    };
+    if (dk === 'dite') {
+      var rcI = df.rc ? this.rcInfo(df.rc) : null;
+      var rcHint = !df.rc ? '' : rcI.ok ? 'Narozen' + (rcI.female ? 'a' : '') + ' ' + this.cz(rcI.birth) + ' · ' + (rcI.female ? 'dívka' : 'chlapec') + ' · ' + this.age(rcI.birth) + ' let'.replace(' let', this.age(rcI.birth) < 5 ? ' roky' : ' let') : 'Rodné číslo ' + rcI.why;
+      var okD = !!(df.first && df.first.trim() && df.last && df.last.trim() && rcI && rcI.ok && df.cls);
+      Object.assign(dlg, {
+        title: 'Přidat dítě',
+        inputs: [inp('Jméno', 'first', 'Např. Tereza'), inp('Příjmení', 'last', 'Např. Malá'), inp('Rodné číslo', 'rc', 'RRMMDD/XXXX', 'text', rcHint, rcI && !rcI.ok), inp('Nástup do školky', 'start', '', 'date')],
+        choices: [group('Třída', 'cls', CL.map(function (c) { return [c.id, c.name]; }))],
+        canSave: okD,
+        summary: okD ? 'Datum narození a pohlaví se doplní z rodného čísla. Zbytek (adresa, zástupci) doplníte v kartě.' : 'Jméno, příjmení a rodné číslo — víc teď není potřeba.',
+        saveLabel: okD ? 'Přidat do třídy ' + clsById[df.cls].name : 'Vyplňte jméno a RČ',
+        save: function () {
+          if (!okD) return;
+          var k = { id: 'k' + Date.now(), first: df.first.trim(), last: df.last.trim(), cls: df.cls, female: rcI.female, birth: rcI.birth, rc: (function (d) { return d.length === 10 ? d.slice(0, 6) + '/' + d.slice(6) : d.length === 9 ? d.slice(0, 6) + '/' + d.slice(6) : df.rc.trim(); })(df.rc.replace(/\D/g, '')), foreignCode: '',
+            obcan: 'CZ', obec: '', adresa: '', spad: true, zahajeni: df.start || self.iso(self.today), duvod: 'Nástup', provoz: clsById[df.cls].provoz, zpusob: 'Pravidelná docházka', odklad: false,
+            zastupce: '', telefon: '', email: '', pojistovna: '', ockovani: false, alergie: '', svp: '', po: '', zvj: '', souhlasFoto: false, oml: 0, neoml: 0 };
+          self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
+          self.setState({ dlg: null, df: {}, page: 'deti', kidId: k.id, editKeys: self.missing(k).map(function (m) { return m[0]; }) });
+          self.showToast(k.first + ' přidán' + (k.female ? 'a' : '') + ' — doplňte zbytek v kartě');
+        }
+      });
+    }
+    if (dk === 'ucitel') {
+      var okT = !!(df.name && df.name.trim().indexOf(' ') > 0 && df.email && /@/.test(df.email));
+      Object.assign(dlg, {
+        title: 'Přidat učitele',
+        inputs: [inp('Jméno a příjmení', 'name', 'Např. Klára Veselá'), inp('E-mail', 'email', 'Pošleme pozvánku do aplikace', 'email')],
+        choices: [group('Role', 'role', [['Učitelka', 'Učitelka'], ['Asistent pedagoga', 'Asistent pedagoga'], ['Chůva', 'Chůva'], ['Zástupkyně', 'Zástupkyně']]), group('Třídy', 'classes', CL.map(function (c) { return [c.id, c.name]; }), true)],
+        canSave: okT,
+        summary: okT ? 'Přijde jí pozvánka a uvidí jen své třídy.' : 'Stačí jméno a e-mail.',
+        saveLabel: okT ? 'Poslat pozvánku' : 'Vyplňte jméno a e-mail',
+        save: function () {
+          if (!okT) return;
+          self.teachers.push({ id: 't' + Date.now(), name: df.name.trim(), role: df.role || 'Učitelka', email: df.email.trim(), classes: df.classes || [], invited: true });
+          self.setState({ dlg: null, df: {} });
+          self.showToast('Pozvánka odeslána na ' + df.email.trim());
+        }
+      });
+    }
+    if (dk === 'trida') {
+      var okC = !!(df.name && df.name.trim());
+      Object.assign(dlg, {
+        title: 'Nová třída',
+        inputs: [inp('Název', 'name', 'Např. Žabičky')],
+        choices: [group('Barva', 'color', [['#3BA55C', 'Zelená'], ['#8B5CF6', 'Fialová'], ['#F28C28', 'Oranžová'], ['#F06BA8', 'Růžová']]), group('Kapacita', 'capacity', [['20', '20 dětí'], ['24', '24 dětí'], ['28', '28 dětí']]), group('Druh provozu', 'provoz', [['C', 'Celodenní'], ['P', 'Polodenní']])],
+        canSave: okC,
+        summary: okC ? 'Učitelky přiřadíte v kartě třídy.' : 'Stačí název.',
+        saveLabel: okC ? 'Založit třídu' : 'Napište název',
+        save: function () {
+          if (!okC) return;
+          var name = df.name.trim();
+          self.classes.push({ id: 'c' + Date.now(), name: name, code: name.slice(0, 3).toUpperCase(), color: df.color || '#3BA55C', capacity: +(df.capacity || 24), provoz: df.provoz || 'C' });
+          self.setState({ dlg: null, df: {} });
+          self.showToast('Třída ' + name + ' založena');
+        }
+      });
+    }
+    dlg.cantSave = !dlg.canSave;
+    dlg.saveStyle = bigBtn(dlg.canSave);
+    dlg.summaryFg = dlg.canSave ? '#17181A' : '#5A5C60';
+
+    return {
+      school: { name: this.school.name }, year: this.syStart + '/' + (this.syStart + 1),
+      nav: nav, is: is, page: page,
+      stats: stats, todo: todo, todoNone: todo.length === 0, classesToday: classesToday,
+      deti: deti, kid: kid, teachers: teachers, classCards: classCards, mat: mat, urazy: urazy,
+      dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
+    };
+  }
+}
+</script>
+</body>
+</html>
