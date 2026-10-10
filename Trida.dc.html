@@ -1112,7 +1112,7 @@ class Component extends DCLogic {
 
     /* Povinné předškolní vzdělávání (PPV) — děti, kterým bylo 5 let do 31. 8.
        Jejich absence musí být omluvená; neomluvenou řeší ředitelka. */
-    ['oliver', 'adam', 'david', 'tobias', 'jakub', 'lukas', 'filip', 'sebastian', 'samuel', 'karolina'].forEach(function (id) { byId[id].ppv = true; });
+    ['oliver', 'matyas', 'david', 'tobias', 'jakub', 'sebastian', 'ondrej', 'vojtech', 'kristof', 'karolina'].forEach(function (id) { byId[id].ppv = true; });
     motylci.forEach(function (k, i) { if (i < 13) k.ppv = true; });
     kids.forEach(function (k) { k.ppv = !!k.ppv; });
 
@@ -1124,7 +1124,9 @@ class Component extends DCLogic {
       motylci: ['Lucie Malá']
     };
     /* Kniha úrazů je pro celou školku jedna; čísluje se průběžně za rok. */
-    this.urazNo = 3;
+    this.urazNo = this.store().urazNo || 3;
+    var nowD = new Date();
+    this.syStart = nowD.getMonth() >= 8 ? nowD.getFullYear() : nowD.getFullYear() - 1;
 
     /* Třídní kniha — denní zápis. Docházka se do něj bere sama. */
     var back = function (n) { var d = new Date(); while (n > 0) { d.setDate(d.getDate() - 1); if (d.getDay() % 6) n--; } return self0.iso(d); };
@@ -1136,6 +1138,10 @@ class Component extends DCLogic {
         kn(3, 'Kaštánci', ['Ranní kruh', 'Pracovní činnost', 'Zpěv'], ['Práce s nůžkami'])
       ]
     };
+    var KA = this.store().kidAtt;
+    if (KA) this.kids.forEach(function (k) { if (KA[k.id]) Object.assign(k, KA[k.id]); });
+    var SK = this.store().kniha;
+    Object.keys(SK).forEach(function (c) { self0.kniha[c] = SK[c]; });
 
     /* -------------------------------------------- fotky, akce, schůzky
        Ukázková data. Datumy jsou vztažené k dnešku, ať ukázka nestárne. */
@@ -1172,6 +1178,12 @@ class Component extends DCLogic {
       dlg: null, df: {}, albumId: null, viewer: null, akceSel: null,
       kn: null
     };
+  }
+
+  /* Sdílený stav s ředitelnou (v jednom okně aplikace). Naostro server. */
+  store() {
+    var w = typeof window !== 'undefined' ? window : {};
+    return w.__skolka || (w.__skolka = { urazy: [], att: {}, kniha: {}, urazNo: 3 });
   }
 
   iso(d) {
@@ -1236,6 +1248,14 @@ class Component extends DCLogic {
 
   renderVals() {
     var self = this, st = this.state, f = st.f || {};
+    /* Docházka tříd pro ředitelnu: kdo je teď ve které třídě. */
+    var ST0 = this.store(), nowT = this.now();
+    this.classes.forEach(function (c) {
+      var inC = self.kids.filter(function (k) { return (k.todayCls || k.cls) === c.id; });
+      ST0.att[c.id] = { present: inC.filter(function (k) { return k.att === 'present'; }).length, total: inC.length, at: nowT };
+    });
+    ST0.kidAtt = {};
+    this.kids.forEach(function (k) { ST0.kidAtt[k.id] = { att: k.att, arrived: k.arrived, left: k.left }; });
     var DNY = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
     var MES = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
     var D = new Date();
@@ -1539,7 +1559,7 @@ class Component extends DCLogic {
       cares: multi('care', ['Studený obklad', 'Vyčištěno', 'Náplast', 'Dezinfekce', 'K lékaři', 'Bez ošetření']),
       places: single('place', ['Třída', 'Zahrada', 'Umývárna', 'Vycházka']),
       witnesses: single('witness', (self.staff[s.todayCls || s.cls] || []).concat(['Nikdo další'])),
-      no: (this.urazNo + 1) + '/' + new Date().getFullYear(), by: this.me, when: 'dnes ' + this.now(), kidName: s.name.split(' ')[0]
+      no: (this.urazNo + 1) + '/' + this.syStart, by: this.me, when: 'dnes ' + this.now(), kidName: s.name.split(' ')[0]
     };
 
     // Poznámka
@@ -1612,6 +1632,9 @@ class Component extends DCLogic {
       }
       if (kind === 'uraz') {
         self.urazNo++;
+        var ST = self.store();
+        ST.urazNo = self.urazNo;
+        ST.urazy.push({ id: 'tab-' + Date.now(), no: self.urazNo, date: self.iso(new Date()), child: k.name, cls: k.cls, what: f.what + ' — ' + areaLabel + (f.place ? ' ' + PLACE[f.place] : ''), care: (f.care || []).join(', ') || 'bez ošetření', by: self.me, witness: f.witness || '' });
         self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'kniha úrazů č. ' + self.urazNo + (f.witness && f.witness !== 'Nikdo další' ? ' · svědek ' + f.witness : '') });
       }
       if (kind === 'poznamka') {
@@ -1695,6 +1718,7 @@ class Component extends DCLogic {
         if (!knOk || knClean) return;
         var entry = { date: todayIso, theme: knF.theme.trim(), acts: knF.acts.slice(), safety: knF.safety.slice(), by: self.me, present: counts.present, absent: counts.excused + counts.expected };
         self.kniha[home] = [entry].concat(knList.filter(function (e) { return e.date !== todayIso; }));
+        self.store().kniha[home] = self.kniha[home];
         self.setState({ kn: null });
         self.showToast('Zapsáno do třídní knihy');
       },

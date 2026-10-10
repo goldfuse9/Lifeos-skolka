@@ -40,42 +40,62 @@ aplikace zmizí (stejně jako ostatní ukázková data).
 
 ## Ředitelna (`#reditel`)
 
-Deska `Reditel.dc.html` pro počítač ředitelky (1440×900). Odkaz na ni
-stačí otevřít jako `index.html#reditel`.
+Deska `Reditel.dc.html` pro počítač ředitelky a hospodářky (1440×900),
+otevírá se jako `index.html#reditel`. Vlevo dole se přepíná uživatel —
+**ředitelka** vidí vše, **hospodářka** jen přehled, děti (bez úprav),
+docházku, platby, zprávy a archiv.
 
 | Část | Co v ní je |
 | --- | --- |
-| **Přehled** | dnes ve školce, počet dětí s PPV, chyby v matrice, obsazenost; „Vyžaduje pozornost“ (chyby matriky, záznam o úrazu se lhůtou, neomluvená absence u PPV, chybějící souhlas s focením a doklad o očkování, třída s jednou učitelkou) |
-| **Děti** | kartotéka podle školní matriky: hledání, filtr tříd a PPV, „jen s chybějícími údaji“; karta dítěte, ve které jsou chybějící údaje rovnou pole k vyplnění. Nové dítě = jméno, příjmení, rodné číslo (datum narození a pohlaví se z něj spočítají, kontroluje se kontrolní číslice), nástup a třída — zbytek se doplní v kartě |
-| **Učitelé** | přidat (jméno, e-mail, role, třídy → pozvánka), přiřadit ke třídám klepnutím |
-| **Třídy** | kapacita, počet dětí s PPV, věk, celodenní/polodenní provoz, přiřazení učitelek; upozornění na překročenou kapacitu nebo chybějící druhou učitelku |
-| **Matrika MŠMT** | sběr k 30. 9. / 31. 3., lhůty, kontrola před odevzdáním (s tlačítkem „Doplnit“), údaje školy (IZO, RED_IZO, část, název, doba provozu, rozlišení); export **XML** `M{IZO}_{část}.xml` (+ `a` pro SVP, `b` pro podpůrná opatření na podzim) s náhledem a stažením |
-| **Kniha úrazů** | všechny úrazy z tabletů s pořadovým číslem; u úrazu s absencí 2 a více dní lhůta pro záznam pro ČŠI a pojišťovnu (do 5. dne dalšího měsíce) |
+| **Přehled** | dnes ve školce (z tabletů), PPV, chyby v matrice, obsazenost; „Vyžaduje pozornost“: chybějící učitelka bez zástupu, matrika, záznam o úrazu se lhůtou, neomluvená absence u PPV (s dalším krokem), končící doporučení ŠPZ, vyhodnocení PLPP, ověření individuálního vzdělávání, nezaplacené platby; u tříd i to, jestli je dnes zapsaná třídní kniha |
+| **Děti** | kartotéka podle školní matriky; karta dítěte: osobní údaje, vzdělávání, **dva zákonní zástupci, doručovací adresa, pověřené osoby k vyzvedávání** (se zmocněním), **podpůrná opatření** (stupeň, doporučení ŠPZ s platností, IVP, asistent, PLPP), **ověření při individuálním vzdělávání**, **neomluvená absence** (výzva rodičům → oznámení OSPOD), **souhlasy GDPR** s datem, **ukončení docházky** (ZŠ, přestup, na žádost, § 35 — u PPV zablokováno); chybějící údaje jsou rovnou pole, „Upravit“ odemkne všechna |
+| **Zápis** | žádosti pod registračními čísly, pořadí podle kritérií (PPV ze spádu → spád od nejstaršího → sourozenec → ostatní), volná místa po odchodu předškoláků, rozhodnutí (klepnutím jde změnit), zveřejnění seznamu, odeslání rozhodnutí, převod přijatých do kartotéky s nástupem 1. 9. |
+| **Docházka** | měsíční přehled po třídách: přítomno, omluveno, neomluveno, obědy; dnešek z tabletů; neomluvená absence u PPV |
+| **Platby** | předpis školného (u PPV 0) a stravného za odebrané obědy, variabilní symboly, **načtení výpisu z banky (CSV)** a párování podle VS, nespárované platby, upomínky, export pro účetnictví (CSV); sazby jdou změnit |
+| **Zprávy rodičům** | komu (celá školka, třída, předškoláci, nezaplacené platby), předmět, text; odeslané s počtem přečtení |
+| **Učitelé** | pozvání, třídy, **úvazek** (s přímou pedagogickou prací), **dnes chybí → kdo zastoupí** |
+| **Třídy** | kapacita, PPV, věk, provoz, učitelky; upozornění |
+| **Porady** | zápisy z pedagogických rad a provozních porad (datum, program, usnesení; přítomní se doplní sami) |
+| **Matrika MŠMT** | sběr k 30. 9. / 31. 3., kontrola, údaje školy, export XML (`M{IZO}_{část}.xml`, `a` SVP, `b` podpůrná opatření) |
+| **Kniha úrazů** | úrazy z tabletů s číslem, svědkem a tím, kdo zapsal; záznam pro ČŠI a pojišťovnu se lhůtou |
+| **Archiv** | spisový a skartační plán (lhůty jsou ukázkové a dají se přepsat) a **historie změn** — kdo co kdy změnil |
+
+### Propojení s tablety
+
+Tablet třídy a ředitelna v jedné aplikaci sdílejí stav: úraz zapsaný na
+tabletu se objeví v knize úrazů, docházka tříd v přehledu a docházce,
+zápis do třídní knihy u třídy na přehledu. Mezi zařízeními to bez serveru
+nejde — k tomu je `supabase/schema.sql`.
+
+### Server (`supabase/schema.sql`)
+
+Návrh databáze pro ostrý provoz: tabulky pro všechno výše, přístupová
+práva podle role (ředitelka / učitelka / hospodářka / rodič) přes RLS,
+učitelky a hospodářka nevidí rodná čísla, každá změna osobních údajů jde
+do `audit_log`. Ověřeno na PostgreSQL 16.
 
 ## Soulad s MŠMT
 
-Co prototyp pokrývá podle školského zákona (§ 28) a prováděcích vyhlášek:
+- **Školní matrika** (vyhl. 364/2005 Sb. ve znění 388/2022 Sb.) — všechny
+  údaje o dětech včetně podpůrných opatření, znalosti češtiny a absence;
+  předávání k 30. 9. (do 15. 10.) a k 31. 3. na matrika.msmt.cz.
+- **Přijímání dětí** (§ 34 a 34a školského zákona) — zápis 2.–16. 5.,
+  přednost dětí s PPV ze spádového obvodu, registrační čísla, rozhodnutí.
+- **Ukončení vzdělávání** (§ 35) — u dětí s PPV nejde.
+- **Individuální vzdělávání** (§ 34b) — ověření očekávaných výstupů
+  v listopadu, náhradní termín v prosinci.
+- **Podpůrná opatření** (vyhl. 27/2016 Sb.) — stupně, doporučení ŠPZ,
+  IVP, PLPP.
+- **Úplata** (vyhl. 14/2005 Sb., § 123) — u PPV bezúplatně; **stravné**
+  (vyhl. 107/2005 Sb.) podle věkové skupiny.
+- **Kniha úrazů** (vyhl. 64/2005 Sb.), **třídní kniha** a **záznamy
+  z pedagogických rad** (§ 28).
+- **GDPR** — souhlasy s datem, role a historie změn.
 
-- **Školní matrika** — údaje o dětech podle vyhl. 364/2005 Sb. (ve znění
-  388/2022 Sb.): rodné číslo nebo náhradní kód u cizinců, pohlaví, datum
-  narození, státní občanství, obec trvalého pobytu, spádovost, třída, druh
-  provozu, zahájení vzdělávání, způsob plnění PPV, odklad, znalost češtiny,
-  SVP a podpůrná opatření, omluvená/neomluvená absence.
-- **Předávání individuálních údajů** — od 2025/26 i za mateřské školy; k 30. 9.
-  (odevzdat do 15. 10.) a k 31. 3.; nahrává se na matrika.msmt.cz. Jména
-  dětí se nepředávají.
-- **Kniha úrazů** — podle vyhl. 64/2005 Sb.: pořadové číslo, dítě, co se
-  stalo, kde a kdy, ošetření, svědek, kdo zapsal; záznam o úrazu při absenci
-  2 a více dní.
-- **Třídní kniha** — denní zápis s poučením o bezpečnosti a docházkou.
-- **Povinné předškolní vzdělávání** — PPV se počítá samo (5 let do 31. 8.),
-  absence musí být omluvená.
-
-**Pozor:** názvy prvků v XML jsou zatím **náhled**. Oficiální popis struktury
-souborů pro MŠ se nepodařilo stáhnout, takže pojmenování vychází z
-dostupných popisů a nápovědy. Před ostrým odevzdáním je potřeba soubor
-nahrát na testovací server **profa.msmt.cz** a pojmenování i číselníky
-(RAZM, RAKO, RASM…) upravit podle jeho chybového protokolu.
+**Pozor:** názvy prvků v XML jsou zatím **náhled** — oficiální popis
+struktury souborů pro MŠ se nepodařilo stáhnout. Před ostrým odevzdáním
+nahrát na testovací **profa.msmt.cz** a upravit podle chybového protokolu.
+Lhůty ve skartačním plánu jsou ukázkové.
 
 ## Jak to funguje
 
@@ -86,6 +106,7 @@ shell.js          spustí desku podle #trida / #reditel
 Trida.dc.html     třída — deska z plátna (Main.dc.html)
 Reditel.dc.html   ředitelna — deska z plátna (Reditel.dc.html)
 sw.js             offline
+supabase/         návrh databáze s právy podle rolí pro ostrý provoz
 ```
 
 Deska je nakreslená na 1194×834 (iPad na šířku); `index.html` ji roztáhne
@@ -106,6 +127,9 @@ Lokálně stačí `python3 -m http.server` v téhle složce a otevřít
 
 ## Co to (zatím) není
 
-Žádné skutečné odesílání rodičům, žádné propojení s LifeOS, žádné účty.
+Data jsou ukázková a drží se v paměti — nic se skutečně neodesílá (rodičům,
+do banky, na MŠMT), přihlášení je zatím jen přepínač ředitelka / hospodářka.
+Na ostrý provoz je potřeba server podle `supabase/schema.sql` a přihlášení
+přes něj.
 Napojení na rodiče — co školka vidí (alergie, pověřené osoby) a co rodičům
 posílá (teplota, potíže, úraz) — patří do fáze 2 LifeOS.
