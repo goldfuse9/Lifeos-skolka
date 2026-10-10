@@ -22,9 +22,17 @@ tabletu — po zavření aplikace se vrátí do výchozího stavu.
 | **Není mu dobře** | stejné tváře a odrážky jako zápis příznaků v LifeOS (+ zvracení, průjem, bolest ucha, vyrážka); u „Teplota“ se objeví pole na hodnotu; u dušnosti upozornění na 155 |
 | **Úraz** | místo na těle (+ strana), co se stalo, ošetření, kde; ukládá se i do knihy úrazů |
 | **Poznámka** | rychlé volby (spal, jedl…) + vlastní text |
+| **Třídy** (klepnout na nadpis) | tři třídy; přepnout, **sloučit** dnes (hned / od 12, 14, 15 h) a zase rozdělit; **přesunout děti** do jiné třídy jen na dnes nebo natrvalo — děti z jiné třídy mají tečku v barvě třídy |
+| **Fotky** | alba zakládají učitelky (název + pro koho: třída / celá školka); fotky z tabletu (fotoaparát i galerie), prohlížení, mazání; rodiče album uvidí až po „Zveřejnit rodičům“; upozornění na děti bez souhlasu s focením |
+| **Akce** | výlety, divadla, besídky pro třídu nebo celou školku; nová akce = název, den, čas, s sebou, cena; přehled kdo přijde / nepřijde / neodpověděl, připomenutí |
+| **Schůzky** | třídní schůzka (den, čas, kde, program) s odpověďmi rodičů; **konzultační hodiny** jako časy po 10–20 min, rezervace rodičů, blokování času; při změně rozpisu rezervace zůstávají |
 
-Každý zápis se okamžitě promítne do karty nahoře, na dlaždici dítěte a do
-jeho dne — proto je všechno jedna deska se sdíleným stavem.
+Docházka, Fotky, Akce a Schůzky jsou záložky v hlavičce. Každý zápis se
+okamžitě promítne do karty nahoře, na dlaždici dítěte a do jeho dne —
+proto je všechno jedna deska se sdíleným stavem.
+
+Fotky nahrané v prototypu zůstávají jen v paměti tabletu; po zavření
+aplikace zmizí (stejně jako ostatní ukázková data).
 
 ## Jak to funguje
 
