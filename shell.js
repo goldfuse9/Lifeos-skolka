@@ -4,8 +4,10 @@
    Stejný princip jako v LifeOS: obrazovky jsou desky z plátna „Školka —
    hlavní stránka třídy“ a spouští se beze změny přes dc.js.
 
-   Školka má zatím jedinou desku, Trida.dc.html. Docházka, teplota,
-   „není mu dobře“, úraz i poznámka jsou vrstvy uvnitř ní — musí sdílet
+   Desky jsou dvě: Trida.dc.html (tablet učitelky, #trida) a
+   Reditel.dc.html (počítač ředitelky — kartotéka, učitelé, matrika, #reditel).
+   V desce třídy jsou docházka, teplota,
+   „není mu dobře“, úraz i poznámka vrstvy uvnitř ní — musí sdílet
    jeden stav dětí, jinak by se zápis teploty neukázal v kartě nahoře
    ani na dlaždici dítěte. Mapa DESKY je tu proto, aby šlo další desky
    (třeba nastavení třídy) přidat stejně jako v LifeOS.
@@ -15,6 +17,7 @@
 
 const DESKY = {
   'Trida.dc.html': 'trida',
+  'Reditel.dc.html': 'reditel',
 };
 const PODLE_JMENA = Object.fromEntries(Object.entries(DESKY).map(([s, k]) => [k, s]));
 const VYCHOZI = 'trida';
