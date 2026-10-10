@@ -596,6 +596,61 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </div>
     </sc-if>
 
+    <!-- ========================================================== WEB
+         Webové stránky školky se skládají z údajů v ředitelně: kontakty,
+         třídy, zápis, platby, povinně zveřejňované informace. -->
+    <sc-if value="{{is.web}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <div style="width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding-bottom: 4px">
+          <section aria-label="Povinné údaje" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: baseline; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Povinné údaje na webu</h2><span style="{{web.scoreStyle}}">{{web.score}}</span></div>
+            <sc-for list="{{web.checks}}" as="c" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 10px; font-size: 14px"><span style="{{c.dotStyle}}"></span><span style="flex-grow: 1">{{c.label}}</span><span style="font-size: 12px; color: #5A5C60">{{c.src}}</span></div>
+            </sc-for>
+          </section>
+          <section aria-label="Údaje školy" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 800">Kontakty a údaje</h2>
+            <sc-for list="{{web.fields}}" as="f" hint-placeholder-count="6">
+              <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: #5A5C60">{{f.label}}
+                <input type="text" value="{{f.value}}" placeholder="{{f.ph}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="{{f.style}}">
+              </label>
+            </sc-for>
+          </section>
+          <section aria-label="O nás" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+            <label for="web-onas" style="font-size: 16px; font-weight: 800">O školce</label>
+            <textarea id="web-onas" rows="4" value="{{web.about}}" onInput="{{web.onAbout}}" onChange="{{web.onAbout}}" style="border-radius: 14px; border: 1px solid #E4E3DC; padding: 10px 12px; font-size: 14px; line-height: 20px; color: #17181A; resize: none"></textarea>
+            <span style="font-size: 15px; font-weight: 800; margin-top: 4px">Na webu ukázat</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <sc-for list="{{web.sections}}" as="c" hint-placeholder-count="6">
+                <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+              </sc-for>
+            </div>
+          </section>
+          <section aria-label="Dokumenty" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 800">Dokumenty ke stažení</h2>
+            <sc-for list="{{web.docs}}" as="d" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; background: #F3F2EC">
+                <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{d.label}}</span><span style="{{d.subStyle}}">{{d.sub}}</span></span>
+                <label style="height: 34px; padding: 0 12px; border-radius: 17px; background: #FFFFFF; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0">{{d.action}}<input type="file" accept=".pdf,.doc,.docx" aria-label="Nahrát {{d.label}}" onChange="{{d.onFile}}" style="display: none"></label>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+        <section aria-label="Náhled webu" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 22px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <sc-for list="{{web.devices}}" as="c" hint-placeholder-count="2">
+              <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+            </sc-for>
+            <span style="flex-grow: 1; font-size: 13px; color: #5A5C60; text-align: center">{{web.domain}}</span>
+            <button type="button" onClick="{{web.download}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #17181A; color: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer">Stáhnout web</button>
+          </div>
+          <div style="{{web.frameWrap}}">
+            <iframe title="Náhled webu školky" srcdoc="{{web.html}}" style="{{web.frameStyle}}"></iframe>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
     <!-- ========================================================== ARCHIV -->
     <sc-if value="{{is.archiv}}" hint-placeholder-val="{{false}}">
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
@@ -737,7 +792,21 @@ class Component extends DCLogic {
     // které do 31. 8. před jeho začátkem dosáhly 5 let.
     this.syStart = t.getMonth() >= 8 ? t.getFullYear() : t.getFullYear() - 1;
 
-    this.school = { name: 'MŠ Sluníčko', izo: '600012345', redizo: '600054321', cast: '01', nazev: 'Mateřská škola Sluníčko, Praha 6', provoz: 'C', doba: '10,5', kontakt: 'Ivana Pokorná, 220 123 456', rozliseni: 'bez' };
+    this.school = { name: 'MŠ Sluníčko', izo: '600012345', redizo: '600054321', cast: '01', nazev: 'Mateřská škola Sluníčko, Praha 6', provoz: 'C', doba: '10,5', kontakt: 'Ivana Pokorná, 220 123 456', rozliseni: 'bez',
+      adresa: 'Na Hutích 12, 160 00 Praha 6', telefon: '220 123 456', email: 'skolka@ms-slunicko.cz', datovka: 'x7k2pqa', ico: '70891234', ucet: '2000145399/0800',
+      zrizovatel: 'Městská část Praha 6', provozni: '6:30–17:00', uredni: 'Po–Pá 7:30–15:00, jinak po domluvě', poverenec: 'Mgr. Jan Kříž, poverenec@praha6.cz', web: 'www.ms-slunicko.cz' };
+    this.webCfg = {
+      about: 'Jsme sídlištní školka se zahradou plnou stromů. Tři třídy, děti od dvou do šesti let, hodně času venku a klidné tempo. Každé dítě má svou značku — na háčku v šatně, na hrnku i na lehátku.',
+      show: { aktuality: true, tridy: true, ucitele: true, den: true, zapis: true, platby: true },
+      device: 'pc',
+      docs: [
+        { key: 'rad', label: 'Školní řád', file: 'skolni-rad.pdf', required: true },
+        { key: 'svp', label: 'Školní vzdělávací program', file: 'svp-barevny-svet.pdf', required: true },
+        { key: 'vz', label: 'Výroční zpráva o činnosti školy', file: '', required: true },
+        { key: 'vz106', label: 'Výroční zpráva o poskytování informací', file: '', required: true },
+        { key: 'uplata', label: 'Směrnice o úplatě', file: 'smernice-uplata.pdf', required: false }
+      ]
+    };
     this.classes = [
       { id: 'slunicka', name: 'Sluníčka', code: 'SLU', color: '#F7B500', capacity: 28, provoz: 'C' },
       { id: 'berusky', name: 'Berušky', code: 'BER', color: '#E0302B', capacity: 20, provoz: 'C' },
@@ -1145,6 +1214,157 @@ class Component extends DCLogic {
     }).map(function (a, i) { a.order = i + 1; a.age = ageAt(a.birth); return a; });
   }
 
+  /* Co musí být na webu (zákon 106/1999 Sb., školský zákon, přístupnost, GDPR). */
+  webChecks() {
+    var sc = this.school, doc = {};
+    this.webCfg.docs.forEach(function (d) { doc[d.key] = !!d.file; });
+    return [
+      { label: 'Název, IZO a zřizovatel', ok: !!(sc.nazev && sc.izo && sc.zrizovatel), src: 'údaje školy' },
+      { label: 'Adresa, telefon, e-mail', ok: !!(sc.adresa && sc.telefon && sc.email), src: 'kontakty' },
+      { label: 'Datová schránka a IČO', ok: !!(sc.datovka && sc.ico), src: 'kontakty' },
+      { label: 'Úřední hodiny', ok: !!sc.uredni, src: 'kontakty' },
+      { label: 'Kritéria přijetí a zápis', ok: true, src: 'ze Zápisu' },
+      { label: 'Úplata a stravné', ok: !!(this.rates.skolne && this.rates.s1), src: 'z Plateb' },
+      { label: 'Školní řád', ok: doc.rad, src: 'dokument' },
+      { label: 'Školní vzdělávací program', ok: doc.svp, src: 'dokument' },
+      { label: 'Výroční zpráva o činnosti', ok: doc.vz, src: 'dokument' },
+      { label: 'Výroční zpráva o informacích', ok: doc.vz106, src: 'dokument' },
+      { label: 'Pověřenec pro ochranu údajů', ok: !!sc.poverenec, src: 'GDPR' },
+      { label: 'Prohlášení o přístupnosti', ok: true, src: 'vytvoří se samo' }
+    ];
+  }
+
+  /* Webové stránky školky jako jeden soubor HTML. Jména dětí ani nic
+     z kartotéky se na web nedostane — jen údaje školy, tříd a zápisu. */
+  buildWeb() {
+    var self = this, sc = this.school, cfg = this.webCfg, show = cfg.show;
+    var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    var kids = this.kids.filter(function (k) { return !k.ended; });
+    var Z = this.zapis;
+    var cap = this.classes.reduce(function (a, c) { return a + c.capacity; }, 0);
+    var SYM = {
+      sun: '<circle cx="24" cy="24" r="9" fill="currentColor"/><g stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M24 5v5M24 38v5M5 24h5M38 24h5M10.6 10.6l3.5 3.5M33.9 33.9l3.5 3.5M10.6 37.4l3.5-3.5M33.9 14.1l3.5-3.5"/></g>',
+      ladybug: '<circle cx="24" cy="27" r="14" fill="currentColor"/><path d="M24 13v28" stroke="var(--paper)" stroke-width="2.5"/><circle cx="17" cy="23" r="3" fill="var(--paper)"/><circle cx="31" cy="23" r="3" fill="var(--paper)"/><circle cx="18" cy="33" r="2.6" fill="var(--paper)"/><circle cx="30" cy="33" r="2.6" fill="var(--paper)"/><circle cx="24" cy="11" r="5" fill="currentColor"/>',
+      butterfly: '<path d="M24 16c-4-9-17-11-18-3s7 11 18 9c-11 2-14 11-9 14s9-4 9-10c0 6 4 13 9 10s2-12-9-14c11 2 19-1 18-9s-14-6-18 3z" fill="currentColor"/><path d="M24 14v22" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>',
+      star: '<path d="M24 6l5.3 11.6 12.7 1.4-9.5 8.6 2.7 12.5L24 33.8 12.8 40.1l2.7-12.5L6 19l12.7-1.4z" fill="currentColor"/>',
+      cup: '<path d="M10 14h22v14a11 11 0 0 1-22 0z" fill="currentColor"/><path d="M32 18h4a5 5 0 0 1 0 10h-4" fill="none" stroke="currentColor" stroke-width="3.5"/>',
+      tree: '<path d="M24 5L9 30h30z" fill="currentColor"/><rect x="21" y="30" width="6" height="11" rx="1.5" fill="currentColor"/>'
+    };
+    var sym = function (k, color, size) { return '<svg viewBox="0 0 48 48" width="' + (size || 40) + '" height="' + (size || 40) + '" aria-hidden="true" style="color:' + color + '">' + SYM[k] + '</svg>'; };
+    var CLSYM = ['sun', 'ladybug', 'butterfly', 'star', 'cup', 'tree'];
+    var ped = this.teachers.filter(function (t) { return t.role !== 'Chůva'; });
+    var nav = [['aktuality', 'Aktuality', show.aktuality], ['tridy', 'Třídy', show.tridy], ['den', 'Den ve školce', show.den], ['zapis', 'Zápis', show.zapis], ['platby', 'Platby', show.platby], ['kontakty', 'Kontakty', true], ['informace', 'Povinné informace', true]].filter(function (n) { return n[2]; });
+    var news = this.messages.filter(function (m) { return m.to === 'Celá školka'; }).slice(0, 3);
+    var prov = (sc.provozni || '6:30–17:00').split(/[–-]/);
+    var DAY = [[prov[0], 'Příchod, volná hra a ranní kruh'], ['8:45', 'Svačina'], ['9:15', 'Řízená činnost podle týdenního tématu'], ['10:00', 'Pobyt venku — zahrada, vycházky'], ['11:45', 'Oběd'], ['12:30', 'Odpočinek; předškoláci mají vlastní program'], ['14:30', 'Svačina'], ['15:00', 'Hry a vyzvedávání do ' + (prov[1] || '17:00')]];
+    var order = this.zapisOrder();
+    var docs = cfg.docs.filter(function (d) { return d.file; });
+    var stamp = this.cz(this.today);
+    var h = [];
+    h.push('<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">');
+    h.push('<title>' + e(sc.name) + '</title><meta name="description" content="' + e(sc.nazev) + ' — třídy, zápis, platby a kontakty.">');
+    h.push('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">');
+    h.push('<style>'
+      /* Šatna: každá třída má svou značku na háčku — z toho je celý web. */
+      + ':root{--paper:#F5F7F2;--card:#FFFFFF;--ink:#18222B;--soft:#56616B;--line:#DDE3DA;--sun:#F2A900;--sun-ink:#5A3E00;--sun-tint:#FFF1C9;--ok:#2F6B1F;--display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;--body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}'
+      + '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#121A1F;--card:#1B252C;--ink:#ECF0EA;--soft:#A9B4BA;--line:#2C3A42;--sun:#FFC23D;--sun-ink:#FFE3A1;--sun-tint:#3A2E10;--ok:#9FD27E;color-scheme:dark}}'
+      + ':root[data-theme="dark"]{--paper:#121A1F;--card:#1B252C;--ink:#ECF0EA;--soft:#A9B4BA;--line:#2C3A42;--sun:#FFC23D;--sun-ink:#FFE3A1;--sun-tint:#3A2E10;--ok:#9FD27E;color-scheme:dark}'
+      + '*{box-sizing:border-box}html{scroll-behavior:smooth}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}'
+      + 'body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--body);padding-inline:20px}'
+      + '.w{max-width:1080px;margin-inline:auto}h1,h2,h3{font-family:var(--display);line-height:1.08;text-wrap:balance;margin:0}'
+      + 'h2{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.02em}h3{font-size:20px;font-weight:800}'
+      + 'a{color:inherit}a:focus-visible,summary:focus-visible{outline:3px solid var(--sun);outline-offset:3px;border-radius:6px}'
+      + '.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);margin-inline:-20px;padding:10px 20px}'
+      + '.top .w{display:flex;align-items:center;gap:18px}.brand{display:flex;align-items:center;gap:10px;font:800 19px var(--display);text-decoration:none;flex-shrink:0}'
+      + '.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}.nav a{white-space:nowrap;text-decoration:none;font-weight:700;font-size:15px;padding:8px 12px;border-radius:999px}.nav a:hover{background:var(--card)}'
+      + '.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:56px 40px}'
+      + '.kick{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}'
+      + '.hero h1{font-size:clamp(44px,7vw,84px);font-weight:800;letter-spacing:-.035em;margin-block:10px 18px}.hero h1 span{color:var(--sun)}'
+      + '.lead{font-size:19px;max-width:34em;color:var(--ink)}.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}'
+      + '.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;font-weight:700;text-decoration:none;border:2px solid var(--ink)}.btn.primary{background:var(--ink);color:var(--paper)}'
+      + '.rack{background:var(--card);border-radius:28px;padding:22px 20px 26px;border:1px solid var(--line)}.rack .bar{height:10px;border-radius:5px;background:var(--line);margin-bottom:0}'
+      + '.hooks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.hook{display:flex;flex-direction:column;align-items:center;gap:8px}.hook::before{content:"";width:6px;height:22px;border-radius:0 0 6px 6px;background:var(--soft)}'
+      + '.tag{width:100%;aspect-ratio:1;max-width:120px;border-radius:22px;display:grid;place-items:center;background:var(--paper)}.hook b{font-size:15px}.hook small{color:var(--soft);font-size:13px;margin-top:-6px}'
+      + 'section.s{padding-block:44px;border-top:1px solid var(--line)}.head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}.head p{margin:0;color:var(--soft)}'
+      + '.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}'
+      + '.card{background:var(--card);border-radius:22px;padding:22px;border:1px solid var(--line);display:flex;flex-direction:column;gap:8px;min-width:0}.card p{margin:0}.meta{color:var(--soft);font-size:15px}'
+      + '.cls{display:flex;align-items:center;gap:12px}.cls .tag{width:56px;max-width:56px;border-radius:16px}'
+      + '.day{list-style:none;margin:0;padding:0;display:grid;gap:0;max-width:720px}.day li{display:grid;grid-template-columns:80px minmax(0,1fr);gap:16px;padding-block:12px;border-bottom:1px dashed var(--line)}.day time{font-weight:700;font-variant-numeric:tabular-nums}'
+      + '.banner{background:var(--sun-tint);color:var(--sun-ink);border-radius:22px;padding:20px 22px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-bottom:20px}.banner strong{font:800 24px var(--display)}'
+      + 'ol.crit{margin:0;padding-left:22px;display:grid;gap:6px}'
+      + '.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}th{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}'
+      + '.yes{color:var(--ok);font-weight:700}.big{font:800 34px var(--display);letter-spacing:-.02em}'
+      + 'dl.info{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);margin:0;background:var(--card);border-radius:22px;border:1px solid var(--line);overflow:hidden}dl.info dt,dl.info dd{margin:0;padding:12px 18px;border-bottom:1px solid var(--line)}dl.info dt{font-weight:700;color:var(--soft);font-size:15px}'
+      + '.docs{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.docs a{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;text-decoration:none;font-weight:700}.docs a span{color:var(--soft);font-weight:400;font-size:14px}'
+      + 'footer{padding-block:32px 48px;border-top:1px solid var(--line);color:var(--soft);font-size:15px;display:grid;gap:10px}footer p{margin:0;max-width:60em}'
+      + '@media (max-width:820px){.hero{grid-template-columns:minmax(0,1fr);padding-block:32px}.top .w{flex-wrap:wrap;gap:6px}.nav{margin-left:0;width:100%}dl.info{grid-template-columns:minmax(0,1fr)}dl.info dt{border-bottom:0;padding-bottom:0}}'
+      + '</style></head><body>');
+    h.push('<header class="top"><div class="w"><a class="brand" href="#">' + sym('sun', 'var(--sun)', 30) + e(sc.name) + '</a><nav class="nav" aria-label="Hlavní menu">' + nav.map(function (n) { return '<a href="#' + n[0] + '">' + n[1] + '</a>'; }).join('') + '</nav></div></header>');
+    h.push('<main class="w">');
+    var town = (sc.adresa.split(',')[1] || '').replace(/\d{3}\s?\d{2}/, '').trim();
+    h.push('<div class="hero"><div><div class="kick">' + e(town || 'Mateřská škola') + ' · ' + this.classes.length + ' třídy · ' + cap + ' míst · ' + e(sc.provozni) + '</div>'
+      + '<h1>Mateřská škola <span>' + e(sc.name.replace(/^MŠ\s*/, '')) + '</span></h1><p class="lead">' + e(cfg.about) + '</p>'
+      + '<div class="cta">' + (show.zapis ? '<a class="btn primary" href="#zapis">Zápis 2.–16. 5. ' + Z.year + '</a>' : '') + '<a class="btn" href="#kontakty">Kontakty</a></div></div>'
+      + '<div class="rack" aria-label="Značky tříd"><div class="bar"></div><div class="hooks">' + this.classes.slice(0, 3).map(function (c, i) {
+          var ck = kids.filter(function (k) { return k.cls === c.id && (!k.zahajeni || k.zahajeni <= self.iso(self.today)); });
+          var ages = ck.map(function (k) { return self.age(k.birth); });
+          return '<div class="hook"><div class="tag">' + sym(CLSYM[i % CLSYM.length], c.color, 64) + '</div><b>' + e(c.name) + '</b><small>' + (ages.length ? Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) + ' let' : '') + '</small></div>';
+        }).join('') + '</div></div></div>');
+    if (show.aktuality && news.length) {
+      h.push('<section class="s" id="aktuality"><div class="head"><h2>Aktuality</h2></div><div class="grid">' + news.map(function (m) { return '<article class="card"><span class="meta">' + e(m.at) + '</span><h3>' + e(m.title) + '</h3><p>' + e(m.text) + '</p></article>'; }).join('') + '</div></section>');
+    }
+    if (show.tridy) {
+      h.push('<section class="s" id="tridy"><div class="head"><h2>Třídy</h2><p>Každé dítě má svou značku — pozná si podle ní háček, hrnek i lehátko.</p></div><div class="grid">' + this.classes.map(function (c, i) {
+        var ck = kids.filter(function (k) { return k.cls === c.id && (!k.zahajeni || k.zahajeni <= self.iso(self.today)); });
+        var ages = ck.map(function (k) { return self.age(k.birth); });
+        var who = self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1; });
+        return '<article class="card"><div class="cls"><div class="tag">' + sym(CLSYM[i % CLSYM.length], c.color, 36) + '</div><div><h3>' + e(c.name) + '</h3><span class="meta">' + (ages.length ? Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) + ' let · ' : '') + c.capacity + ' míst · ' + (c.provoz === 'P' ? 'polodenní' : 'celodenní') + '</span></div></div>'
+          + (show.ucitele && who.length ? '<p>' + who.map(function (t) { return e(t.name) + (t.role !== 'Učitelka' ? ' <span class="meta">(' + e(t.role.toLowerCase()) + ')</span>' : ''); }).join(', ') + '</p>' : '') + '</article>';
+      }).join('') + '</div>'
+        + (show.ucitele ? '<p class="meta" style="margin-top:16px">Ředitelka: ' + e(this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '') + ' · ' + ped.length + ' pedagogů</p>' : '') + '</section>');
+    }
+    if (show.den) {
+      h.push('<section class="s" id="den"><div class="head"><h2>Den ve školce</h2><p>Časy jsou orientační, řídíme se počasím a dětmi.</p></div><ol class="day">' + DAY.map(function (d) { return '<li><time>' + e(d[0]) + '</time><span>' + e(d[1]) + '</span></li>'; }).join('') + '</ol></section>');
+    }
+    if (show.zapis) {
+      h.push('<section class="s" id="zapis"><div class="head"><h2>Zápis</h2><p>Na školní rok ' + Z.year + '/' + (Z.year + 1) + '</p></div>'
+        + '<div class="banner"><strong>2.–16. května ' + Z.year + '</strong><span>Žádost podává zákonný zástupce osobně, datovou schránkou nebo e-mailem s elektronickým podpisem. Od 1. 9. je předškolní vzdělávání povinné pro děti, které do 31. 8. dovrší 5 let.</span></div>'
+        + '<div class="grid"><div class="card"><h3>Kritéria přijetí</h3><ol class="crit"><li>Děti s povinným předškolním vzděláváním ze spádového obvodu.</li><li>Děti ze spádového obvodu od nejstaršího, které do 31. 8. dovrší 3 let.</li><li>Sourozenec už do školky chodí.</li><li>Ostatní děti podle věku; mladší 3 let jen při volné kapacitě.</li></ol></div>'
+        + (Z.published ? '<div class="card"><h3>Výsledky pod registračními čísly</h3><p class="meta">Zveřejněno ' + e(this.cz(new Date(Z.published))) + ' na 15 dní.</p><div class="tbl"><table><thead><tr><th>Reg. č.</th><th>Výsledek</th></tr></thead><tbody>'
+            + order.map(function (a) { return '<tr><td>' + e(a.reg) + '</td><td' + (a.result === 'prijato' ? ' class="yes">přijato' : '>nepřijato') + '</td></tr>'; }).join('') + '</tbody></table></div></div>'
+          : '<div class="card"><h3>Volná místa</h3><p class="big">' + this.nextFree() + '</p><p class="meta">od září ' + Z.year + ' po odchodu předškoláků do základní školy</p></div>')
+        + '</div></section>');
+    }
+    if (show.platby) {
+      h.push('<section class="s" id="platby"><div class="head"><h2>Platby</h2><p>Platí se převodem do 15. dne v měsíci.</p></div><div class="grid">'
+        + '<div class="card"><span class="meta">Školné</span><p class="big">' + e(this.kc(+this.rates.skolne || 0)) + '</p><p>měsíčně. Děti s povinným předškolním vzděláváním neplatí.</p></div>'
+        + '<div class="card"><span class="meta">Stravné na den</span><p class="big">' + e(this.kc(+this.rates.s1 || 0)) + '</p><p>děti 3–6 let, starší ' + e(this.kc(+this.rates.s2 || 0)) + '. Platí se jen za odebrané obědy.</p></div>'
+        + '<div class="card"><span class="meta">Číslo účtu</span><p class="big" style="font-size:26px">' + e(sc.ucet) + '</p><p>Variabilní symbol dostanete s nástupem, platí celý rok.</p></div>'
+        + '</div></section>');
+    }
+    h.push('<section class="s" id="kontakty"><div class="head"><h2>Kontakty</h2></div><div class="grid">'
+      + '<div class="card"><h3>Adresa</h3><p>' + e(sc.nazev) + '<br>' + e(sc.adresa) + '</p><p class="meta">Provoz ' + e(sc.provozni) + '</p></div>'
+      + '<div class="card"><h3>Telefon a e-mail</h3><p>' + e(sc.telefon) + '<br>' + e(sc.email) + '</p><p class="meta">Ředitelka ' + e(this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '') + '</p></div>'
+      + '<div class="card"><h3>Úřední cesty</h3><p>Datová schránka ' + e(sc.datovka) + '<br>IČO ' + e(sc.ico) + '</p><p class="meta">Úřední hodiny ' + e(sc.uredni) + '</p></div>'
+      + '</div></section>');
+    var director = this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '';
+    var INFO = [
+      ['Název', sc.nazev], ['Důvod a způsob založení', 'Příspěvková organizace zřízená zřizovatelem ' + sc.zrizovatel + ' podle školského zákona.'],
+      ['Organizační struktura', 'Ředitelka ' + director + ', ' + this.classes.length + ' třídy, ' + ped.length + ' pedagogů, provozní zaměstnanci.'],
+      ['Kontaktní spojení', sc.adresa + ' · tel. ' + sc.telefon + ' · ' + sc.email], ['Úřední hodiny', sc.uredni], ['Datová schránka', sc.datovka],
+      ['Bankovní spojení', sc.ucet], ['IČO', sc.ico], ['DIČ', 'Škola není plátcem DPH.'], ['IZO a RED_IZO', sc.izo + ' · ' + sc.redizo],
+      ['Žádosti o informace', 'Písemně, e-mailem, datovou schránkou nebo osobně v úředních hodinách. Odpovíme do 15 dnů.'],
+      ['Opravné prostředky', 'Odvolání proti rozhodnutí ředitelky se podává prostřednictvím školy do 15 dnů; rozhoduje krajský úřad (v Praze Magistrát hl. m. Prahy).'],
+      ['Sazebník úhrad za informace', 'Informace poskytujeme zdarma; za mimořádně rozsáhlé vyhledání se účtuje podle sazebníku školy.'],
+      ['Ochrana osobních údajů', 'Pověřenec: ' + sc.poverenec]
+    ];
+    h.push('<section class="s" id="informace"><div class="head"><h2>Povinné informace</h2><p>Podle zákona č. 106/1999 Sb.</p></div><dl class="info">' + INFO.map(function (r) { return '<dt>' + e(r[0]) + '</dt><dd>' + e(r[1]) + '</dd>'; }).join('') + '</dl>'
+      + (docs.length ? '<div class="docs">' + docs.map(function (d) { return '<a href="dokumenty/' + e(d.file) + '">' + e(d.label) + ' <span>PDF</span></a>'; }).join('') + '</div>' : '') + '</section>');
+    h.push('</main><footer class="w"><p><strong>Prohlášení o přístupnosti.</strong> ' + e(sc.nazev) + ' se zavazuje zpřístupnit své webové stránky podle zákona č. 99/2019 Sb. Stránky jsou v souladu s tímto zákonem; dokumenty v PDF mohou být přístupné jen částečně. Připomínky posílejte na ' + e(sc.email) + '.</p>'
+      + '<p>Web nepoužívá cookies ani měřicí kódy. Aktualizováno ' + stamp + ' · ' + e(sc.web) + '</p></footer></body></html>');
+    return h.join('');
+  }
+
   download(file) {
     try {
       var blob = new Blob([file.text], { type: file.type || 'application/xml' });
@@ -1204,25 +1424,26 @@ class Component extends DCLogic {
     var curMonth = this.monthKeys[this.monthKeys.length - 1], prevMonth = this.monthKeys[this.monthKeys.length - 2];
     var unpaid = function (key) { return key ? kids.filter(function (k) { var d = self.due(k, key).total; return d && (self.paid[key][k.id] || 0) < d; }) : []; };
     var unpaidPrev = unpaid(prevMonth);
+    var webMissing = this.webChecks().filter(function (c) { return !c.ok; }).length;
     var NAV = [
       ['prehled', 'Přehled', ''], ['deti', 'Děti', kids.length], ['zapis', 'Zápis', ''], ['dochazka', 'Docházka', neoml.length || ''],
-      ['platby', 'Platby', unpaidPrev.length || ''], ['zpravy', 'Zprávy rodičům', ''], ['ucitele', 'Učitelé', this.teachers.length],
+      ['platby', 'Platby', unpaidPrev.length || ''], ['zpravy', 'Zprávy rodičům', ''], ['web', 'Webové stránky', webMissing || ''], ['ucitele', 'Učitelé', this.teachers.length],
       ['tridy', 'Třídy', CL.length], ['porady', 'Porady', ''], ['matrika', 'Matrika MŠMT', matErr.length ? matErr.length : ''],
       ['urazy', 'Kniha úrazů', urazPending.length ? urazPending.length : ''], ['archiv', 'Archiv', '']
     ].filter(function (n) { return allowed(n[0]); });
     var nav = NAV.map(function (n) {
       var on = st.page === n[0];
-      var warn = ['matrika', 'urazy', 'dochazka', 'platby'].indexOf(n[0]) !== -1 && n[2] !== '';
+      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web'].indexOf(n[0]) !== -1 && n[2] !== '';
       return {
         label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
           + (warn ? 'background: #F28C28; color: #FFFFFF' : 'background: ' + (on ? '#F3F2EC' : '#E4E3DC') + '; color: #3A3C40'),
         pick: go(n[0], { kidId: null, editAll: false }),
-        style: 'min-height: 42px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
+        style: 'min-height: 40px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
       };
     });
     var is = {};
-    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'archiv'].forEach(function (p) { is[p] = st.page === p; });
+    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'archiv'].forEach(function (p) { is[p] = st.page === p; });
 
     var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
     var today = this.today;
@@ -1240,7 +1461,8 @@ class Component extends DCLogic {
       platby: ['Úplata za předškolní vzdělávání a stravné', 'Platby', '', null],
       zpravy: ['Hromadné zprávy do aplikace a e-mailem', 'Zprávy rodičům', '', null],
       porady: ['Záznamy z pedagogických rad a provozních porad', 'Porady', '+ Nový zápis', function () { self.setState({ dlg: 'porada', df: { date: self.iso(today), typ: 'Pedagogická rada' } }); }],
-      archiv: ['Spisová služba a kontrola přístupu', 'Archiv', '', null]
+      archiv: ['Spisová služba a kontrola přístupu', 'Archiv', '', null],
+      web: ['Skládají se z údajů v ředitelně — kontakty, třídy, zápis, platby', 'Webové stránky', '', null]
     };
     var P = PAGES[st.page];
     var page = { kicker: P[0], title: P[1], hasAction: !!P[2] && canEdit, actionLabel: P[2], action: P[3] || function () {} };
@@ -1716,6 +1938,26 @@ class Component extends DCLogic {
       log: this.audit.map(function (l) { return { what: l.what, who: l.who, when: l.at }; })
     };
 
+    /* -------------------------------------------------- web */
+    var W = this.webCfg, checks = this.webChecks(), okN = checks.filter(function (c) { return c.ok; }).length;
+    var wField = function (label, key, ph) { return { label: label, value: self.school[key] || '', ph: ph || '', style: 'height: 38px; border-radius: 12px; padding: 0 12px; font-size: 14px; font-weight: 500; color: #17181A; ' + (self.school[key] ? 'border: 1px solid #E4E3DC; background: #FFFFFF' : 'border: 2px solid #F2C3AE; background: #FFF8F4'), onInput: function (ev) { self.school[key] = ev.target.value; self.forceUpdate(); } }; };
+    var pc = W.device === 'pc';
+    var web = {
+      score: okN + ' z ' + checks.length, scoreStyle: 'font-size: 13px; font-weight: 800; color: ' + (okN === checks.length ? '#2F5212' : '#9A3412'),
+      checks: checks.map(function (c) { return { label: c.label, src: c.ok ? c.src : 'chybí', dotStyle: 'width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; background: ' + (c.ok ? '#7FB23A' : '#F28C28') }; }),
+      fields: [wField('Adresa', 'adresa', 'Ulice, PSČ, obec'), wField('Telefon', 'telefon'), wField('E-mail', 'email'), wField('Datová schránka', 'datovka'), wField('IČO', 'ico'), wField('Číslo účtu', 'ucet'), wField('Zřizovatel', 'zrizovatel'), wField('Provozní doba', 'provozni', '6:30–17:00'), wField('Úřední hodiny', 'uredni'), wField('Pověřenec pro ochranu údajů', 'poverenec'), wField('Adresa webu', 'web')],
+      about: W.about, onAbout: function (ev) { W.about = ev.target.value; self.forceUpdate(); },
+      sections: [['aktuality', 'Aktuality'], ['tridy', 'Třídy'], ['ucitele', 'Učitelé'], ['den', 'Den ve školce'], ['zapis', 'Zápis'], ['platby', 'Platby']].map(function (x) { var on = !!W.show[x[0]]; return { label: x[1], on: on, style: chip(on, true), pick: function () { W.show[x[0]] = !on; self.forceUpdate(); } }; }),
+      docs: W.docs.map(function (d) { return { label: d.label, sub: d.file ? d.file : (d.required ? 'musí být na webu — chybí' : 'nepovinné'), subStyle: 'font-size: 12px; color: ' + (d.file ? '#5A5C60' : d.required ? '#9A3412' : '#5A5C60'), action: d.file ? 'Vyměnit' : 'Nahrát',
+        onFile: function (ev) { var f = ev.target.files && ev.target.files[0]; if (!f) return; d.file = f.name; self.log('Web: nahrán dokument ' + d.label); self.forceUpdate(); self.showToast(d.label + ' je na webu'); } }; }),
+      devices: [['pc', 'Počítač'], ['mobil', 'Mobil']].map(function (x) { var on = W.device === x[0]; return { label: x[1], on: on, style: chip(on, true), pick: function () { W.device = x[0]; self.forceUpdate(); } }; }),
+      domain: self.school.web,
+      html: is.web ? this.buildWeb() : '',
+      frameWrap: 'flex-grow: 1; min-height: 0; border-radius: 14px; overflow: hidden; background: #E4E3DC; display: flex; justify-content: center; position: relative',
+      frameStyle: pc ? 'border: 0; width: 1280px; height: 1320px; transform: scale(0.54); transform-origin: 0 0; position: absolute; left: 0; top: 0; background: #FFFFFF' : 'border: 0; width: 390px; height: 100%; background: #FFFFFF',
+      download: function () { self.download({ name: 'index.html', text: self.buildWeb(), type: 'text/html' }); self.log('Web: staženy stránky ' + self.school.web); }
+    };
+
     /* -------------------------------------------------- uživatel */
     var me = { name: ME.name, role: ME.role, initials: ME.initials,
       avatarStyle: 'width: 40px; height: 40px; border-radius: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; background: ' + ME.bg,
@@ -1872,7 +2114,7 @@ class Component extends DCLogic {
       nav: nav, is: is, page: page,
       stats: stats, todo: todo, todoNone: todo.length === 0, classesToday: classesToday,
       deti: deti, kid: kid, teachers: teachers, classCards: classCards, mat: mat, urazy: urazy,
-      zap: zap, doch: doch, pay: pay, msg: msg, porady: porady, arch: arch, me: me,
+      zap: zap, doch: doch, pay: pay, msg: msg, porady: porady, arch: arch, me: me, web: web,
       dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }

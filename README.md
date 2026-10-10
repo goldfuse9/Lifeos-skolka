@@ -58,6 +58,7 @@ docházku, platby, zprávy a archiv.
 | **Porady** | zápisy z pedagogických rad a provozních porad (datum, program, usnesení; přítomní se doplní sami) |
 | **Matrika MŠMT** | sběr k 30. 9. / 31. 3., kontrola, údaje školy, export XML (`M{IZO}_{část}.xml`, `a` SVP, `b` podpůrná opatření) |
 | **Kniha úrazů** | úrazy z tabletů s číslem, svědkem a tím, kdo zapsal; záznam pro ČŠI a pojišťovnu se lhůtou |
+| **Webové stránky** | web školky se skládá z údajů v ředitelně: kontakty, třídy a učitelky, den ve školce, zápis (kritéria, volná místa, po zveřejnění výsledky pod reg. čísly), školné a stravné, aktuality ze zpráv celé školce, povinné informace podle zákona 106/1999 Sb., dokumenty, prohlášení o přístupnosti; kontrola povinných údajů, náhled počítač/mobil, stažení jako `index.html` (ukázka ve složce `web/`) |
 | **Archiv** | spisový a skartační plán (lhůty jsou ukázkové a dají se přepsat) a **historie změn** — kdo co kdy změnil |
 
 ### Propojení s tablety
@@ -106,6 +107,7 @@ shell.js          spustí desku podle #trida / #reditel
 Trida.dc.html     třída — deska z plátna (Main.dc.html)
 Reditel.dc.html   ředitelna — deska z plátna (Reditel.dc.html)
 sw.js             offline
+web/index.html    ukázka vygenerovaného webu školky
 supabase/         návrh databáze s právy podle rolí pro ostrý provoz
 ```
 
