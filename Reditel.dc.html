@@ -1239,153 +1239,115 @@ class Component extends DCLogic {
   buildWeb() {
     var self = this, sc = this.school, cfg = this.webCfg, show = cfg.show;
     var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
-    var todayIso = this.iso(this.today);
-    var kids = this.kids.filter(function (k) { return !k.ended && (!k.zahajeni || k.zahajeni <= todayIso); });
+    var kids = this.kids.filter(function (k) { return !k.ended; });
     var Z = this.zapis;
     var cap = this.classes.reduce(function (a, c) { return a + c.capacity; }, 0);
-    var allAges = kids.map(function (k) { return self.age(k.birth); });
-    var aMin = allAges.length ? Math.max(2, Math.min.apply(null, allAges)) : 2, aMax = allAges.length ? Math.max.apply(null, allAges) : 6;
     var SYM = {
       sun: '<circle cx="24" cy="24" r="9" fill="currentColor"/><g stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M24 5v5M24 38v5M5 24h5M38 24h5M10.6 10.6l3.5 3.5M33.9 33.9l3.5 3.5M10.6 37.4l3.5-3.5M33.9 14.1l3.5-3.5"/></g>',
-      ladybug: '<circle cx="24" cy="27" r="14" fill="currentColor"/><path d="M24 13v28" stroke="#fff" stroke-width="2.5"/><circle cx="17" cy="23" r="3" fill="#fff"/><circle cx="31" cy="23" r="3" fill="#fff"/><circle cx="18" cy="33" r="2.6" fill="#fff"/><circle cx="30" cy="33" r="2.6" fill="#fff"/><circle cx="24" cy="11" r="5" fill="currentColor"/>',
-      butterfly: '<path d="M24 16c-4-9-17-11-18-3s7 11 18 9c-11 2-14 11-9 14s9-4 9-10c0 6 4 13 9 10s2-12-9-14c11 2 19-1 18-9s-14-6-18 3z" fill="currentColor"/><path d="M24 14v22" stroke="#2A2840" stroke-width="2.5" stroke-linecap="round"/>',
+      ladybug: '<circle cx="24" cy="27" r="14" fill="currentColor"/><path d="M24 13v28" stroke="var(--paper)" stroke-width="2.5"/><circle cx="17" cy="23" r="3" fill="var(--paper)"/><circle cx="31" cy="23" r="3" fill="var(--paper)"/><circle cx="18" cy="33" r="2.6" fill="var(--paper)"/><circle cx="30" cy="33" r="2.6" fill="var(--paper)"/><circle cx="24" cy="11" r="5" fill="currentColor"/>',
+      butterfly: '<path d="M24 16c-4-9-17-11-18-3s7 11 18 9c-11 2-14 11-9 14s9-4 9-10c0 6 4 13 9 10s2-12-9-14c11 2 19-1 18-9s-14-6-18 3z" fill="currentColor"/><path d="M24 14v22" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>',
       star: '<path d="M24 6l5.3 11.6 12.7 1.4-9.5 8.6 2.7 12.5L24 33.8 12.8 40.1l2.7-12.5L6 19l12.7-1.4z" fill="currentColor"/>',
       cup: '<path d="M10 14h22v14a11 11 0 0 1-22 0z" fill="currentColor"/><path d="M32 18h4a5 5 0 0 1 0 10h-4" fill="none" stroke="currentColor" stroke-width="3.5"/>',
       tree: '<path d="M24 5L9 30h30z" fill="currentColor"/><rect x="21" y="30" width="6" height="11" rx="1.5" fill="currentColor"/>'
     };
     var sym = function (k, color, size) { return '<svg viewBox="0 0 48 48" width="' + (size || 40) + '" height="' + (size || 40) + '" aria-hidden="true" style="color:' + color + '">' + SYM[k] + '</svg>'; };
-    /* čmáranice: hvězda, srdce, vlnovka, spirálka — jen ozdoba, aria-hidden */
-    var DOODLE = {
-      star: '<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M20 4l4.4 10 10.6 1.1-8 7.2 2.3 10.4L20 27.4l-9.3 5.3L13 22.3l-8-7.2L15.6 14z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>',
-      heart: '<svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M20 33S6 24.5 6 15.5A7 7 0 0 1 20 12a7 7 0 0 1 14 3.5C34 24.5 20 33 20 33z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>',
-      wave: '<svg viewBox="0 0 70 16" width="64" height="15" aria-hidden="true"><path d="M3 9c6-8 10 6 16 0s10-7 16 0 10 6 16 0 10-6 16 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
-      curl: '<svg viewBox="0 0 50 40" width="46" height="36" aria-hidden="true"><path d="M4 30c10 4 22-2 20-12s-12-6-8 2 18 8 28-10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M38 6l6 4-7 3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      dash: '<svg viewBox="0 0 30 30" width="26" height="26" aria-hidden="true"><path d="M6 4l3 9M15 2v10M24 5l-4 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'
-    };
-    var TINT = [['var(--blue)', 'var(--blue-t)', '#5B63D6'], ['var(--yellow)', 'var(--yellow-t)', '#E59A00'], ['var(--pink)', 'var(--pink-t)', '#E25C8E']];
     var CLSYM = ['sun', 'ladybug', 'butterfly', 'star', 'cup', 'tree'];
-    var hl = function (txt, n) { return '<span class="hl hl' + (n || 0) + '">' + txt + '</span>'; };
     var ped = this.teachers.filter(function (t) { return t.role !== 'Chůva'; });
-    var director = this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '';
-    var nav = [['aktuality', 'Aktuality', show.aktuality], ['tridy', 'Třídy', show.tridy], ['den', 'Náš den', show.den], ['platby', 'Platby', show.platby], ['kontakty', 'Kontakty', true], ['informace', 'Povinné informace', true]].filter(function (n) { return n[2]; });
+    var nav = [['aktuality', 'Aktuality', show.aktuality], ['tridy', 'Třídy', show.tridy], ['den', 'Den ve školce', show.den], ['zapis', 'Zápis', show.zapis], ['platby', 'Platby', show.platby], ['kontakty', 'Kontakty', true], ['informace', 'Povinné informace', true]].filter(function (n) { return n[2]; });
     var news = this.messages.filter(function (m) { return m.to === 'Celá školka'; }).slice(0, 3);
     var prov = (sc.provozni || '6:30–17:00').split(/[–-]/);
     var DAY = [[prov[0], 'Příchod, volná hra a ranní kruh'], ['8:45', 'Svačina'], ['9:15', 'Řízená činnost podle týdenního tématu'], ['10:00', 'Pobyt venku — zahrada, vycházky'], ['11:45', 'Oběd'], ['12:30', 'Odpočinek; předškoláci mají vlastní program'], ['14:30', 'Svačina'], ['15:00', 'Hry a vyzvedávání do ' + (prov[1] || '17:00')]];
     var order = this.zapisOrder();
     var docs = cfg.docs.filter(function (d) { return d.file; });
     var stamp = this.cz(this.today);
-    var town = (sc.adresa.split(',')[1] || '').replace(/\d{3}\s?\d{2}/, '').trim();
-    var underline = function (c) { return "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8c40-6 90-7 194-3' fill='none' stroke='%23" + c + "' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E\")"; };
     var h = [];
     h.push('<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">');
     h.push('<title>' + e(sc.name) + '</title><meta name="description" content="' + e(sc.nazev) + ' — třídy, zápis, platby a kontakty.">');
-    h.push('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">');
+    h.push('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">');
     h.push('<style>'
-      /* Pastelové kruhy pod matným sklem, oranžová tlačítka, podtržené klíčové slovo, čmáranice. */
-      + ':root{--bg:#FBF6F2;--ink:#1E1D2B;--soft:#5D5B6E;--glass:rgba(255,255,255,.62);--glass-strong:rgba(255,255,255,.8);--edge:rgba(255,255,255,.85);--shade:rgba(60,50,90,.08);'
-      + '--orange:#FF9F1A;--orange-ink:#1E1D2B;--blue:#9AA3F7;--blue-t:rgba(154,163,247,.22);--yellow:#FBD56B;--yellow-t:rgba(251,213,107,.28);--pink:#F7A9C6;--pink-t:rgba(247,169,198,.26);--ok:#2E7A3A;--blob:.75;'
-      + '--font:"Lato","Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}'
-      + '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17151F;--ink:#F3F1F8;--soft:#B6B2C6;--glass:rgba(36,33,50,.6);--glass-strong:rgba(44,40,60,.82);--edge:rgba(255,255,255,.08);--shade:rgba(0,0,0,.3);--orange:#FFAE3D;--blue-t:rgba(154,163,247,.16);--yellow-t:rgba(251,213,107,.14);--pink-t:rgba(247,169,198,.15);--ok:#8FD49A;--blob:.4;color-scheme:dark}}'
-      + ':root[data-theme="dark"]{--bg:#17151F;--ink:#F3F1F8;--soft:#B6B2C6;--glass:rgba(36,33,50,.6);--glass-strong:rgba(44,40,60,.82);--edge:rgba(255,255,255,.08);--shade:rgba(0,0,0,.3);--orange:#FFAE3D;--blue-t:rgba(154,163,247,.16);--yellow-t:rgba(251,213,107,.14);--pink-t:rgba(247,169,198,.15);--ok:#8FD49A;--blob:.4;color-scheme:dark}'
+      /* Šatna: každá třída má svou značku na háčku — z toho je celý web. */
+      + ':root{--paper:#F5F7F2;--card:#FFFFFF;--ink:#18222B;--soft:#56616B;--line:#DDE3DA;--sun:#F2A900;--sun-ink:#5A3E00;--sun-tint:#FFF1C9;--ok:#2F6B1F;--display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;--body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}'
+      + '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#121A1F;--card:#1B252C;--ink:#ECF0EA;--soft:#A9B4BA;--line:#2C3A42;--sun:#FFC23D;--sun-ink:#FFE3A1;--sun-tint:#3A2E10;--ok:#9FD27E;color-scheme:dark}}'
+      + ':root[data-theme="dark"]{--paper:#121A1F;--card:#1B252C;--ink:#ECF0EA;--soft:#A9B4BA;--line:#2C3A42;--sun:#FFC23D;--sun-ink:#FFE3A1;--sun-tint:#3A2E10;--ok:#9FD27E;color-scheme:dark}'
       + '*{box-sizing:border-box}html{scroll-behavior:smooth}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}'
-      + 'body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.65 var(--font);padding-inline:20px;position:relative;overflow-x:hidden}'
-      + '.blobs{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}.blobs i{position:absolute;border-radius:50%;filter:blur(40px);opacity:var(--blob)}'
-      + '.blobs i{width:640px;height:640px}.blobs .b1{left:-260px;top:-260px;background:var(--pink)}.blobs .b2{right:-280px;top:6%;background:var(--yellow)}.blobs .b3{left:-300px;top:22%;background:var(--blue)}.blobs .b4{right:-260px;top:38%;background:var(--pink)}.blobs .b5{left:-240px;top:55%;background:var(--yellow)}.blobs .b6{right:-300px;top:70%;background:var(--blue)}.blobs .b7{left:-280px;top:86%;background:var(--pink)}'
-      + '.wrap{position:relative;z-index:1}.w{max-width:1120px;margin-inline:auto}'
-      + '.glass{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);border:1px solid var(--edge);box-shadow:0 10px 40px var(--shade)}'
-      + 'h1,h2,h3{line-height:1.15;text-wrap:balance;margin:0;font-weight:900}h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.01em}h3{font-size:20px}'
-      + 'a{color:inherit}a:focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:8px}'
-      + '.hl{background-repeat:no-repeat;background-position:0 100%;background-size:100% .38em;padding-bottom:.12em}.hl0{background-image:' + underline('FBC93D') + '}.hl1{background-image:' + underline('F28DB2') + '}.hl2{background-image:' + underline('8C95F2') + '}'
-      + '.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:5;border-radius:999px;margin-top:12px;padding:10px 12px 10px 18px}.top .w{display:flex;align-items:center;gap:16px}'
-      + '.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;text-decoration:none;letter-spacing:.01em;flex-shrink:0}.brand b{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--yellow-t)}'
-      + '.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-inline:auto}.nav a{white-space:nowrap;text-decoration:none;font-size:15px;font-weight:700;padding:8px 12px;border-radius:999px}.nav a:hover{background:var(--glass-strong)}'
-      + '.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 24px;border-radius:999px;background:var(--orange);color:var(--orange-ink);font-weight:700;text-decoration:none;white-space:nowrap;box-shadow:0 6px 18px rgba(255,159,26,.35)}.pill:hover{filter:brightness(1.05)}'
-      + '.ghost{display:inline-flex;align-items:center;padding:11px 22px;border-radius:999px;font-weight:700;text-decoration:none;background:var(--glass-strong);border:1px solid var(--edge)}'
-      + '.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:64px 56px}'
-      + '.hero h1{font-size:clamp(38px,5.4vw,60px);letter-spacing:-.02em;margin-bottom:20px}.lead{font-size:19px;max-width:32em;margin:0 0 28px;color:var(--ink)}.kick{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:14px}.cta{display:flex;flex-wrap:wrap;gap:12px}'
-      + '.collage{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(7,minmax(0,46px));gap:14px}'
-      + '.tile{border-radius:26px;display:grid;place-items:center;position:relative}.tile svg{filter:drop-shadow(0 6px 10px rgba(30,29,43,.12))}.tile span{position:absolute;bottom:12px;left:16px;font-weight:900;font-size:15px;color:#1E1D2B}'
-      + '.t1{grid-column:3/7;grid-row:1/4;background:var(--blue)}.t2{grid-column:1/4;grid-row:4/8;background:var(--yellow)}.t3{grid-column:4/8;grid-row:4/7;background:var(--pink)}'
-      + '.dd{position:absolute;pointer-events:none}.dot{position:absolute;border-radius:50%}'
-      + 'section.s{padding-block:40px}.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}.head p{margin:0;color:var(--soft);max-width:30em}'
-      + '.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}'
-      + '.card{border-radius:26px;padding:26px;display:flex;flex-direction:column;gap:10px;min-width:0}.card p{margin:0}.meta{color:var(--soft);font-size:15px}'
-      + '.prog{display:grid;grid-template-columns:96px minmax(0,1fr);gap:20px;align-items:start;border-radius:26px;padding:26px}.prog .ic{width:96px;height:96px;border-radius:24px;display:grid;place-items:center;background:var(--glass-strong)}.prog h3{margin-bottom:8px}.prog p{margin:0 0 12px}.more{color:var(--orange);font-weight:700;text-decoration:underline;text-underline-offset:4px}'
-      + '.about{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:40px;align-items:center}.about .pic{aspect-ratio:5/4;max-width:100%;border-radius:30px;background:var(--yellow);display:grid;place-items:center;position:relative}'
-      + '.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}.facts div{border-radius:20px;padding:14px 16px}.facts b{display:block;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums}.facts span{font-size:14px;color:var(--soft)}'
-      + '.day{list-style:none;margin:0;padding:8px 26px;border-radius:26px}.day li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:16px;padding-block:13px;border-bottom:1px dashed rgba(127,120,160,.3)}.day li:last-child{border-bottom:0}.day time{font-weight:900;font-variant-numeric:tabular-nums;color:var(--soft)}'
-      + '.banner{border-radius:26px;padding:24px 26px;display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;background:var(--yellow-t)}.banner strong{font-size:26px;font-weight:900}.banner p{margin:0;flex:1 1 320px}'
-      + 'ol.crit{margin:0;padding-left:22px;display:grid;gap:6px}.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(127,120,160,.22)}th{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}.yes{color:var(--ok);font-weight:700}'
-      + '.big{font-size:34px;font-weight:900;letter-spacing:-.01em;line-height:1.1}'
-      + 'dl.info{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr);margin:0;border-radius:26px;overflow:hidden}dl.info dt,dl.info dd{margin:0;padding:13px 22px;border-bottom:1px solid rgba(127,120,160,.18)}dl.info dt{font-weight:700;color:var(--soft);font-size:15px}'
-      + '.docs{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.docs a{border-radius:999px;padding:10px 18px;text-decoration:none;font-weight:700}.docs a span{color:var(--soft);font-weight:400;font-size:14px}'
-      + 'footer{padding-block:24px 48px;color:var(--soft);font-size:15px;display:grid;gap:10px}footer p{margin:0;max-width:62em}'
-      + '@media (max-width:860px){.hero,.about{grid-template-columns:minmax(0,1fr);padding-block:36px}.top{border-radius:24px}.top .w{flex-wrap:wrap;gap:8px}.nav{order:3;width:100%;margin:0}.top .pill{margin-left:auto}.collage{grid-template-rows:repeat(7,minmax(0,36px))}.prog{grid-template-columns:minmax(0,1fr)}.facts{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}dl.info{grid-template-columns:minmax(0,1fr)}dl.info dt{border-bottom:0;padding-bottom:0}}'
+      + 'body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--body);padding-inline:20px}'
+      + '.w{max-width:1080px;margin-inline:auto}h1,h2,h3{font-family:var(--display);line-height:1.08;text-wrap:balance;margin:0}'
+      + 'h2{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.02em}h3{font-size:20px;font-weight:800}'
+      + 'a{color:inherit}a:focus-visible,summary:focus-visible{outline:3px solid var(--sun);outline-offset:3px;border-radius:6px}'
+      + '.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);margin-inline:-20px;padding:10px 20px}'
+      + '.top .w{display:flex;align-items:center;gap:18px}.brand{display:flex;align-items:center;gap:10px;font:800 19px var(--display);text-decoration:none;flex-shrink:0}'
+      + '.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}.nav a{white-space:nowrap;text-decoration:none;font-weight:700;font-size:15px;padding:8px 12px;border-radius:999px}.nav a:hover{background:var(--card)}'
+      + '.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:56px 40px}'
+      + '.kick{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}'
+      + '.hero h1{font-size:clamp(44px,7vw,84px);font-weight:800;letter-spacing:-.035em;margin-block:10px 18px}.hero h1 span{color:var(--sun)}'
+      + '.lead{font-size:19px;max-width:34em;color:var(--ink)}.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}'
+      + '.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;font-weight:700;text-decoration:none;border:2px solid var(--ink)}.btn.primary{background:var(--ink);color:var(--paper)}'
+      + '.rack{background:var(--card);border-radius:28px;padding:22px 20px 26px;border:1px solid var(--line)}.rack .bar{height:10px;border-radius:5px;background:var(--line);margin-bottom:0}'
+      + '.hooks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.hook{display:flex;flex-direction:column;align-items:center;gap:8px}.hook::before{content:"";width:6px;height:22px;border-radius:0 0 6px 6px;background:var(--soft)}'
+      + '.tag{width:100%;aspect-ratio:1;max-width:120px;border-radius:22px;display:grid;place-items:center;background:var(--paper)}.hook b{font-size:15px}.hook small{color:var(--soft);font-size:13px;margin-top:-6px}'
+      + 'section.s{padding-block:44px;border-top:1px solid var(--line)}.head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}.head p{margin:0;color:var(--soft)}'
+      + '.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}'
+      + '.card{background:var(--card);border-radius:22px;padding:22px;border:1px solid var(--line);display:flex;flex-direction:column;gap:8px;min-width:0}.card p{margin:0}.meta{color:var(--soft);font-size:15px}'
+      + '.cls{display:flex;align-items:center;gap:12px}.cls .tag{width:56px;max-width:56px;border-radius:16px}'
+      + '.day{list-style:none;margin:0;padding:0;display:grid;gap:0;max-width:720px}.day li{display:grid;grid-template-columns:80px minmax(0,1fr);gap:16px;padding-block:12px;border-bottom:1px dashed var(--line)}.day time{font-weight:700;font-variant-numeric:tabular-nums}'
+      + '.banner{background:var(--sun-tint);color:var(--sun-ink);border-radius:22px;padding:20px 22px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-bottom:20px}.banner strong{font:800 24px var(--display)}'
+      + 'ol.crit{margin:0;padding-left:22px;display:grid;gap:6px}'
+      + '.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}th{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}'
+      + '.yes{color:var(--ok);font-weight:700}.big{font:800 34px var(--display);letter-spacing:-.02em}'
+      + 'dl.info{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);margin:0;background:var(--card);border-radius:22px;border:1px solid var(--line);overflow:hidden}dl.info dt,dl.info dd{margin:0;padding:12px 18px;border-bottom:1px solid var(--line)}dl.info dt{font-weight:700;color:var(--soft);font-size:15px}'
+      + '.docs{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.docs a{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;text-decoration:none;font-weight:700}.docs a span{color:var(--soft);font-weight:400;font-size:14px}'
+      + 'footer{padding-block:32px 48px;border-top:1px solid var(--line);color:var(--soft);font-size:15px;display:grid;gap:10px}footer p{margin:0;max-width:60em}'
+      + '@media (max-width:820px){.hero{grid-template-columns:minmax(0,1fr);padding-block:32px}.top .w{flex-wrap:wrap;gap:6px}.nav{margin-left:0;width:100%}dl.info{grid-template-columns:minmax(0,1fr)}dl.info dt{border-bottom:0;padding-bottom:0}}'
       + '</style></head><body>');
-    h.push('<div class="blobs" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i><i class="b6"></i><i class="b7"></i></div><div class="wrap">');
-    h.push('<header class="top glass w"><div class="w"><a class="brand" href="#"><b>' + sym('sun', '#F2A900', 26) + '</b>' + e(sc.name.replace(/^MŠ\s*/, '').toUpperCase()) + '</a><nav class="nav" aria-label="Hlavní menu">' + nav.map(function (n) { return '<a href="#' + n[0] + '">' + n[1] + '</a>'; }).join('') + '</nav>'
-      + (show.zapis ? '<a class="pill" href="#zapis">Zápis</a>' : '') + '</div></header>');
+    h.push('<header class="top"><div class="w"><a class="brand" href="#">' + sym('sun', 'var(--sun)', 30) + e(sc.name) + '</a><nav class="nav" aria-label="Hlavní menu">' + nav.map(function (n) { return '<a href="#' + n[0] + '">' + n[1] + '</a>'; }).join('') + '</nav></div></header>');
     h.push('<main class="w">');
-    var tiles = this.classes.slice(0, 3);
-    h.push('<div class="hero"><div><div class="kick">Mateřská škola · ' + e(town || '') + '</div>'
-      + '<h1>Školka pro děti<br>' + hl('od ' + aMin + ' do ' + aMax + ' let', 0) + '</h1><p class="lead">' + e(cfg.about) + '</p>'
-      + '<div class="cta">' + (show.zapis ? '<a class="pill" href="#zapis">Zápis 2.–16. 5. ' + Z.year + '</a>' : '') + '<a class="ghost" href="#kontakty">Kontakty</a></div></div>'
-      + '<div class="collage" aria-label="Značky tříd">'
-      + tiles.map(function (c, i) { return '<div class="tile t' + (i + 1) + '">' + sym(CLSYM[i % CLSYM.length], i === 1 ? '#E0302B' : i === 2 ? '#3B55D9' : '#F7A400', i === 1 ? 110 : 90) + '<span>' + e(c.name) + '</span></div>'; }).join('')
-      + '<span class="dd" style="left:2%;top:4%;color:#8C95F2">' + DOODLE.curl + '</span>'
-      + '<span class="dd" style="left:14%;top:30%;color:#8C95F2">' + DOODLE.star + '</span>'
-      + '<span class="dd" style="right:-2%;top:2%;color:#F28DB2">' + DOODLE.heart + '</span>'
-      + '<span class="dd" style="right:2%;top:40%;color:#F5B000">' + DOODLE.star + '</span>'
-      + '<span class="dd" style="left:44%;top:50%;color:#F5B000">' + DOODLE.wave + '</span>'
-      + '<span class="dot" style="width:46px;height:46px;left:4%;top:22%;background:var(--pink)"></span>'
-      + '<span class="dot" style="width:26px;height:26px;right:24%;top:2%;background:var(--yellow)"></span>'
-      + '<span class="dot" style="width:40px;height:40px;left:46%;top:62%;background:var(--blue)"></span>'
-      + '<span class="dot" style="width:16px;height:16px;right:6%;top:26%;background:var(--pink)"></span>'
-      + '</div></div>');
+    var town = (sc.adresa.split(',')[1] || '').replace(/\d{3}\s?\d{2}/, '').trim();
+    h.push('<div class="hero"><div><div class="kick">' + e(town || 'Mateřská škola') + ' · ' + this.classes.length + ' třídy · ' + cap + ' míst · ' + e(sc.provozni) + '</div>'
+      + '<h1>Mateřská škola <span>' + e(sc.name.replace(/^MŠ\s*/, '')) + '</span></h1><p class="lead">' + e(cfg.about) + '</p>'
+      + '<div class="cta">' + (show.zapis ? '<a class="btn primary" href="#zapis">Zápis 2.–16. 5. ' + Z.year + '</a>' : '') + '<a class="btn" href="#kontakty">Kontakty</a></div></div>'
+      + '<div class="rack" aria-label="Značky tříd"><div class="bar"></div><div class="hooks">' + this.classes.slice(0, 3).map(function (c, i) {
+          var ck = kids.filter(function (k) { return k.cls === c.id && (!k.zahajeni || k.zahajeni <= self.iso(self.today)); });
+          var ages = ck.map(function (k) { return self.age(k.birth); });
+          return '<div class="hook"><div class="tag">' + sym(CLSYM[i % CLSYM.length], c.color, 64) + '</div><b>' + e(c.name) + '</b><small>' + (ages.length ? Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) + ' let' : '') + '</small></div>';
+        }).join('') + '</div></div></div>');
+    if (show.aktuality && news.length) {
+      h.push('<section class="s" id="aktuality"><div class="head"><h2>Aktuality</h2></div><div class="grid">' + news.map(function (m) { return '<article class="card"><span class="meta">' + e(m.at) + '</span><h3>' + e(m.title) + '</h3><p>' + e(m.text) + '</p></article>'; }).join('') + '</div></section>');
+    }
     if (show.tridy) {
-      h.push('<section class="s" id="tridy"><div class="head"><h2>Naše třídy</h2><p>Každé dítě má svou značku — na háčku v šatně, na hrnku i na lehátku.</p></div><div class="grid">' + this.classes.map(function (c, i) {
-        var ck = kids.filter(function (k) { return k.cls === c.id; });
+      h.push('<section class="s" id="tridy"><div class="head"><h2>Třídy</h2><p>Každé dítě má svou značku — pozná si podle ní háček, hrnek i lehátko.</p></div><div class="grid">' + this.classes.map(function (c, i) {
+        var ck = kids.filter(function (k) { return k.cls === c.id && (!k.zahajeni || k.zahajeni <= self.iso(self.today)); });
         var ages = ck.map(function (k) { return self.age(k.birth); });
         var who = self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1; });
-        var T = TINT[i % 3];
-        return '<article class="prog glass" style="background:' + T[1] + '"><div class="ic">' + sym(CLSYM[i % CLSYM.length], c.color, 58) + '</div><div><h3>' + e(c.name) + ' ' + (ages.length ? hl(Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) + ' let', (i + 1) % 3) : '') + '</h3>'
-          + '<p>' + c.capacity + ' míst · ' + (c.provoz === 'P' ? 'polodenní provoz' : 'celodenní provoz') + '</p>'
-          + (show.ucitele && who.length ? '<p class="meta">' + who.map(function (t) { return e(t.name) + (t.role !== 'Učitelka' ? ' (' + e(t.role.toLowerCase()) + ')' : ''); }).join(', ') + '</p>' : '') + '</div></article>';
-      }).join('') + '</div></section>');
-    }
-    h.push('<section class="s" id="o-nas"><div class="about"><div class="pic">' + sym('tree', '#3E8E4E', 140)
-      + '<span class="dd" style="right:6%;top:8%;color:#F28DB2">' + DOODLE.dash + '</span><span class="dd" style="left:8%;bottom:10%;color:#8C95F2">' + DOODLE.star + '</span>'
-      + '<span class="dot" style="width:54px;height:54px;right:-10px;top:30%;background:var(--pink)"></span><span class="dot" style="width:22px;height:22px;left:12%;top:14%;background:var(--blue)"></span></div>'
-      + '<div><h2>O naší školce</h2><p class="lead" style="margin-top:16px">' + e(cfg.about) + '</p>'
-      + '<div class="facts"><div class="glass"><b>' + this.classes.length + '</b><span>třídy</span></div><div class="glass"><b>' + cap + '</b><span>míst</span></div><div class="glass"><b>' + ped.length + '</b><span>pedagogů</span></div></div>'
-      + (show.ucitele && director ? '<p class="meta" style="margin-top:16px">Ředitelka ' + e(director) + '</p>' : '') + '</div></div></section>');
-    if (show.aktuality && news.length) {
-      h.push('<section class="s" id="aktuality"><div class="head"><h2>Aktuality</h2></div><div class="grid">' + news.map(function (m) { return '<article class="card glass"><span class="meta">' + e(m.at) + '</span><h3>' + e(m.title) + '</h3><p>' + e(m.text) + '</p></article>'; }).join('') + '</div></section>');
+        return '<article class="card"><div class="cls"><div class="tag">' + sym(CLSYM[i % CLSYM.length], c.color, 36) + '</div><div><h3>' + e(c.name) + '</h3><span class="meta">' + (ages.length ? Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) + ' let · ' : '') + c.capacity + ' míst · ' + (c.provoz === 'P' ? 'polodenní' : 'celodenní') + '</span></div></div>'
+          + (show.ucitele && who.length ? '<p>' + who.map(function (t) { return e(t.name) + (t.role !== 'Učitelka' ? ' <span class="meta">(' + e(t.role.toLowerCase()) + ')</span>' : ''); }).join(', ') + '</p>' : '') + '</article>';
+      }).join('') + '</div>'
+        + (show.ucitele ? '<p class="meta" style="margin-top:16px">Ředitelka: ' + e(this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '') + ' · ' + ped.length + ' pedagogů</p>' : '') + '</section>');
     }
     if (show.den) {
-      h.push('<section class="s" id="den"><div class="head"><h2>Jak vypadá ' + hl('náš den', 2) + '</h2><p>Časy jsou orientační, řídíme se počasím a dětmi.</p></div><ol class="day glass">' + DAY.map(function (d) { return '<li><time>' + e(d[0]) + '</time><span>' + e(d[1]) + '</span></li>'; }).join('') + '</ol></section>');
+      h.push('<section class="s" id="den"><div class="head"><h2>Den ve školce</h2><p>Časy jsou orientační, řídíme se počasím a dětmi.</p></div><ol class="day">' + DAY.map(function (d) { return '<li><time>' + e(d[0]) + '</time><span>' + e(d[1]) + '</span></li>'; }).join('') + '</ol></section>');
     }
     if (show.zapis) {
-      h.push('<section class="s" id="zapis"><div class="head"><h2>Zápis na rok ' + Z.year + '/' + (Z.year + 1) + '</h2></div>'
-        + '<div class="banner glass" style="background:var(--yellow-t)"><strong>2.–16. května ' + Z.year + '</strong><p>Žádost podává zákonný zástupce osobně, datovou schránkou nebo e-mailem s elektronickým podpisem. Od 1. 9. je předškolní vzdělávání povinné pro děti, které do 31. 8. dovrší 5 let.</p></div>'
-        + '<div class="grid" style="margin-top:20px"><div class="card glass"><h3>Kritéria přijetí</h3><ol class="crit"><li>Děti s povinným předškolním vzděláváním ze spádového obvodu.</li><li>Děti ze spádového obvodu od nejstaršího, které do 31. 8. dovrší 3 let.</li><li>Sourozenec už do školky chodí.</li><li>Ostatní děti podle věku; mladší 3 let jen při volné kapacitě.</li></ol></div>'
-        + (Z.published ? '<div class="card glass"><h3>Výsledky pod registračními čísly</h3><p class="meta">Zveřejněno ' + e(this.cz(new Date(Z.published))) + ' na 15 dní.</p><div class="tbl"><table><thead><tr><th>Reg. č.</th><th>Výsledek</th></tr></thead><tbody>'
+      h.push('<section class="s" id="zapis"><div class="head"><h2>Zápis</h2><p>Na školní rok ' + Z.year + '/' + (Z.year + 1) + '</p></div>'
+        + '<div class="banner"><strong>2.–16. května ' + Z.year + '</strong><span>Žádost podává zákonný zástupce osobně, datovou schránkou nebo e-mailem s elektronickým podpisem. Od 1. 9. je předškolní vzdělávání povinné pro děti, které do 31. 8. dovrší 5 let.</span></div>'
+        + '<div class="grid"><div class="card"><h3>Kritéria přijetí</h3><ol class="crit"><li>Děti s povinným předškolním vzděláváním ze spádového obvodu.</li><li>Děti ze spádového obvodu od nejstaršího, které do 31. 8. dovrší 3 let.</li><li>Sourozenec už do školky chodí.</li><li>Ostatní děti podle věku; mladší 3 let jen při volné kapacitě.</li></ol></div>'
+        + (Z.published ? '<div class="card"><h3>Výsledky pod registračními čísly</h3><p class="meta">Zveřejněno ' + e(this.cz(new Date(Z.published))) + ' na 15 dní.</p><div class="tbl"><table><thead><tr><th>Reg. č.</th><th>Výsledek</th></tr></thead><tbody>'
             + order.map(function (a) { return '<tr><td>' + e(a.reg) + '</td><td' + (a.result === 'prijato' ? ' class="yes">přijato' : '>nepřijato') + '</td></tr>'; }).join('') + '</tbody></table></div></div>'
-          : '<div class="card glass" style="background:var(--blue-t)"><h3>Volná místa</h3><p class="big">' + this.nextFree() + '</p><p class="meta">od září ' + Z.year + ' po odchodu předškoláků do základní školy</p></div>')
+          : '<div class="card"><h3>Volná místa</h3><p class="big">' + this.nextFree() + '</p><p class="meta">od září ' + Z.year + ' po odchodu předškoláků do základní školy</p></div>')
         + '</div></section>');
     }
     if (show.platby) {
       h.push('<section class="s" id="platby"><div class="head"><h2>Platby</h2><p>Platí se převodem do 15. dne v měsíci.</p></div><div class="grid">'
-        + '<div class="card glass" style="background:var(--pink-t)"><span class="meta">Školné</span><p class="big">' + e(this.kc(+this.rates.skolne || 0)) + '</p><p>měsíčně. Děti s povinným předškolním vzděláváním neplatí.</p></div>'
-        + '<div class="card glass" style="background:var(--yellow-t)"><span class="meta">Oběd a svačiny na den</span><p class="big">' + e(this.kc(+this.rates.s1 || 0)) + '</p><p>děti 3–6 let, starší ' + e(this.kc(+this.rates.s2 || 0)) + '. Platí se jen za odebrané obědy.</p></div>'
-        + '<div class="card glass" style="background:var(--blue-t)"><span class="meta">Číslo účtu</span><p class="big" style="font-size:26px">' + e(sc.ucet) + '</p><p>Variabilní symbol dostanete s nástupem, platí celý rok.</p></div>'
+        + '<div class="card"><span class="meta">Školné</span><p class="big">' + e(this.kc(+this.rates.skolne || 0)) + '</p><p>měsíčně. Děti s povinným předškolním vzděláváním neplatí.</p></div>'
+        + '<div class="card"><span class="meta">Stravné na den</span><p class="big">' + e(this.kc(+this.rates.s1 || 0)) + '</p><p>děti 3–6 let, starší ' + e(this.kc(+this.rates.s2 || 0)) + '. Platí se jen za odebrané obědy.</p></div>'
+        + '<div class="card"><span class="meta">Číslo účtu</span><p class="big" style="font-size:26px">' + e(sc.ucet) + '</p><p>Variabilní symbol dostanete s nástupem, platí celý rok.</p></div>'
         + '</div></section>');
     }
     h.push('<section class="s" id="kontakty"><div class="head"><h2>Kontakty</h2></div><div class="grid">'
-      + '<div class="card glass"><h3>Kde nás najdete</h3><p>' + e(sc.nazev) + '<br>' + e(sc.adresa) + '</p><p class="meta">Provoz ' + e(sc.provozni) + '</p></div>'
-      + '<div class="card glass"><h3>Telefon a e-mail</h3><p>' + e(sc.telefon) + '<br>' + e(sc.email) + '</p><p class="meta">Ředitelka ' + e(director) + '</p></div>'
-      + '<div class="card glass"><h3>Úřední cesty</h3><p>Datová schránka ' + e(sc.datovka) + '<br>IČO ' + e(sc.ico) + '</p><p class="meta">Úřední hodiny ' + e(sc.uredni) + '</p></div>'
+      + '<div class="card"><h3>Adresa</h3><p>' + e(sc.nazev) + '<br>' + e(sc.adresa) + '</p><p class="meta">Provoz ' + e(sc.provozni) + '</p></div>'
+      + '<div class="card"><h3>Telefon a e-mail</h3><p>' + e(sc.telefon) + '<br>' + e(sc.email) + '</p><p class="meta">Ředitelka ' + e(this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '') + '</p></div>'
+      + '<div class="card"><h3>Úřední cesty</h3><p>Datová schránka ' + e(sc.datovka) + '<br>IČO ' + e(sc.ico) + '</p><p class="meta">Úřední hodiny ' + e(sc.uredni) + '</p></div>'
       + '</div></section>');
+    var director = this.teachers.filter(function (t) { return t.role === 'Ředitelka'; }).map(function (t) { return t.name; })[0] || '';
     var INFO = [
       ['Název', sc.nazev], ['Důvod a způsob založení', 'Příspěvková organizace zřízená zřizovatelem ' + sc.zrizovatel + ' podle školského zákona.'],
       ['Organizační struktura', 'Ředitelka ' + director + ', ' + this.classes.length + ' třídy, ' + ped.length + ' pedagogů, provozní zaměstnanci.'],
@@ -1396,10 +1358,10 @@ class Component extends DCLogic {
       ['Sazebník úhrad za informace', 'Informace poskytujeme zdarma; za mimořádně rozsáhlé vyhledání se účtuje podle sazebníku školy.'],
       ['Ochrana osobních údajů', 'Pověřenec: ' + sc.poverenec]
     ];
-    h.push('<section class="s" id="informace"><div class="head"><h2>Povinné informace</h2><p>Podle zákona č. 106/1999 Sb.</p></div><dl class="info glass">' + INFO.map(function (r) { return '<dt>' + e(r[0]) + '</dt><dd>' + e(r[1]) + '</dd>'; }).join('') + '</dl>'
-      + (docs.length ? '<div class="docs">' + docs.map(function (d) { return '<a class="glass" href="dokumenty/' + e(d.file) + '">' + e(d.label) + ' <span>PDF</span></a>'; }).join('') + '</div>' : '') + '</section>');
+    h.push('<section class="s" id="informace"><div class="head"><h2>Povinné informace</h2><p>Podle zákona č. 106/1999 Sb.</p></div><dl class="info">' + INFO.map(function (r) { return '<dt>' + e(r[0]) + '</dt><dd>' + e(r[1]) + '</dd>'; }).join('') + '</dl>'
+      + (docs.length ? '<div class="docs">' + docs.map(function (d) { return '<a href="dokumenty/' + e(d.file) + '">' + e(d.label) + ' <span>PDF</span></a>'; }).join('') + '</div>' : '') + '</section>');
     h.push('</main><footer class="w"><p><strong>Prohlášení o přístupnosti.</strong> ' + e(sc.nazev) + ' se zavazuje zpřístupnit své webové stránky podle zákona č. 99/2019 Sb. Stránky jsou v souladu s tímto zákonem; dokumenty v PDF mohou být přístupné jen částečně. Připomínky posílejte na ' + e(sc.email) + '.</p>'
-      + '<p>Web nepoužívá cookies ani měřicí kódy. Aktualizováno ' + stamp + ' · ' + e(sc.web) + '</p></footer></div></body></html>');
+      + '<p>Web nepoužívá cookies ani měřicí kódy. Aktualizováno ' + stamp + ' · ' + e(sc.web) + '</p></footer></body></html>');
     return h.join('');
   }
 
