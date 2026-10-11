@@ -61,6 +61,16 @@ docházku, platby, zprávy a archiv.
 | **Webové stránky** | web školky se skládá z údajů v ředitelně: kontakty, třídy a učitelky, den ve školce, zápis (kritéria, volná místa, po zveřejnění výsledky pod reg. čísly), školné a stravné, aktuality ze zpráv celé školce, povinné informace podle zákona 106/1999 Sb., dokumenty, prohlášení o přístupnosti; kontrola povinných údajů, náhled počítač/mobil, stažení jako `index.html` (ukázka ve složce `web/`) |
 | **Archiv** | spisový a skartační plán (lhůty jsou ukázkové a dají se přepsat) a **historie změn** — kdo co kdy změnil |
 
+### Nastavení, profily, dokumenty (zkušební provoz)
+
+- **Menu** je po skupinách: Děti · Školka · Rodiče a veřejnost · Peníze · Povinná evidence · Nastavení.
+- **Nastavení školky** — všechny údaje na jednom místě (škola, kontakty, provoz, platby); matrika, web, dokumenty i platby si je berou odsud.
+- **Profily** učitelů, ředitelky a hospodářky: jméno, e-mail, telefon, role, fotka; bez fotky kreslená postava (vlasy, barva, tričko). Fotka se ukáže i na tabletu třídy.
+- **Kniha úrazů**: detail úrazu s počtem dní nepřítomnosti, **záznam o úrazu pro ČŠI a pojišťovnu** (předvyplněný, ke stažení), **poslat rodičům** jen když mají mobilní aplikaci — povoluje se v kartě dítěte.
+- **Dokumenty**: předvyplněné šablony povinných dokumentů (školní řád, ŠVP, kritéria přijímání, úplata, řád jídelny, provozní řád, BOZP, výroční zprávy, GDPR, spisový řád) — upravit, schválit, zveřejnit na webu, stáhnout.
+- **Vysvětlivky** zkratek (PPV, PO, ŠPZ, PLPP, IVP, AP, OSPOD…) v kartotéce.
+- **Zkušební provoz**: všechno funguje, ale nic neodchází ven; změny zůstávají v tomto prohlížeči (localStorage), „Vrátit ukázková data“ v Nastavení je smaže.
+
 ### Propojení s tablety
 
 Tablet třídy a ředitelna v jedné aplikaci sdílejí stav: úraz zapsaný na
