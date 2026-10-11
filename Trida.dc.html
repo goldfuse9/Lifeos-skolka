@@ -76,7 +76,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}<sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{false}}"><span style="{{t.badgeStyle}}">{{t.badge}}</span></sc-if></button>
       </sc-for>
     </nav>
-    <div aria-label="Učitelka Petra H." style="width: 52px; height: 52px; border-radius: 26px; background: #F6C6D8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px">PH</div>
+    <span aria-label="Učitelka {{meName}}" style="display: inline-flex; flex-shrink: 0"><span style="{{meAv.box}}"><sc-if value="{{meAv.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{meAv.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{meAv.drawn}}" hint-placeholder-val="{{true}}"><span style="{{meAv.back}}"></span><span style="{{meAv.body}}"></span><span style="{{meAv.head}}"></span><span style="{{meAv.front}}"></span><span style="{{meAv.eyes}}"></span></sc-if></span></span>
   </header>
 
   <sc-if value="{{tab.isTrida}}" hint-placeholder-val="{{true}}">
@@ -1183,7 +1183,35 @@ class Component extends DCLogic {
   /* Sdílený stav s ředitelnou (v jednom okně aplikace). Naostro server. */
   store() {
     var w = typeof window !== 'undefined' ? window : {};
-    return w.__skolka || (w.__skolka = { urazy: [], att: {}, kniha: {}, urazNo: 3 });
+    if (!w.__skolka) {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
+      var d0 = new Date(), today = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate();
+      if (saved && saved.day !== today) { saved.att = {}; saved.kidAtt = null; }
+      w.__skolka = saved || { urazy: [], att: {}, kniha: {}, urazNo: 3 };
+      w.__skolka.day = today;
+    }
+    return w.__skolka;
+  }
+
+  saveStore() {
+    var self = this;
+    clearTimeout(this._ss);
+    this._ss = setTimeout(function () { try { localStorage.setItem('skolka-sdilene-v1', JSON.stringify(self.store())); } catch (e) { /* bez úložiště */ } }, 300);
+  }
+
+  /* Stejná kreslená postava jako v ředitelně; fotka má přednost. */
+  meAvatar(size) {
+    var p = (this.store().people || {})[this.me] || {};
+    var L = p.look || { hair: '#3B2A20', style: 'bun', shirt: '#D9467E', skin: '#F3C9A8' }, S = size;
+    var abs = 'position: absolute; display: block; ';
+    return { box: 'width: ' + S + 'px; height: ' + S + 'px; border-radius: ' + (S / 2) + 'px; overflow: hidden; position: relative; flex-shrink: 0; display: inline-block; background: #F5DCE6',
+      hasPhoto: !!p.photo, photo: p.photo || '', drawn: !p.photo,
+      back: L.style === 'long' ? abs + 'left: 24%; width: 52%; top: 17%; height: 52%; border-radius: 46% 46% 22% 22%; background: ' + L.hair : (L.style === 'bun' ? abs + 'left: 39%; width: 22%; top: 7%; height: 22%; border-radius: 50%; background: ' + L.hair : 'display: none'),
+      body: abs + 'left: 16%; width: 68%; bottom: -16%; height: 44%; border-radius: 50% 50% 0 0 / 70% 70% 0 0; background: ' + L.shirt,
+      head: abs + 'left: 30%; width: 40%; top: 21%; height: 42%; border-radius: 50%; background: ' + L.skin,
+      front: abs + 'left: 27%; width: 46%; top: 17%; height: ' + (L.style === 'short' ? '20%' : '18%') + '; border-radius: 50% 50% 35% 35%; background: ' + L.hair,
+      eyes: abs + 'left: 41%; top: 42%; width: ' + Math.max(2, S * 0.045) + 'px; height: ' + Math.max(2, S * 0.045) + 'px; border-radius: 50%; background: #2A2A2A; box-shadow: ' + (S * 0.13) + 'px 0 0 #2A2A2A' };
   }
 
   iso(d) {
@@ -1256,6 +1284,7 @@ class Component extends DCLogic {
     });
     ST0.kidAtt = {};
     this.kids.forEach(function (k) { ST0.kidAtt[k.id] = { att: k.att, arrived: k.arrived, left: k.left }; });
+    this.saveStore();
     var DNY = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
     var MES = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
     var D = new Date();
@@ -1634,7 +1663,7 @@ class Component extends DCLogic {
         self.urazNo++;
         var ST = self.store();
         ST.urazNo = self.urazNo;
-        ST.urazy.push({ id: 'tab-' + Date.now(), no: self.urazNo, date: self.iso(new Date()), child: k.name, cls: k.cls, what: f.what + ' — ' + areaLabel + (f.place ? ' ' + PLACE[f.place] : ''), care: (f.care || []).join(', ') || 'bez ošetření', by: self.me, witness: f.witness || '' });
+        ST.urazy.push({ id: 'tab-' + Date.now(), no: self.urazNo, date: self.iso(new Date()), time: t, place: f.place ? PLACE[f.place].replace(/^(ve|na|v) /, '') : '', child: k.name, cls: k.cls, what: f.what + ' — ' + areaLabel + (f.place ? ' ' + PLACE[f.place] : ''), care: (f.care || []).join(', ') || 'bez ošetření', by: self.me, witness: f.witness || '' });
         self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'kniha úrazů č. ' + self.urazNo + (f.witness && f.witness !== 'Nikdo další' ? ' · svědek ' + f.witness : '') });
       }
       if (kind === 'poznamka') {
@@ -2129,7 +2158,7 @@ class Component extends DCLogic {
     return {
       dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
       kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
-      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn,
+      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(52), meName: this.me,
       dlg: dlg, gal: gal, viewer: viewer, akce: akce, meet: meet, kons: kons,
       openTridy: openDlg('tridy', { from: 'Od 14:00', with: [] }),
       toast: { show: !!st.toast, text: st.toast || '' },

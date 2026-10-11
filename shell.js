@@ -19,6 +19,28 @@ const DESKY = {
   'Trida.dc.html': 'trida',
   'Reditel.dc.html': 'reditel',
 };
+/* Na jaký rozměr je která deska nakreslená. Menší okno = deska se celá
+   zmenší, aby se vešla; větší okno = roztáhne se. Pod 60 % se už dál
+   nezmenšuje (text by byl nečitelný) a okno se dá posunout. */
+const ROZMER = {
+  trida: [1194, 834],
+  reditel: [1440, 900],
+};
+const MIN_ZOOM = 0.6;
+let aktualni = null;
+
+function prizpusob() {
+  const r = ROZMER[aktualni] || [1194, 834];
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const z = Math.max(MIN_ZOOM, Math.min(1, vw / r[0], vh / r[1]));
+  koren.style.setProperty('--z', String(z));
+  koren.style.setProperty('--w', Math.max(vw / z, z === MIN_ZOOM ? r[0] : 0) + 'px');
+  koren.style.setProperty('--h', Math.max(vh / z, z === MIN_ZOOM ? r[1] : 0) + 'px');
+  document.documentElement.style.overflow = z === MIN_ZOOM ? 'auto' : 'hidden';
+  document.body.style.overflow = z === MIN_ZOOM ? 'auto' : 'hidden';
+}
+window.addEventListener('resize', prizpusob);
+
 const PODLE_JMENA = Object.fromEntries(Object.entries(DESKY).map(([s, k]) => [k, s]));
 const VYCHOZI = 'trida';
 
@@ -47,6 +69,8 @@ async function otevri(klic, zHashe) {
     chybaEl.hidden = true;
     nacitam.hidden = false;
     const t = await zdroj(soubor);
+    aktualni = klic;
+    prizpusob();
     window.DC.pripojDesku(t, koren, soubor);
     nacitam.hidden = true;
     if (!zHashe) location.hash = '#' + klic;
