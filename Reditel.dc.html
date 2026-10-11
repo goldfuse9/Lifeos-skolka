@@ -15,6 +15,15 @@ body{margin:0}
 a{color:#17181A}a:hover{color:#000}
 button,input,textarea,select{font-family:inherit}
 input::placeholder,textarea::placeholder{color:#8A8C90}
+.doc-ed{outline:none;color:#17181A}
+.doc-ed h1{font:700 1.45em/1.25 system-ui,-apple-system,sans-serif;margin:0 0 .6em}
+.doc-ed h2{font:700 1.15em/1.3 system-ui,-apple-system,sans-serif;margin:1.1em 0 .4em}
+.doc-ed p,.doc-ed div{margin:0 0 .55em}
+.doc-ed ul,.doc-ed ol{margin:0 0 .6em;padding-left:1.4em}
+.doc-ed li{margin:0 0 .2em}
+.doc-tb button{height:34px;min-width:34px;padding:0 9px;border-radius:10px;border:0;background:transparent;font-size:14px;color:#17181A;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.doc-tb button:hover{background:#F3F4F2}
+.doc-tb select{height:34px;border-radius:10px;border:1px solid #E5E7E4;background:#FFFFFF;font-size:13px;padding:0 6px;color:#17181A}
 </style>
 </helmet>
 <div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F8F9F7; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; overflow: hidden; position: relative">
@@ -784,7 +793,38 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </sc-for>
           </div>
           <span style="{{docsP.noteStyle}}">{{docsP.note}}</span>
-          <textarea id="dokument-text" aria-label="Text dokumentu" value="{{docsP.text}}" onInput="{{docsP.onText}}" onChange="{{docsP.onText}}" style="flex-grow: 1; min-height: 0; border-radius: 14px; border: 1px solid #E5E7E4; padding: 14px 16px; font-size: 14px; line-height: 21px; color: #17181A; resize: none; font-family: inherit"></textarea>
+          <div class="doc-tb" role="toolbar" aria-label="Formátování" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 6px; border-radius: 14px; background: #F8F9F7; border: 1px solid #EEF0ED">
+            <select aria-label="Styl odstavce" onChange="{{docsP.tb.block}}" onMouseDown="{{docsP.tb.keepSel}}">
+              <option value="">Styl…</option><option value="p">Text</option><option value="h1">Nadpis</option><option value="h2">Podnadpis</option>
+            </select>
+            <select aria-label="Velikost písma" onChange="{{docsP.tb.size}}" onMouseDown="{{docsP.tb.keepSel}}">
+              <option value="">Velikost…</option><option value="9">9 pt</option><option value="10">10 pt</option><option value="11">11 pt</option><option value="12">12 pt</option><option value="14">14 pt</option><option value="16">16 pt</option><option value="18">18 pt</option><option value="24">24 pt</option>
+            </select>
+            <span style="width: 1px; height: 22px; background: #E5E7E4; margin: 0 4px"></span>
+            <button type="button" aria-label="Tučně" title="Tučně (⌘B)" onMouseDown="{{docsP.tb.bold}}" style="font-weight: 800">B</button>
+            <button type="button" aria-label="Kurzíva" title="Kurzíva (⌘I)" onMouseDown="{{docsP.tb.italic}}" style="font-style: italic; font-family: Georgia, serif">I</button>
+            <button type="button" aria-label="Podtržení" title="Podtržení (⌘U)" onMouseDown="{{docsP.tb.underline}}" style="text-decoration: underline">U</button>
+            <span style="width: 1px; height: 22px; background: #E5E7E4; margin: 0 4px"></span>
+            <button type="button" aria-label="Zarovnat vlevo" title="Zarovnat vlevo" onMouseDown="{{docsP.tb.left}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"></path></svg></button>
+            <button type="button" aria-label="Na střed" title="Na střed" onMouseDown="{{docsP.tb.center}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"></path></svg></button>
+            <button type="button" aria-label="Zarovnat vpravo" title="Zarovnat vpravo" onMouseDown="{{docsP.tb.right}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"></path></svg></button>
+            <button type="button" aria-label="Do bloku" title="Do bloku" onMouseDown="{{docsP.tb.justify}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></button>
+            <span style="width: 1px; height: 22px; background: #E5E7E4; margin: 0 4px"></span>
+            <button type="button" aria-label="Odrážky" title="Odrážky" onMouseDown="{{docsP.tb.ul}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1" fill="currentColor"></circle><circle cx="4.5" cy="12" r="1" fill="currentColor"></circle><circle cx="4.5" cy="18" r="1" fill="currentColor"></circle></svg></button>
+            <button type="button" aria-label="Číslování" title="Číslování" onMouseDown="{{docsP.tb.ol}}" style="font-size: 12px; font-weight: 800">1.</button>
+            <button type="button" aria-label="Zrušit formát" title="Zrušit formát vybraného textu" onMouseDown="{{docsP.tb.clear}}" style="font-size: 13px; font-weight: 700; color: #5A5C60">T̸</button>
+            <span style="width: 1px; height: 22px; background: #E5E7E4; margin: 0 4px"></span>
+            <button type="button" aria-label="Zpět" title="Zpět (⌘Z)" onMouseDown="{{docsP.tb.undo}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 0 12h-3"></path></svg></button>
+            <button type="button" aria-label="Znovu" title="Znovu" onMouseDown="{{docsP.tb.redo}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0 0 12h3"></path></svg></button>
+            <span style="flex-grow: 1"></span>
+            <span style="font-size: 12px; font-weight: 700; color: #5A5C60; margin-right: 2px">Celý dokument:</span>
+            <sc-for list="{{docsP.fmt}}" as="c" hint-placeholder-count="5">
+              <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" title="{{c.title}}" style="{{c.style}}">{{c.label}}</button>
+            </sc-for>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto; background: #F3F4F2; border-radius: 14px; padding: 18px 0">
+            <div id="dokument-editor" class="doc-ed" role="textbox" aria-multiline="true" aria-label="Text dokumentu" contenteditable="{{docsP.editable}}" spellcheck="true" onInput="{{docsP.onInput}}" onPaste="{{docsP.onPaste}}" onKeyUp="{{docsP.keepSel}}" onMouseUp="{{docsP.keepSel}}" style="{{docsP.pageStyle}}"></div>
+          </div>
         </section>
       </div>
     </sc-if>
@@ -935,6 +975,25 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <button type="button" onClick="{{dlg.save}}" aria-disabled="{{dlg.cantSave}}" style="{{dlg.saveStyle}}">{{dlg.saveLabel}}</button>
           </div>
         </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ NÁHLED TISKU -->
+  <sc-if value="{{preview.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.45); display: flex; align-items: center; justify-content: center; z-index: 7">
+      <div role="dialog" aria-label="Náhled tisku" style="width: 920px; height: 860px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.3)">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 16px 18px 14px 24px; border-bottom: 1px solid #EEF0ED">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+            <span style="font-size: 13px; font-weight: 600; color: #5A5C60">Náhled tisku · A4</span>
+            <span style="font-size: 22px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{preview.title}}</span>
+          </div>
+          <button type="button" onClick="{{preview.print}}" style="height: 44px; padding: 0 20px; border-radius: 22px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">Vytisknout / PDF</button>
+          <button type="button" onClick="{{preview.close}}" aria-label="Zavřít náhled" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <iframe title="Náhled tisku" sandbox="allow-scripts" srcdoc="{{preview.html}}" style="flex-grow: 1; min-height: 0; width: 100%; border: 0; background: #E5E7E4"></iframe>
       </div>
     </div>
   </sc-if>
@@ -1598,10 +1657,12 @@ class Component extends DCLogic {
     return (T[key] || ['# ' + key]).join('\n');
   }
 
-  docHtml(d) {
+  /* Starší dokumenty jsou v jednoduchém textu („# nadpis“, „- odrážka“);
+     editor ukládá HTML. Tohle převede text na HTML, ať se dá formátovat. */
+  mdToHtml(text) {
     var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
     var out = [], inList = false;
-    (d.text || this.docTemplate(d.key)).split('\n').forEach(function (l) {
+    String(text || '').split('\n').forEach(function (l) {
       var li = /^- /.test(l);
       if (li && !inList) { out.push('<ul>'); inList = true; }
       if (!li && inList) { out.push('</ul>'); inList = false; }
@@ -1611,14 +1672,69 @@ class Component extends DCLogic {
       else if (l.trim()) out.push('<p>' + e(l) + '</p>');
     });
     if (inList) out.push('</ul>');
-    return '<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>' + e(d.title) + '</title><style>body{font:16px/1.6 Georgia,serif;max-width:760px;margin:40px auto;padding:0 20px;color:#17181A}h1{font:700 26px/1.2 system-ui,sans-serif}h2{font:700 17px/1.3 system-ui,sans-serif;margin-top:26px}.meta{color:#5A5C60;font:13px system-ui,sans-serif;margin-top:32px}</style></head><body>'
-      + out.join('\n') + '<p class="meta">' + (d.approved ? 'Schváleno ' + this.cz(new Date(d.approved)) + ', verze ' + d.version : 'Koncept — zatím neschváleno') + '</p></body></html>';
+    return out.join('');
   }
+  docBody(d) { return d.html || this.mdToHtml(d.text || this.docTemplate(d.key)); }
+  docFmt(d) { var f = d.fmt || {}; return { font: f.font || 'serif', size: f.size || 11, lh: f.lh || 1.5 }; }
+  /* Jedna sada pravidel pro editor, náhled i tisk — proto vypadají stejně. */
+  docCss(d, sel) {
+    var f = this.docFmt(d), S = sel || '.doc';
+    var fam = f.font === 'sans' ? 'Arial, Helvetica, sans-serif' : 'Georgia, "Times New Roman", serif';
+    return S + '{font-family:' + fam + ';font-size:' + f.size + 'pt;line-height:' + f.lh + ';color:#17181A}'
+      + S + ' h1{font:700 1.45em/1.25 system-ui,-apple-system,sans-serif;margin:0 0 .6em}'
+      + S + ' h2{font:700 1.15em/1.3 system-ui,-apple-system,sans-serif;margin:1.1em 0 .4em}'
+      + S + ' p,' + S + ' div{margin:0 0 .55em}' + S + ' ul,' + S + ' ol{margin:0 0 .6em;padding-left:1.4em}' + S + ' li{margin:0 0 .2em}';
+  }
+  docHtml(d) {
+    var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    return '<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>' + e(d.title) + '</title><style>body{max-width:760px;margin:40px auto;padding:0 20px}' + this.docCss(d) + '.meta{color:#5A5C60;font:13px system-ui,sans-serif;margin-top:32px}</style></head><body><div class="doc">'
+      + this.docBody(d) + '</div><p class="meta">' + (d.approved ? 'Schváleno ' + this.cz(new Date(d.approved)) + ', verze ' + d.version : 'Koncept — zatím neschváleno') + '</p></body></html>';
+  }
+
 
   /* Dokument k tisku nebo do PDF: hlavička školy, obsah, místo na podpisy.
      Otevře se v novém okně s tiskem („Uložit jako PDF“); když okno nejde
      otevřít, stáhne se jako HTML. */
-  printDoc(title, body) {
+  /* ------------------------------------------------ editor dokumentů
+     Formátování dělá prohlížeč (execCommand) přímo v poli. Výběr textu si
+     pamatujeme, protože klepnutí do nabídky (styl, velikost) ho jinak zruší. */
+  docEl() { return typeof document !== 'undefined' ? document.getElementById('dokument-editor') : null; }
+  docSaveSel() {
+    var el = this.docEl(), sel = window.getSelection && window.getSelection();
+    if (el && sel && sel.rangeCount && el.contains(sel.getRangeAt(0).commonAncestorContainer)) this._docRange = sel.getRangeAt(0).cloneRange();
+  }
+  docRestoreSel() {
+    var el = this.docEl(); if (!el) return false;
+    el.focus();
+    if (this._docRange && el.contains(this._docRange.commonAncestorContainer)) { var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(this._docRange); }
+    return true;
+  }
+  docStore() {
+    var el = this.docEl(); if (!el) return;
+    var DS = this.docs.filter(function (d) { return d.key === this.state.docSel; }, this)[0] || this.docs[0];
+    DS.html = el.innerHTML; if (DS.approved) DS.edited = true;
+    this.docSaveSel(); this.save();
+  }
+  docCmd(c, v) {
+    if (!this.docRestoreSel()) return;
+    try { document.execCommand('styleWithCSS', false, false); } catch (e) { /* starší prohlížeč */ }
+    document.execCommand(c, false, c === 'formatBlock' ? '<' + v + '>' : (v == null ? null : v));
+    this.docStore();
+  }
+  docSize(pt) {
+    if (!this.docRestoreSel()) return;
+    var el = this.docEl();
+    try { document.execCommand('styleWithCSS', false, false); } catch (e) { /* nic */ }
+    document.execCommand('fontSize', false, '7');
+    [].slice.call(el.querySelectorAll('font[size="7"]')).forEach(function (fnt) {
+      var sp = document.createElement('span'); sp.style.fontSize = pt + 'pt';
+      while (fnt.firstChild) sp.appendChild(fnt.firstChild);
+      fnt.parentNode.replaceChild(sp, fnt);
+    });
+    this.docStore();
+  }
+
+  printPage(title, body, css) {
     var sc = this.school;
     var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
     var html = '<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>' + e(title) + '</title><style>'
@@ -1631,7 +1747,30 @@ class Component extends DCLogic {
       + '</style></head><body>'
       + '<div class="hd"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="9" fill="#F2A900"/><g stroke="#F2A900" stroke-width="3.5" stroke-linecap="round"><path d="M24 5v5M24 38v5M5 24h5M38 24h5M10.6 10.6l3.5 3.5M33.9 33.9l3.5 3.5M10.6 37.4l3.5-3.5M33.9 14.1l3.5-3.5"/></g></svg>'
       + '<div><b>' + e(sc.nazev) + '</b><span>' + e(sc.adresa) + ' · IČO ' + e(sc.ico) + ' · IZO ' + e(sc.izo) + ' · ' + e(sc.telefon) + ' · ' + e(sc.email) + '</span></div></div>'
+      + (css ? '<style>' + css + '</style>' : '')
       + body + '<div class="ft">Vytištěno ' + this.cz(this.today) + ' z ředitelny ' + e(sc.name) + '.</div></body></html>';
+    return html;
+  }
+  /* Náhled: stejná stránka jako tisk, jen rozdělená na listy A4 (okraje
+     18 × 16 mm), aby bylo vidět, kde stránka končí. */
+  previewPage(title, body, css) {
+    var html = this.printPage(title, body, css);
+    var pg = '<style>@media screen{html{background:#E5E7E4}body{margin:0;padding:22px 0 8px}'
+      + '.pg{width:210mm;height:297mm;padding:18mm 16mm;box-sizing:border-box;background:#fff;margin:0 auto 18px;box-shadow:0 2px 10px rgba(0,0,0,.12);position:relative;overflow:hidden}'
+      + '.pg-in{height:100%;overflow:hidden}.pg-no{position:absolute;bottom:7mm;right:16mm;font:8pt system-ui,sans-serif;color:#999}#src{display:none}}</style>';
+    var js = '<script>(function(){var src=document.getElementById("src"),blocks=[];'
+      + '[].slice.call(src.childNodes).forEach(function(n){if(n.nodeType!==1)return;'
+      + 'if(n.classList.contains("doc")){[].slice.call(n.childNodes).forEach(function(c){if(c.nodeType===3&&!c.textContent.trim())return;'
+      + 'if(c.nodeType===1&&/^(UL|OL)$/.test(c.tagName)){[].slice.call(c.children).forEach(function(li,i){var l=c.cloneNode(false);if(c.tagName==="OL")l.start=(c.start||1)+i;l.appendChild(li.cloneNode(true));blocks.push({doc:1,el:l});});}'
+      + 'else blocks.push({doc:1,el:c.cloneNode(true)});});}else blocks.push({el:n.cloneNode(true)});});'
+      + 'var pages=[],cur,docBox;function page(){var p=document.createElement("div");p.className="pg";var i=document.createElement("div");i.className="pg-in";p.appendChild(i);document.body.appendChild(p);pages.push(p);cur=i;docBox=null;}'
+      + 'page();blocks.forEach(function(b){var t=cur;if(b.doc){if(!docBox){docBox=src.querySelector(".doc").cloneNode(false);cur.appendChild(docBox);}t=docBox;}t.appendChild(b.el);'
+      + 'if(cur.scrollHeight>cur.clientHeight+1&&cur.childNodes.length+(docBox?docBox.childNodes.length:0)>2){t.removeChild(b.el);page();if(b.doc){docBox=src.querySelector(".doc").cloneNode(false);cur.appendChild(docBox);docBox.appendChild(b.el);}else cur.appendChild(b.el);}});'
+      + 'pages.forEach(function(p,i){var n=document.createElement("div");n.className="pg-no";n.textContent="Strana "+(i+1)+" z "+pages.length;p.appendChild(n);});})();<\/script>';
+    return html.replace('</head><body>', pg + '</head><body><div id="src">').replace('</body></html>', '</div>' + js + '</body></html>');
+  }
+  printDoc(title, body, css) {
+    var html = this.printPage(title, body, css);
     var w = null;
     try { w = window.open('', '_blank'); } catch (err) { w = null; }
     if (w && w.document) {
@@ -2615,11 +2754,38 @@ class Component extends DCLogic {
         style: 'width: 100%; border: 0; border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F4F2' : 'transparent') }; }),
       title: DS.title,
       meta: DS.law + ' · ' + (DS.approved ? 'schváleno ' + this.cz(new Date(DS.approved)) + ', verze ' + DS.version : 'zatím neschváleno') + (DS.webable ? (DS.onWeb && DS.approved ? ' · na webu' : ' · není na webu') : ' · jen ve školce'),
-      note: DS.text ? 'Upravený text — údaje školky se do něj už samy nepropisují. „Vrátit šablonu“ ho znovu poskládá z aktuálních údajů.' : 'Předvyplněno z údajů školky podle předpisů platných k polovině roku 2026. Před schválením si text přečtěte a upravte podle školky.',
-      noteStyle: 'font-size: 13px; line-height: 18px; padding: 8px 12px; border-radius: 12px; ' + (DS.text ? 'background: #F7F0DA; color: #5C4300' : 'background: #EBF1FA; color: #27407A'),
-      text: DS.text || this.docTemplate(DS.key),
-      onText: function (ev) { DS.text = ev.target.value; if (DS.approved) DS.edited = true; self.forceUpdate(); },
+      note: (DS.html || DS.text) ? 'Upravený text — údaje školky se do něj už samy nepropisují. „Vrátit šablonu“ ho znovu poskládá z aktuálních údajů.' : 'Předvyplněno z údajů školky podle předpisů platných k polovině roku 2026. Před schválením si text přečtěte a upravte podle školky.',
+      noteStyle: 'font-size: 13px; line-height: 18px; padding: 8px 12px; border-radius: 12px; ' + ((DS.html || DS.text) ? 'background: #F7F0DA; color: #5C4300' : 'background: #EBF1FA; color: #27407A'),
+      editable: canEdit ? 'true' : 'false',
+      pageStyle: 'width: 178mm; max-width: calc(100% - 40px); min-height: 100%; box-sizing: border-box; margin: 0 auto; padding: 16mm 0; background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 6px rgba(23,24,26,0.08); padding-left: 14mm; padding-right: 14mm; '
+        + (function () { var f = self.docFmt(DS); return 'font-family: ' + (f.font === 'sans' ? 'Arial, Helvetica, sans-serif' : 'Georgia, "Times New Roman", serif') + '; font-size: ' + f.size + 'pt; line-height: ' + f.lh; })(),
+      /* Psaní stav nepřekresluje — jinak by kurzor skočil na začátek. */
+      onInput: function (ev) { DS.html = ev.currentTarget.innerHTML; if (DS.approved) DS.edited = true; self._docDirty = true; self.save(); },
+      onPaste: function (ev) { ev.preventDefault(); var t = (ev.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, t); },
+      keepSel: function () { self.docSaveSel(); },
+      tb: (function () {
+        var cmd = function (c, v) { return function (ev) { if (ev) ev.preventDefault(); if (!canEdit) return; self.docCmd(c, v); }; };
+        return {
+          keepSel: function () { self.docSaveSel(); },
+          block: function (ev) { var v = ev.target.value; ev.target.value = ''; if (v) self.docCmd('formatBlock', v); },
+          size: function (ev) { var v = ev.target.value; ev.target.value = ''; if (v) self.docSize(v); },
+          bold: cmd('bold'), italic: cmd('italic'), underline: cmd('underline'),
+          left: cmd('justifyLeft'), center: cmd('justifyCenter'), right: cmd('justifyRight'), justify: cmd('justifyFull'),
+          ul: cmd('insertUnorderedList'), ol: cmd('insertOrderedList'), clear: cmd('removeFormat'), undo: cmd('undo'), redo: cmd('redo')
+        };
+      })(),
+      fmt: (function () {
+        var F = self.docFmt(DS);
+        var chip = function (label, title, on, set) { return { label: label, title: title, on: on ? 'true' : 'false', pick: function () { if (!canEdit) return; DS.fmt = Object.assign(self.docFmt(DS), set); if (DS.approved) DS.edited = true; self.forceUpdate(); },
+          style: 'height: 30px; min-width: 0; padding: 0 10px; border-radius: 15px; font-size: 12px; font-weight: 700; cursor: pointer; ' + (on ? 'border: 1px solid #B4C6DD; background: #E6EDF6; color: #1F3A5C' : 'border: 1px solid #E5E7E4; background: #FFFFFF; color: #3A3C40') }; };
+        return [
+          chip('Patkové', 'Písmo celého dokumentu: Georgia', F.font === 'serif', { font: 'serif' }), chip('Bezpatkové', 'Písmo celého dokumentu: Arial', F.font === 'sans', { font: 'sans' }),
+          chip('10 pt', 'Základní velikost textu', F.size === 10, { size: 10 }), chip('11 pt', 'Základní velikost textu', F.size === 11, { size: 11 }), chip('12 pt', 'Základní velikost textu', F.size === 12, { size: 12 }),
+          chip('Řádky 1,15', 'Řádkování', F.lh === 1.15, { lh: 1.15 }), chip('1,5', 'Řádkování', F.lh === 1.5, { lh: 1.5 })
+        ];
+      })(),
       actions: [
+        { label: 'Náhled', style: docBtn(false, false), go: function () { self.setState({ docPreview: DS.key }); } },
         { label: DS.approved && !DS.edited ? 'Schváleno' : DS.approved ? 'Schválit novou verzi' : 'Schválit', style: docBtn(true, !needApprove || !canEdit), go: function () {
           if (!needApprove || !canEdit) return;
           DS.approved = self.iso(self.today); DS.version = (DS.version || 0) + 1; DS.edited = false;
@@ -2628,8 +2794,19 @@ class Component extends DCLogic {
       ].concat(DS.webable ? [{ label: DS.onWeb ? 'Stáhnout z webu' : 'Zveřejnit na webu', style: docBtn(false, !DS.approved || !canEdit), go: function () {
           if (!DS.approved || !canEdit) return; DS.onWeb = !DS.onWeb; self.log((DS.onWeb ? 'Zveřejněn na webu: ' : 'Stažen z webu: ') + DS.title); self.forceUpdate(); self.showToast(DS.onWeb ? DS.title + ' je na webu' : DS.title + ' už na webu není');
         } }] : []).concat([{ label: 'Stáhnout', style: docBtn(false, false), go: function () { self.download({ name: DS.key + '.html', text: self.docHtml(DS), type: 'text/html' }); } }])
-        .concat(DS.text ? [{ label: 'Vrátit šablonu', style: docBtn(false, !canEdit), go: function () { if (!canEdit) return; DS.text = null; if (DS.approved) DS.edited = true; self.forceUpdate(); } }] : [])
+        .concat((DS.html || DS.text) ? [{ label: 'Vrátit šablonu', style: docBtn(false, !canEdit), go: function () { if (!canEdit) return; DS.text = null; DS.html = null; if (DS.approved) DS.edited = true; self.forceUpdate(); } }] : [])
     };
+
+    /* Editor je mimo šablonu (contenteditable): po vykreslení do něj vrátíme text. */
+    var docBodyNow = this.docBody(DS);
+    setTimeout(function () {
+      var el = document.getElementById('dokument-editor');
+      if (el && el.getAttribute('data-filled') !== '1') { el.innerHTML = docBodyNow; el.setAttribute('data-filled', '1'); }
+    }, 0);
+    var PV = st.docPreview ? (this.docs.filter(function (d) { return d.key === st.docPreview; })[0] || null) : null;
+    var preview = { open: !!PV, title: PV ? PV.title : '', html: PV ? this.previewPage(PV.title, '<div class="doc">' + this.docBody(PV) + '</div>', this.docCss(PV)) : '',
+      close: function () { self.setState({ docPreview: null }); },
+      print: function () { if (PV) self.printDoc(PV.title, '<div class="doc">' + self.docBody(PV) + '</div>', self.docCss(PV)); } };
 
     /* -------------------------------------------------- nastavení */
     var sc = this.school;
@@ -2893,7 +3070,7 @@ class Component extends DCLogic {
         return [{ title: 'Učitelé', sub: cnt(ped.length, 'pedagog', 'pedagogové', 'pedagogů') + ' · ředitelka, zástupkyně a učitelky', items: ped },
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
-      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP,
+      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview,
       dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }
