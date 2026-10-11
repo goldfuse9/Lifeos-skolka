@@ -33,6 +33,16 @@ input::placeholder{color:#8A8C90}
       <span style="font-size: 14px; color: #5A5C60">{{school}}</span>
     </div>
 
+    <sc-if value="{{ses.on}}" hint-placeholder-val="{{false}}">
+      <div role="status" style="display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border-radius: 16px; background: #F3F4F2">
+        <span style="font-size: 14px; line-height: 20px; color: #3A3C40">Teď je přihlášen(a) <b style="font-weight: 800; color: #17181A">{{ses.jmeno}}</b> · {{ses.role}}.<sc-if value="{{ses.hasWhy}}" hint-placeholder-val="{{false}}"> {{ses.why}}</sc-if></span>
+        <div style="display: flex; gap: 8px">
+          <button type="button" onClick="{{ses.go}}" style="flex: 1 1 0; height: 40px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">{{ses.goLabel}}</button>
+          <button type="button" onClick="{{ses.logout}}" style="flex: 1 1 0; height: 40px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; color: #17181A; font-size: 14px; font-weight: 700; cursor: pointer">Odhlásit</button>
+        </div>
+      </div>
+    </sc-if>
+
     <div role="radiogroup" aria-label="Kam se přihlásit" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
       <sc-for list="{{oblasti}}" as="o" hint-placeholder-count="3">
         <button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">
@@ -89,7 +99,9 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     var A = this.api();
-    this.state = { oblast: (A.posledniOblast && A.posledniOblast()) || 'reditel', email: '', heslo: '', ukazHeslo: false, chyba: '', busy: false };
+    var chtel = A.chtel && /^(reditel|trida|jidelna)$/.test(A.chtel) ? A.chtel : '';
+    this.chtel = chtel;
+    this.state = { oblast: chtel || (A.posledniOblast && A.posledniOblast()) || 'reditel', email: '', heslo: '', ukazHeslo: false, chyba: '', busy: false };
   }
 
   api() {
@@ -128,7 +140,18 @@ class Component extends DCLogic {
       };
     });
     var cur = O.filter(function (o) { return o[0] === st.oblast; })[0] || O[0];
+    var NZ = { reditel: 'Ředitelna', trida: 'Třída', jidelna: 'Jídelna' };
+    var U = this.api().aktualni ? this.api().aktualni() : null;
+    var ses = U ? {
+      on: true, jmeno: U.jmeno, role: U.role,
+      hasWhy: !!this.chtel && U.desky.indexOf(this.chtel) === -1,
+      why: this.chtel ? 'Do části „' + NZ[this.chtel] + '“ tenhle přístup nevede — odhlaste se a přihlaste jiným.' : '',
+      goLabel: 'Pokračovat: ' + NZ[U.desky[0]],
+      go: function () { self.api().otevri(U.desky[0]); },
+      logout: function () { self.api().odhlas(); }
+    } : { on: false, jmeno: '', role: '', hasWhy: false, why: '', goLabel: '', go: function () {}, logout: function () {} };
     return {
+      ses: ses,
       school: 'MŠ Sluníčko · Praha 6', oblasti: oblasti, oblastPopis: cur[2],
       email: st.email, heslo: st.heslo, hesloTyp: st.ukazHeslo ? 'text' : 'password',
       hesloToggle: st.ukazHeslo ? 'Skrýt' : 'Zobrazit', hesloToggleAria: st.ukazHeslo ? 'Skrýt heslo' : 'Zobrazit heslo',

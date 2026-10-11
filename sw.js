@@ -4,7 +4,7 @@
    Po každé změně souboru zvedněte VERZE, jinak si tablet nechá starou.
    ============================================================================= */
 
-const VERZE = 'skolka-v22';
+const VERZE = 'skolka-v23';
 const SOUBORY = [
   './',
   './index.html',
@@ -36,29 +36,32 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+/* Naše soubory: napřed síť (ať je vždy poslední verze a skořápka sedí
+   k deskám), cache jen když síť nejde — tablet tak funguje i bez wifi.
+   Písma: napřed cache, mění se zřídka. */
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  const u = new URL(req.url);
+  const nase = u.origin === location.origin;
+  const pismo = u.host.endsWith('googleapis.com') || u.host.endsWith('gstatic.com');
+  if (!nase && !pismo) return;
+
+  if (pismo) {
+    e.respondWith(caches.match(req).then((z) => z || fetch(req).then((o) => {
+      if (o.ok) { const k = o.clone(); caches.open(VERZE).then((c) => c.put(req, k)); }
+      return o;
+    })));
+    return;
+  }
 
   e.respondWith(
-    caches.match(req, { ignoreSearch: true }).then((zCache) => {
-      if (zCache) return zCache;
-
-      return fetch(req)
-        .then((odpoved) => {
-          const u = new URL(req.url);
-          const nase = u.origin === location.origin;
-          const pismo = u.host.endsWith('googleapis.com') || u.host.endsWith('gstatic.com');
-          if (odpoved.ok && (nase || pismo)) {
-            const kopie = odpoved.clone();
-            caches.open(VERZE).then((c) => c.put(req, kopie));
-          }
-          return odpoved;
-        })
-        .catch(() => {
-          if (req.mode === 'navigate') return caches.match('./index.html');
-          return new Response('', { status: 504, statusText: 'Offline' });
-        });
-    }),
+    fetch(req, { cache: 'no-cache' })
+      .then((odpoved) => {
+        if (odpoved.ok) { const kopie = odpoved.clone(); caches.open(VERZE).then((c) => c.put(req, kopie)); }
+        return odpoved;
+      })
+      .catch(() => caches.match(req, { ignoreSearch: true })
+        .then((z) => z || (req.mode === 'navigate' ? caches.match('./index.html') : new Response('', { status: 504, statusText: 'Offline' })))),
   );
 });
