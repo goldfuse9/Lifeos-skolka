@@ -228,8 +228,11 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
 
     <!-- ========================================================== UČITELÉ -->
     <sc-if value="{{is.ucitele}}" hint-placeholder-val="{{false}}">
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; flex-grow: 1; min-height: 0; overflow-y: auto; padding: 2px">
-        <sc-for list="{{teachers}}" as="t" hint-placeholder-count="6">
+      <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1; min-height: 0; overflow-y: auto; padding: 2px">
+        <sc-for list="{{staffGroups}}" as="g" hint-placeholder-count="2">
+        <div style="display: flex; align-items: baseline; gap: 10px; padding: 4px 2px 0"><h2 style="margin: 0; font-size: 17px; font-weight: 800">{{g.title}}</h2><span style="font-size: 13px; color: #5A5C60">{{g.sub}}</span></div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start">
+        <sc-for list="{{g.items}}" as="t" hint-placeholder-count="3">
           <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
             <div style="display: flex; align-items: center; gap: 12px">
               <span style="{{t.av.box}}"><sc-if value="{{t.av.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{t.av.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{t.av.drawn}}" hint-placeholder-val="{{true}}"><span style="{{t.av.back}}"></span><span style="{{t.av.body}}"></span><span style="{{t.av.head}}"></span><span style="{{t.av.front}}"></span><span style="{{t.av.eyes}}"></span></sc-if></span>
@@ -272,6 +275,8 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               </sc-if>
             </div>
           </div>
+        </sc-for>
+        </div>
         </sc-for>
       </div>
     </sc-if>
@@ -2847,7 +2852,16 @@ class Component extends DCLogic {
       school: { name: this.school.name }, year: this.syStart + '/' + (this.syStart + 1),
       nav: nav, is: is, page: page,
       stats: stats, todo: todo, todoNone: todo.length === 0, classesToday: classesToday,
-      deti: deti, kid: kid, gloss: gloss, teachers: teachers, classCards: classCards, mat: mat, urazy: urazy,
+      deti: deti, kid: kid, gloss: gloss, teachers: teachers,
+      staffGroups: (function () {
+        var isAsst = function (r) { return r === 'Asistent pedagoga' || r === 'Chůva'; };
+        var rank = { 'Ředitelka': 0, 'Zástupkyně': 1, 'Učitelka': 2, 'Asistent pedagoga': 3, 'Chůva': 4 };
+        var sorted = teachers.slice().sort(function (x, y) { return (rank[x.role] != null ? rank[x.role] : 9) - (rank[y.role] != null ? rank[y.role] : 9); });
+        var ped = sorted.filter(function (t) { return !isAsst(t.role); }), asst = sorted.filter(function (t) { return isAsst(t.role); });
+        var cnt = function (n, one, few, many) { return n + ' ' + (n === 1 ? one : n >= 2 && n <= 4 ? few : many); };
+        return [{ title: 'Učitelé', sub: cnt(ped.length, 'pedagog', 'pedagogové', 'pedagogů') + ' · ředitelka, zástupkyně a učitelky', items: ped },
+          { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
+      })(), classCards: classCards, mat: mat, urazy: urazy,
       zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP,
       dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
