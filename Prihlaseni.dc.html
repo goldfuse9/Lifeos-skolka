@@ -77,7 +77,14 @@ class Component extends DCLogic {
   }
 
   api() {
-    return (typeof window !== 'undefined' && window.SkolkaUcet) || { ucty: [], nazevDesky: {}, prihlas: function () { return false; } };
+    if (typeof window !== 'undefined' && window.SkolkaUcet) return window.SkolkaUcet;
+    /* Na plátně neběží shell.js — ukážeme stejné účty jen na pohled. */
+    var U = function (jmeno, role, skupina, desky) { return { id: jmeno, jmeno: jmeno, role: role, email: '', skupina: skupina, desky: desky }; };
+    return { nazevDesky: { reditel: 'Ředitelna', jidelna: 'Jídelna', trida: 'Tablet třídy' }, prihlas: function () { return false; }, ucty: [
+      U('Ivana Pokorná', 'ředitelka', 'Vedení školky', ['reditel', 'jidelna']), U('Petra Horáková', 'zástupkyně ředitelky', 'Vedení školky', ['reditel', 'trida']),
+      U('Hana Veselá', 'hospodářka', 'Vedení školky', ['reditel']), U('Jaroslava Benešová', 'vedoucí školní jídelny', 'Školní jídelna', ['jidelna']),
+      U('Marie Dvořáková', 'hlavní kuchařka', 'Školní jídelna', ['jidelna']), U('Alena Benešová', 'učitelka · Sluníčka', 'Učitelky', ['trida']),
+      U('Jana Králová', 'učitelka · Berušky', 'Učitelky', ['trida']), U('Lucie Malá', 'učitelka · Motýlci', 'Učitelky', ['trida'])] };
   }
 
   login() {
