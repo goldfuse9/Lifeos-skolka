@@ -55,7 +55,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     <!-- Nadpis třídy je zároveň přepínač: sloučit třídy, přesunout děti,
          podívat se do jiné třídy. Šipka dolů říká, že se na něj dá klepnout. -->
     <button type="button" onClick="{{openTridy}}" aria-label="Třídy — sloučit nebo přesunout děti" style="border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; color: #17181A; min-width: 0; flex-grow: 1">
-      <span style="font-size: 13px; font-weight: 600; color: #5A5C60">{{dateLabel}}</span>
+      <span style="font-size: 13px; font-weight: 600; color: #5A5C60; display: flex; align-items: center; gap: 8px; white-space: nowrap">{{dateLabel}}<sc-if value="{{view.isMerged}}" hint-placeholder-val="{{false}}"><span style="display: inline-flex; align-items: center; gap: 6px">·<sc-for list="{{view.legend}}" as="l" hint-placeholder-count="2"><span style="display: inline-flex; align-items: center; gap: 4px; color: #2B2E33"><span style="{{l.dotStyle}}"></span>{{l.name}}</span></sc-for><span>{{view.mergedNote}}</span></span></sc-if></span>
       <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
         <span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{view.title}}</span>
         <span style="width: 32px; height: 32px; border-radius: 16px; background: #FFFFFF; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
@@ -63,20 +63,12 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </span>
       </span>
     </button>
-    <sc-if value="{{view.isMerged}}" hint-placeholder-val="{{false}}">
-      <span style="height: 36px; padding: 0 14px; border-radius: 18px; background: #FFFFFF; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; white-space: nowrap">
-        <sc-for list="{{view.legend}}" as="l" hint-placeholder-count="2">
-          <span style="display: flex; align-items: center; gap: 5px"><span style="{{l.dotStyle}}"></span>{{l.name}}</span>
-        </sc-for>
-        <span style="color: #5A5C60; font-weight: 600">· {{view.mergedNote}}</span>
-      </span>
-    </sc-if>
     <nav role="tablist" aria-label="Části" style="display: flex; gap: 4px; padding: 4px; border-radius: 26px; background: #E5E7E4; flex-shrink: 0">
       <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
         <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}<sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{false}}"><span style="{{t.badgeStyle}}">{{t.badge}}</span></sc-if></button>
       </sc-for>
     </nav>
-    <span aria-label="Učitelka {{meName}}" style="display: inline-flex; flex-shrink: 0"><span style="{{meAv.box}}"><sc-if value="{{meAv.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{meAv.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{meAv.drawn}}" hint-placeholder-val="{{true}}"><span style="{{meAv.back}}"></span><span style="{{meAv.body}}"></span><span style="{{meAv.head}}"></span><span style="{{meAv.front}}"></span><span style="{{meAv.eyes}}"></span></sc-if></span></span>
+    <span aria-label="Přihlášena {{meName}}" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 4px 14px 4px 4px; border-radius: 28px; background: #FFFFFF"><span style="{{meAv.box}}"><sc-if value="{{meAv.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{meAv.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{meAv.drawn}}" hint-placeholder-val="{{true}}"><span style="{{meAv.back}}"></span><span style="{{meAv.body}}"></span><span style="{{meAv.head}}"></span><span style="{{meAv.front}}"></span><span style="{{meAv.eyes}}"></span></sc-if></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-size: 14px; font-weight: 700; white-space: nowrap">{{meName}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap">{{meRole}}</span></span></span>
   </header>
 
   <sc-if value="{{tab.isTrida}}" hint-placeholder-val="{{true}}">
@@ -159,7 +151,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span style="{{kid.checkStyle}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
             </sc-if>
             <span style="{{kid.avatarStyle}}"><svg width="44" height="44" viewBox="0 0 48 48" aria-hidden="true"><use href="{{kid.symRef}}"></use></svg></span>
-            <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap">{{kid.name}}</span>
+            <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{kid.name}}</span>
             <sc-if value="{{kid.hasBadge}}" hint-placeholder-val="{{false}}">
               <span style="{{kid.badgeStyle}}">{{kid.badge}}</span>
             </sc-if>
@@ -291,7 +283,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span title="Povinné předškolní vzdělávání" style="position: absolute; top: 8px; left: 8px; padding: 1px 6px; border-radius: 8px; background: #EBF1FA; color: #27407A; font-size: 10px; font-weight: 700; letter-spacing: 0.04em">PPV</span>
             </sc-if>
             <span style="{{k.avatarStyle}}"><svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><use href="{{k.symRef}}"></use></svg></span>
-            <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap">{{k.name}}</span>
+            <span style="font-size: 13px; font-weight: 700; color: #17181A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{k.name}}</span>
             <span style="{{k.statusStyle}}">{{k.status}}</span>
             <span style="font-size: 11px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{k.detail}}</span>
           </button>
@@ -557,7 +549,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 <sc-if value="{{s.isBooked}}" hint-placeholder-val="{{false}}">
                   <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{s.symRef}}"></use></svg>
                 </sc-if>
-                <span style="font-size: 14px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.label}}</span>
+                <span style="display: flex; flex-direction: column; min-width: 0; line-height: 1.25"><span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.label}}</span><sc-if value="{{s.hasWho}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.who}}</span></sc-if></span>
               </button>
             </sc-for>
           </div>
@@ -1019,34 +1011,34 @@ class Component extends DCLogic {
        na dlaždici dítěte i v jeho dni. */
     var R = [
       // id, jméno, značka, název značky, alergie, obvykle vyzvedává
-      ['oliver', 'Oliver N.', 'snehulak', 'sněhulák', ['arašídy'], 'máma, táta'],
-      ['ema', 'Ema K.', 'jablko', 'jablíčko', ['mléko'], 'máma'],
-      ['jonas', 'Jonáš P.', 'auticko', 'autíčko', ['mléko'], 'táta'],
-      ['mia', 'Mia S.', 'kytka', 'kytička', [], 'máma'],
-      ['adam', 'Adam V.', 'micek', 'míček', [], 'máma'],
-      ['ella', 'Ella M.', 'motyl', 'motýl', [], 'máma, táta'],
-      ['matyas', 'Matyáš H.', 'lodicka', 'lodička', [], 'táta'],
-      ['sofie', 'Sofie R.', 'srdce', 'srdíčko', ['vejce'], 'máma'],
-      ['david', 'David L.', 'hvezda', 'hvězdička', [], 'máma'],
+      ['oliver', 'Oliver N.', 'snehulak', 'sněhulák', ['arašídy'], 'oba rodiče'],
+      ['ema', 'Ema K.', 'jablko', 'jablíčko', ['mléko'], 'maminka'],
+      ['jonas', 'Jonáš P.', 'auticko', 'autíčko', ['mléko'], 'tatínek'],
+      ['mia', 'Mia S.', 'kytka', 'kytička', [], 'maminka'],
+      ['adam', 'Adam V.', 'micek', 'míček', [], 'maminka'],
+      ['ella', 'Ella M.', 'motyl', 'motýl', [], 'oba rodiče'],
+      ['matyas', 'Matyáš H.', 'lodicka', 'lodička', [], 'tatínek'],
+      ['sofie', 'Sofie R.', 'srdce', 'srdíčko', ['vejce'], 'maminka'],
+      ['david', 'David L.', 'hvezda', 'hvězdička', [], 'maminka'],
       ['anna', 'Anna B.', 'tresne', 'třešničky', ['lepek'], 'děda Karel'],
-      ['tobias', 'Tobiáš Č.', 'muchomurka', 'muchomůrka', [], 'máma'],
-      ['viktorie', 'Viktorie D.', 'mesic', 'měsíček', [], 'táta'],
-      ['jakub', 'Jakub F.', 'domecek', 'domeček', [], 'máma'],
-      ['natalie', 'Natálie G.', 'destnik', 'deštník', [], 'máma, táta'],
-      ['lukas', 'Lukáš J.', 'strom', 'stromeček', ['pyl'], 'máma'],
-      ['eliska', 'Eliška Ch.', 'beruska', 'beruška', [], 'táta'],
-      ['filip', 'Filip O.', 'rybka', 'rybička', [], 'máma'],
-      ['julie', 'Julie T.', 'balonek', 'balónek', [], 'máma'],
+      ['tobias', 'Tobiáš Č.', 'muchomurka', 'muchomůrka', [], 'maminka'],
+      ['viktorie', 'Viktorie D.', 'mesic', 'měsíček', [], 'tatínek'],
+      ['jakub', 'Jakub F.', 'domecek', 'domeček', [], 'maminka'],
+      ['natalie', 'Natálie G.', 'destnik', 'deštník', [], 'oba rodiče'],
+      ['lukas', 'Lukáš J.', 'strom', 'stromeček', ['pyl'], 'maminka'],
+      ['eliska', 'Eliška Ch.', 'beruska', 'beruška', [], 'tatínek'],
+      ['filip', 'Filip O.', 'rybka', 'rybička', [], 'maminka'],
+      ['julie', 'Julie T.', 'balonek', 'balónek', [], 'maminka'],
       ['sebastian', 'Sebastián U.', 'klic', 'klíček', [], 'babička'],
-      ['amalie', 'Amálie Z.', 'mracek', 'mráček', [], 'táta'],
-      ['ondrej', 'Ondřej Š.', 'mrkev', 'mrkvička', [], 'máma'],
-      ['rozalie', 'Rozálie Ž.', 'hruska', 'hruška', [], 'máma, táta'],
-      ['vojtech', 'Vojtěch E.', 'zvonek', 'zvoneček', [], 'táta'],
-      ['emilie', 'Emílie I.', 'duha', 'duha', [], 'máma'],
-      ['kristof', 'Kryštof A.', 'hrnek', 'hrníček', [], 'máma'],
-      ['laura', 'Laura W.', 'list', 'lístek', [], 'táta'],
-      ['samuel', 'Samuel Y.', 'slunce', 'sluníčko', [], 'máma'],
-      ['karolina', 'Karolína N.', 'snek', 'šnek', [], 'máma']
+      ['amalie', 'Amálie Z.', 'mracek', 'mráček', [], 'tatínek'],
+      ['ondrej', 'Ondřej Š.', 'mrkev', 'mrkvička', [], 'maminka'],
+      ['rozalie', 'Rozálie Ž.', 'hruska', 'hruška', [], 'oba rodiče'],
+      ['vojtech', 'Vojtěch E.', 'zvonek', 'zvoneček', [], 'tatínek'],
+      ['emilie', 'Emílie I.', 'duha', 'duha', [], 'maminka'],
+      ['kristof', 'Kryštof A.', 'hrnek', 'hrníček', [], 'maminka'],
+      ['laura', 'Laura W.', 'list', 'lístek', [], 'tatínek'],
+      ['samuel', 'Samuel Y.', 'slunce', 'sluníčko', [], 'maminka'],
+      ['karolina', 'Karolína N.', 'snek', 'šnek', [], 'maminka']
     ];
     var omluveni = { ella: 'nachlazení · omluveno 6:52', tobias: 'dovolená · omluveno včera', filip: 'u lékaře · omluveno 7:05', emilie: 'nachlazení · omluveno 6:31' };
     var cekame = { samuel: true, karolina: true };
@@ -1066,14 +1058,14 @@ class Component extends DCLogic {
     kids.forEach(function (k) { byId[k.id] = k; });
     byId.oliver.arrived = '8:05';
     byId.oliver.log = [
-      { t: '8:05', type: 'dochazka', title: 'Příchod', sub: 'Přivedl táta' },
+      { t: '8:05', type: 'dochazka', title: 'Příchod', sub: 'Přivedl tatínek' },
       { t: '10:12', type: 'teplota', title: 'Teplota 38,4 °C', sub: 'Na čele · rodiče viděli 10:14' }
     ];
     byId.oliver.temp = { value: 38.4, t: '10:12' };
     byId.mia.pickupToday = { who: 'babička Věra', when: 'po spaní', note: 'ohlášeno 7:41' };
-    byId.mia.log.push({ t: '7:41', type: 'vyzvedani', title: 'Vyzvedává babička Věra', sub: 'Ohlásila máma v aplikaci' });
+    byId.mia.log.push({ t: '7:41', type: 'vyzvedani', title: 'Vyzvedává babička Věra', sub: 'Ohlásila maminka v aplikaci' });
     byId.adam.pickupToday = { who: 'teta Lucie', when: 'po obědě', note: 'ohlášeno 7:58' };
-    byId.adam.log.push({ t: '7:58', type: 'vyzvedani', title: 'Vyzvedává teta Lucie po obědě', sub: 'Ohlásila máma v aplikaci' });
+    byId.adam.log.push({ t: '7:58', type: 'vyzvedani', title: 'Vyzvedává teta Lucie po obědě', sub: 'Ohlásila maminka v aplikaci' });
     kids.forEach(function (k) { k.cls = 'slunicka'; k.todayCls = null; k.noPhoto = false; });
     // Rodiče, kteří nedali souhlas s focením — v galerii na ně upozorníme.
     byId.filip.noPhoto = true;
@@ -1092,7 +1084,7 @@ class Component extends DCLogic {
         var sy = SYMS[(i * 5 + offset) % SYMS.length];
         var h = 7 + Math.floor((20 + i * 3) / 60), m = (20 + i * 3) % 60;
         var k = {
-          id: cls + '-' + i, name: n, sym: sy[0], symName: sy[1], allergies: i === 3 ? ['mléko'] : [], usualPickup: i % 3 ? 'máma' : 'táta',
+          id: cls + '-' + i, name: n, sym: sy[0], symName: sy[1], allergies: i === 3 ? ['mléko'] : [], usualPickup: i % 3 ? 'maminka' : 'tatínek',
           pickupToday: null, att: 'present', arrived: h + ':' + (m < 10 ? '0' : '') + m, left: null, excuse: '',
           temp: null, unwell: null, log: [], cls: cls, todayCls: null, noPhoto: i === 9
         };
@@ -1170,7 +1162,7 @@ class Component extends DCLogic {
     };
     var tue = new Date(); tue.setDate(tue.getDate() + ((9 - tue.getDay()) % 7 || 7));
     this.konz = {
-      slunicka: this.makeSlots(this.iso(tue), '14:00', '16:00', 15, [[0, 'ema', 'táta'], [2, 'oliver', 'máma'], [5, 'sofie', 'máma']], [3])
+      slunicka: this.makeSlots(this.iso(tue), '14:00', '16:00', 15, [[0, 'ema', 'tatínek'], [2, 'oliver', 'oba rodiče'], [5, 'sofie', 'maminka']], [3])
     };
 
     this.state = {
@@ -1475,7 +1467,7 @@ class Component extends DCLogic {
           hasClsDot: !!dot, clsDotStyle: dot || '',
           statusStyle: 'font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 10px; white-space: nowrap; background: ' + sBg + '; color: ' + sFg,
           tileStyle: 'position: relative; height: 128px; padding: 8px 6px; box-sizing: border-box; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 0; overflow: hidden; '
-            + 'background: ' + (k.att === 'excused' ? 'transparent' : '#FFFFFF') + '; border: ' + (k.att === 'expected' ? '2px dashed #B9B7AE' : (k.att === 'excused' ? '2px dashed #D8DBD7' : '2px solid transparent')),
+            + 'background: ' + (k.att === 'excused' ? 'transparent' : '#FFFFFF') + '; border: ' + (k.att === 'present' ? '2px solid #A9CC86' : k.att === 'expected' ? '2px dashed #B9B7AE' : (k.att === 'excused' ? '2px dashed #D8DBD7' : '2px solid transparent')),
           avatarStyle: 'width: 50px; height: 50px; border-radius: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #F3F4F2; ' + (away ? 'filter: grayscale(1); opacity: 0.55' : ''),
           tap: function () {
             var before = { att: k.att, arrived: k.arrived, left: k.left };
@@ -1766,7 +1758,7 @@ class Component extends DCLogic {
       return { label: t[1], on: on, hasBadge: !!tabBadge[t[0]], badge: tabBadge[t[0]] || '',
         badgeStyle: 'margin-left: 6px; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; background: #F7DCC6; color: #8A4513; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center',
         pick: function () { self.setState({ tab: t[0], undo: null, move: t[0] === 'trida' ? self.state.move : false, albumId: t[0] === 'fotky' ? self.state.albumId : null }); },
-        style: 'height: 44px; padding: 0 16px; border-radius: 22px; border: 0; font-size: 15px; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600') };
+        style: 'height: 44px; padding: 0 13px; border-radius: 22px; border: 0; font-size: 15px; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; white-space: nowrap; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '700' : '500') };
     });
     var tab = { isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
 
@@ -2143,7 +2135,8 @@ class Component extends DCLogic {
           var bg = x.state === 'booked' ? '#EDF4E4' : x.state === 'blocked' ? '#F3F4F2' : '#FFFFFF';
           return {
             time: x.t, isBooked: x.state === 'booked', symRef: k ? '#z-' + k.sym : '',
-            label: x.state === 'booked' ? (k ? k.name : '') + ' · ' + x.who : x.state === 'blocked' ? 'Blokováno' : 'Volno',
+            label: x.state === 'booked' ? (k ? k.name : '') : x.state === 'blocked' ? 'Blokováno' : 'Volno',
+            hasWho: x.state === 'booked' && !!x.who, who: x.state === 'booked' ? 'Přijde: ' + x.who : '',
             aria: x.t + ', ' + (x.state === 'booked' ? 'rezervováno' : x.state === 'blocked' ? 'blokováno' : 'volno'),
             style: 'min-height: 56px; padding: 0 14px; border-radius: 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; color: #17181A; background: ' + bg + '; border: 2px ' + (x.state === 'free' ? 'dashed #D8DBD7' : 'solid ' + bg) + (x.state === 'blocked' ? '; color: #5A5C60' : ''),
             tap: function () {
@@ -2160,7 +2153,7 @@ class Component extends DCLogic {
     return {
       dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
       kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
-      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(52), meName: this.me,
+      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(44), meName: this.me, meRole: 'Učitelka · ' + ((CL.filter(function (c) { return self.me.indexOf(c.teacher.replace('.', '')) === 0; })[0] || clsById[home]).name),
       dlg: dlg, gal: gal, viewer: viewer, akce: akce, meet: meet, kons: kons,
       openTridy: openDlg('tridy', { from: 'Od 14:00', with: [] }),
       toast: { show: !!st.toast, text: st.toast || '' },
