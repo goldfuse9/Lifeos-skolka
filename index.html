@@ -22,13 +22,15 @@
   }
   #deska { min-height: 100dvh; }
 
-  /* Deska je nakreslená na 1194×834 (iPad na šířku). Vnitřek je pružný
-     (flex, grid, absolute inset:0), takže stačí přebít rozměry kořene. */
+  /* Deska je nakreslená na pevný rozměr (třída 1194×834, ředitelna
+     1440×900). Vnitřek je pružný, takže ji roztáhneme na celé okno; když
+     je okno menší, shell.js ji celou zmenší (zoom), aby se vždycky vešla.
+     --w, --h a --z nastavuje shell.js. */
+  html, body { overflow: hidden; }
   #deska > div {
-    width: 100% !important;
-    min-width: 1024px;
-    height: 100dvh !important;
-    min-height: 700px;
+    width: var(--w, 100vw) !important;
+    height: var(--h, 100dvh) !important;
+    zoom: var(--z, 1);
   }
 
   #nacitam {

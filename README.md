@@ -111,8 +111,9 @@ web/index.html    ukázka vygenerovaného webu školky
 supabase/         návrh databáze s právy podle rolí pro ostrý provoz
 ```
 
-Deska je nakreslená na 1194×834 (iPad na šířku); `index.html` ji roztáhne
-na celý displej (od šířky 1024 px).
+Třída je nakreslená na 1194×834 (iPad na šířku), ředitelna na 1440×900.
+Větší okno je roztáhne, menší okno (třeba notebook) je celé zmenší, aby se
+vešly bez posouvání; pod 60 % se dál nezmenšují a okno se dá posunout.
 
 ### Aktualizace desky z plátna
 
