@@ -40,12 +40,15 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </sc-if>
     </sc-for>
     <div style="flex-grow: 1"></div>
+    <sc-if value="{{me.reditelna}}" hint-placeholder-val="{{false}}">
+    <a href="Reditel.dc.html" style="min-height: 36px; padding: 0 14px; border-radius: 14px; background: #FFFFFF; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; text-decoration: none; color: #17181A"><span aria-hidden="true">←</span> Ředitelna</a>
+    </sc-if>
     <div style="margin-top: 6px; display: flex; align-items: center; gap: 4px">
       <button type="button" onClick="{{me.profile}}" aria-label="Můj profil, {{me.name}}" style="flex-grow: 1; min-width: 0; padding: 6px 8px; border: 0; border-radius: 16px; background: transparent; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; color: #17181A">
         <span style="{{me.av.box}}"><sc-if value="{{me.av.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{me.av.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{me.av.drawn}}" hint-placeholder-val="{{true}}"><span style="{{me.av.back}}"></span><span style="{{me.av.body}}"></span><span style="{{me.av.head}}"></span><span style="{{me.av.front}}"></span><span style="{{me.av.eyes}}"></span></sc-if></span>
         <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-size: 14px; font-weight: 700; line-height: 1.2">{{me.name}}</span><span style="font-size: 12px; color: #5A5C60">{{me.role}}</span></span>
       </button>
-      <button type="button" onClick="{{me.switch}}" aria-label="Přepnout uživatele" title="Přepnout uživatele" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: #FFFFFF; font-size: 15px; font-weight: 800; color: #5A5C60; cursor: pointer; flex-shrink: 0">⇄</button>
+      <button type="button" onClick="{{me.logout}}" aria-label="Odhlásit" title="Odhlásit" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: #FFFFFF; color: #5A5C60; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 17l-5-5 5-5"></path><path d="M5 12h11"></path></svg></button>
     </div>
   </nav>
 
@@ -509,6 +512,9 @@ class Component extends DCLogic {
     this.weeks[this.addDays(m0, 7)] = W([['s2', 'p8', 'o11', 's3', 'n1'], ['s1', 'p4', 'o6', 's6', 'n2'], ['s7', 'p7', 'o9', 's5', 'n1'], ['s4', 'p3', 'o8', 's8', 'n3'], [null, null, null, null, null]], false);
 
     this.state = { page: 'prehled', me: 'k2', weekOff: 0, jidloId: 'o1', q: '', typ: 'vse', ingQ: '', dlg: null, df: {}, toast: null };
+    /* Kdo je přihlášený, určuje shell.js. Ředitelka do jídelny smí, ale kuchařkou není. */
+    this.ucet = typeof window !== 'undefined' && window.SkolkaUcet ? window.SkolkaUcet.aktualni() : null;
+    if (this.ucet) { var meS = this.staff.filter(function (x) { return x.name === this.ucet.jmeno; }, this)[0]; this.state.me = meS ? meS.id : null; }
     this.restore();
   }
 
@@ -527,7 +533,7 @@ class Component extends DCLogic {
     if (!raw) return;
     var data; try { data = JSON.parse(raw); } catch (e) { return; }
     this.persistKeys().forEach(function (k) { if (data[k] !== undefined) self[k] = data[k]; });
-    if (data.me) this.state.me = data.me;
+    if (data.me && !this.ucet) this.state.me = data.me;
   }
   save() {
     var self = this;
@@ -736,7 +742,8 @@ class Component extends DCLogic {
     var primary = function (on) { return 'height: 48px; padding: 0 20px; border-radius: 24px; border: 0; font-size: 15px; font-weight: 800; cursor: ' + (on ? 'pointer' : 'default') + '; ' + (on ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #EDF4E4; color: #2F5212'); };
     var aBadge = 'height: 22px; padding: 0 9px; border-radius: 11px; background: #F3F4F2; color: #3A3C40; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; white-space: nowrap';
     var go = function (page, extra) { return function () { self.setState(Object.assign({ page: page }, extra || {})); }; };
-    var ME = this.staff.filter(function (s) { return s.id === st.me; })[0] || this.staff[0];
+    var UC = this.ucet;
+    var ME = this.staff.filter(function (s) { return s.id === st.me; })[0] || (UC ? { id: 'host', name: UC.jmeno, role: UC.role } : this.staff[0]);
     var monthsAgo = function (isoStr) { var d = self.fromIso(isoStr); return (self.today.getFullYear() - d.getFullYear()) * 12 + self.today.getMonth() - d.getMonth(); };
     var info = this.dayInfo();
 
@@ -1055,7 +1062,8 @@ class Component extends DCLogic {
     var page = { kicker: P[0], title: P[1], hasAction: !!P[2], actionLabel: P[2], action: P[3] || function () {}, actionStyle: primary(!(st.page === 'jidelnicek' && W.published)) };
 
     var cycle = function () { var i = self.staff.indexOf(ME); var nx = self.staff[(i + 1) % self.staff.length]; self.setState({ me: nx.id }); self.showToast('Přihlášena: ' + nx.name); };
-    var me = { name: ME.name, role: ME.role, av: this.avatar(ME, 40), profile: openStaff(ME), switch: cycle };
+    var me = { name: ME.name, role: UC && ME.id === 'host' ? UC.role : ME.role, av: this.avatar(ME, 40), profile: ME.id === 'host' ? function () {} : openStaff(ME), switch: cycle,
+      reditelna: !!UC && UC.desky.indexOf('reditel') !== -1, logout: function () { if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); } };
 
     this.publish();
     this.save();

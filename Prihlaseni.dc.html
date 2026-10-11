@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Přihlášení</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button,input{font-family:inherit}
+input::placeholder{color:#8A8C90}
+</style>
+</helmet>
+<div style="width: 1194px; height: 834px; box-sizing: border-box; background: #F8F9F7; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 32px; overflow: auto; position: relative">
+
+  <!-- ============================================================ PŘIHLÁŠENÍ -->
+  <section aria-label="Přihlášení" style="width: 420px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 15px; font-weight: 700; color: #5A5C60">{{school}}</span>
+      <h1 style="margin: 0; font-size: 36px; font-weight: 800; letter-spacing: -0.02em">Přihlášení</h1>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+      <label for="prihlaseni-email" style="font-size: 14px; font-weight: 700">E-mail</label>
+      <input id="prihlaseni-email" type="email" autocomplete="username" placeholder="jmeno@ms-slunicko.cz" value="{{email}}" onInput="{{onEmail}}" onChange="{{onEmail}}" onKeyDown="{{onKey}}" style="height: 52px; border-radius: 16px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 16px; color: #17181A; background: #FFFFFF">
+      <label for="prihlaseni-heslo" style="font-size: 14px; font-weight: 700">Heslo</label>
+      <input id="prihlaseni-heslo" type="password" autocomplete="current-password" placeholder="••••••••" value="{{heslo}}" onInput="{{onHeslo}}" onChange="{{onHeslo}}" onKeyDown="{{onKey}}" style="height: 52px; border-radius: 16px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 16px; color: #17181A; background: #FFFFFF">
+      <sc-if value="{{hasChyba}}" hint-placeholder-val="{{false}}">
+        <div role="alert" style="padding: 10px 14px; border-radius: 14px; background: #FCF4EF; color: #8A4513; font-size: 14px; font-weight: 600">{{chyba}}</div>
+      </sc-if>
+      <button type="button" onClick="{{prihlasit}}" style="height: 56px; margin-top: 4px; border: 0; border-radius: 28px; background: #DCE6F2; color: #1F3A5C; font-size: 16px; font-weight: 800; cursor: pointer">Přihlásit</button>
+    </div>
+    <span style="font-size: 13px; color: #5A5C60; line-height: 19px; padding: 0 4px">Vedení se přihlásí do ředitelny, kuchyně do jídelny a učitelky do tabletu své třídy.</span>
+  </section>
+
+  <!-- ============================================================ ZKUŠEBNÍ ÚČTY -->
+  <section aria-label="Zkušební účty" style="width: 520px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 22px 22px 18px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Zkušební účty</h2>
+      <span style="padding: 3px 10px; border-radius: 10px; background: #F7F0DA; color: #5C4300; font-size: 11px; font-weight: 800">Zkušební provoz</span>
+    </div>
+    <span style="font-size: 13px; color: #5A5C60; margin-top: -6px">Klepněte na účet — heslo se zatím nekontroluje.</span>
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8C90; padding: 0 4px">{{g.label}}</span>
+        <sc-for list="{{g.ucty}}" as="u" hint-placeholder-count="3">
+          <button type="button" onClick="{{u.pick}}" aria-label="Přihlásit jako {{u.jmeno}}, {{u.role}}" style="min-height: 54px; padding: 6px 14px 6px 6px; border-radius: 18px; border: 1px solid #EEF0ED; background: #FFFFFF; display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left; color: #17181A">
+            <span style="{{u.avStyle}}">{{u.initials}}</span>
+            <span style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1">
+              <span style="font-size: 15px; font-weight: 700">{{u.jmeno}}</span>
+              <span style="font-size: 13px; color: #5A5C60">{{u.role}}</span>
+            </span>
+            <span style="font-size: 12px; font-weight: 700; color: #1F3A5C; background: #EBF1FA; padding: 4px 10px; border-radius: 10px; white-space: nowrap">{{u.kam}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-for>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1194,"height":834}}'>
+/* =============================================================================
+   Přihlášení — jedno místo pro všechny
+   -----------------------------------------------------------------------------
+   Kdo se kam dostane, rozhoduje shell.js (window.SkolkaUcet): vedení do
+   ředitelny, jídelna do jídelny, učitelka do tabletu své třídy. Tahle
+   deska jen najde účet podle e-mailu nebo klepnutí a předá ho dál.
+   ============================================================================= */
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { email: '', heslo: '', chyba: '' };
+  }
+
+  api() {
+    return (typeof window !== 'undefined' && window.SkolkaUcet) || { ucty: [], nazevDesky: {}, prihlas: function () { return false; } };
+  }
+
+  login() {
+    var st = this.state, A = this.api();
+    var mail = (st.email || '').trim().toLowerCase();
+    if (!mail) { this.setState({ chyba: 'Napište e-mail.' }); return; }
+    var u = A.ucty.filter(function (x) { return x.email === mail; })[0];
+    if (!u) { this.setState({ chyba: 'Účet s tímto e-mailem tu není.' }); return; }
+    if (!st.heslo) { this.setState({ chyba: 'Napište heslo.' }); return; }
+    A.prihlas(u.id);
+  }
+
+  renderVals() {
+    var self = this, st = this.state, A = this.api();
+    var BG = { 'Vedení školky': '#E4ECCB', 'Školní jídelna': '#F7F0DA', 'Učitelky': '#EBF1FA' };
+    var order = [], by = {};
+    A.ucty.forEach(function (u) { if (!by[u.skupina]) { by[u.skupina] = []; order.push(u.skupina); } by[u.skupina].push(u); });
+    var groups = order.map(function (g) {
+      return { label: g, ucty: by[g].map(function (u) {
+        var p = u.jmeno.split(' ');
+        return {
+          jmeno: u.jmeno, role: u.role, initials: p[0].charAt(0) + (p[1] || '').charAt(0),
+          kam: u.desky.map(function (d) { return A.nazevDesky[d] || d; }).join(' · '),
+          avStyle: 'width: 40px; height: 40px; border-radius: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #3A3C40; background: ' + (BG[g] || '#F3F4F2'),
+          pick: function () { A.prihlas(u.id); }
+        };
+      }) };
+    });
+    return {
+      school: 'MŠ Sluníčko', email: st.email, heslo: st.heslo, chyba: st.chyba, hasChyba: !!st.chyba, groups: groups,
+      onEmail: function (e) { self.setState({ email: e.target.value, chyba: '' }); },
+      onHeslo: function (e) { self.setState({ heslo: e.target.value, chyba: '' }); },
+      onKey: function (e) { if (e.key === 'Enter') self.login(); },
+      prihlasit: function () { self.login(); }
+    };
+  }
+}
+</script>
+</body>
+</html>
