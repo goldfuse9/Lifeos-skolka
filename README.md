@@ -9,24 +9,29 @@ a rodinná aplikace nemíchaly.
 Offline, žádný server, žádný cloud. Data jsou ukázková a drží se v paměti
 tabletu — po zavření aplikace se vrátí do výchozího stavu.
 
-## Přihlášení a kdo kam smí
+## Přihlášení a přístupy
 
-Aplikace začíná přihlášením (`#prihlaseni`). Podle účtu se otevře jen to, kam
-člověk patří — ostatní adresy ho vrátí na jeho desku:
+Aplikace začíná přihlášením (**LifeOS | Digitální školka**). Na obrazovce se
+vybere, kam se člověk hlásí — **Ředitelna**, **Třída** (tablet) nebo
+**Jídelna** — a zadá e-mail a heslo. Registrace tu záměrně není: přístupy
+vytváří **jen ředitelka** v Ředitelna → Přístupy. Jeden člověk má jeden
+přístup (stejné jméno ani e-mail podruhé neprojde), heslo se vygeneruje
+a ukáže jen jednou; dá se vygenerovat nové nebo přístup zablokovat.
 
-| Účet | Kam se dostane |
+| Role | Kam se přihlásí |
 | --- | --- |
-| Ředitelka | ředitelna (webová aplikace vedení) + školní jídelna |
-| Zástupkyně ředitelky | ředitelna + tablet své třídy (když učí) |
-| Hospodářka | ředitelna — jen přehled, děti, docházka, platby, zprávy, archiv |
-| Vedoucí jídelny, kuchařka | jen školní jídelna |
-| Učitelka | jen tablet své třídy |
+| Ředitelka | Ředitelna, Jídelna — a jen ona spravuje přístupy |
+| Zástupkyně ředitelky | Ředitelna, Třída (svůj tablet) |
+| Hospodářka | Ředitelna — přehled, děti, docházka, platby, zprávy, archiv |
+| Učitelka, asistent/ka | Třída — tablet své třídy |
+| Vedoucí jídelny, kuchařka | Jídelna |
 
-Odhlášení je vlevo dole (ředitelna, jídelna) nebo po klepnutí na své jméno
-vpravo nahoře (tablet). Ve zkušebním provozu jsou účty v `shell.js` a heslo
-se nekontroluje; v ostrém provozu je nahradí Supabase Auth s rolemi ze
-`supabase/schema.sql`. Všechny části sdílejí jedna data — a stejnou databázi
-použije i mobilní aplikace LifeOS pro rodiče (role `rodic`).
+Když se někdo hlásí jinam, než kam jeho přístup vede, přihlášení neprojde
+a obrazovka řekne, kam patří. Tablet si pamatuje poslední volbu, takže
+učitelka má „Třída“ vybranou předem. Ve zkušebním provozu mají ukázkové
+přístupy heslo `skolka`; hesla se ukládají jen jako otisk SHA-256. V ostrém
+provozu je nahradí Supabase Auth s rolemi ze `supabase/schema.sql`; stejnou
+databázi použije i mobilní aplikace LifeOS pro rodiče (role `rodic`).
 
 ## Co umí
 
