@@ -4,8 +4,9 @@
    Stejný princip jako v LifeOS: obrazovky jsou desky z plátna „Školka —
    hlavní stránka třídy“ a spouští se beze změny přes dc.js.
 
-   Desky jsou dvě: Trida.dc.html (tablet učitelky, #trida) a
-   Reditel.dc.html (počítač ředitelky — kartotéka, učitelé, matrika, #reditel).
+   Desky jsou tři: Trida.dc.html (tablet učitelky, #trida),
+   Reditel.dc.html (počítač ředitelky — kartotéka, učitelé, matrika, #reditel)
+   a Jidelna.dc.html (počítač v kuchyni — jídelníček, alergeny, diety, #jidelna).
    V desce třídy jsou docházka, teplota,
    „není mu dobře“, úraz i poznámka vrstvy uvnitř ní — musí sdílet
    jeden stav dětí, jinak by se zápis teploty neukázal v kartě nahoře
@@ -18,6 +19,7 @@
 const DESKY = {
   'Trida.dc.html': 'trida',
   'Reditel.dc.html': 'reditel',
+  'Jidelna.dc.html': 'jidelna',
 };
 /* Na jaký rozměr je která deska nakreslená. Menší okno = deska se celá
    zmenší, aby se vešla; větší okno = roztáhne se. Pod 60 % se už dál
@@ -25,6 +27,7 @@ const DESKY = {
 const ROZMER = {
   trida: [1194, 834],
   reditel: [1440, 900],
+  jidelna: [1440, 900],
 };
 const MIN_ZOOM = 0.6;
 let aktualni = null;

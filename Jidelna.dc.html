@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Školní jídelna</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#17181A}a:hover{color:#000}
+button,input,textarea,select{font-family:inherit}
+input::placeholder,textarea::placeholder{color:#8A8C90}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F8F9F7; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; overflow: hidden; position: relative">
+
+  <!-- ============================================================ MENU -->
+  <nav aria-label="Jídelna" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #E5E7E4">
+    <div style="padding: 0 10px 6px; display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{{school.name}}</span>
+      <span style="font-size: 13px; color: #5A5C60">Školní jídelna · {{year}}</span>
+      <span style="align-self: flex-start; margin-top: 6px; padding: 3px 10px; border-radius: 10px; background: #F7F0DA; color: #5C4300; font-size: 11px; font-weight: 800" title="Všechno funguje, ale nic neodchází ven">Zkušební provoz</span>
+    </div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <sc-if value="{{n.isHead}}" hint-placeholder-val="{{false}}">
+        <span style="padding: 8px 14px 1px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8C90">{{n.label}}</span>
+      </sc-if>
+      <sc-if value="{{n.isItem}}" hint-placeholder-val="{{true}}">
+        <button type="button" onClick="{{n.pick}}" aria-current="{{n.current}}" style="{{n.style}}">
+          <span style="flex-grow: 1; text-align: left">{{n.label}}</span>
+          <sc-if value="{{n.hasCount}}" hint-placeholder-val="{{true}}">
+            <span style="{{n.countStyle}}">{{n.count}}</span>
+          </sc-if>
+        </button>
+      </sc-if>
+    </sc-for>
+    <div style="flex-grow: 1"></div>
+    <div style="margin-top: 6px; display: flex; align-items: center; gap: 4px">
+      <button type="button" onClick="{{me.profile}}" aria-label="Můj profil, {{me.name}}" style="flex-grow: 1; min-width: 0; padding: 6px 8px; border: 0; border-radius: 16px; background: transparent; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; color: #17181A">
+        <span style="{{me.av.box}}"><sc-if value="{{me.av.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{me.av.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{me.av.drawn}}" hint-placeholder-val="{{true}}"><span style="{{me.av.back}}"></span><span style="{{me.av.body}}"></span><span style="{{me.av.head}}"></span><span style="{{me.av.front}}"></span><span style="{{me.av.eyes}}"></span></sc-if></span>
+        <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-size: 14px; font-weight: 700; line-height: 1.2">{{me.name}}</span><span style="font-size: 12px; color: #5A5C60">{{me.role}}</span></span>
+      </button>
+      <button type="button" onClick="{{me.switch}}" aria-label="Přepnout uživatele" title="Přepnout uživatele" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: #FFFFFF; font-size: 15px; font-weight: 800; color: #5A5C60; cursor: pointer; flex-shrink: 0">⇄</button>
+    </div>
+  </nav>
+
+  <main style="flex-grow: 1; min-width: 0; box-sizing: border-box; padding: 24px 28px; display: flex; flex-direction: column; gap: 18px">
+    <header style="display: flex; align-items: center; gap: 14px; min-height: 52px">
+      <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+        <span style="font-size: 13px; font-weight: 600; color: #5A5C60">{{page.kicker}}</span>
+        <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">{{page.title}}</h1>
+      </div>
+      <sc-if value="{{page.hasAction}}" hint-placeholder-val="{{true}}">
+        <button type="button" onClick="{{page.action}}" style="{{page.actionStyle}}">{{page.actionLabel}}</button>
+      </sc-if>
+    </header>
+
+    <!-- ========================================================== PŘEHLED -->
+    <sc-if value="{{is.prehled}}" hint-placeholder-val="{{true}}">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <button type="button" onClick="{{s.go}}" style="{{s.style}}">
+            <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{s.label}}</span>
+            <span style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em">{{s.value}}</span>
+            <span style="font-size: 13px; color: {{s.subFg}}">{{s.sub}}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+          <section aria-label="Co se vaří" style="background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px"><h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Co se vaří</h2><span style="font-size: 13px; color: #5A5C60">{{dnes.dayLabel}}</span></div>
+            <sc-for list="{{dnes.meals}}" as="m" hint-placeholder-count="5">
+              <div style="display: grid; grid-template-columns: 64px 118px minmax(0, 1fr) auto 72px; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid #EEF0ED">
+                <span style="font-size: 14px; font-weight: 700; color: #5A5C60">{{m.time}}</span>
+                <span style="font-size: 13px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.04em">{{m.slot}}</span>
+                <span style="font-size: 15px; font-weight: 700; line-height: 1.3">{{m.dish}}</span>
+                <span style="{{m.aStyle}}">{{m.alergeny}}</span>
+                <span style="font-size: 15px; font-weight: 800; text-align: right">{{m.porce}}</span>
+              </div>
+            </sc-for>
+          </section>
+          <section aria-label="Počty porcí" style="background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-height: 0">
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px"><h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Počty porcí</h2><span style="font-size: 13px; color: #5A5C60">{{dnes.countNote}}</span></div>
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 110px 110px; gap: 12px; padding: 0 0 8px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">
+              <span>Třída</span><span style="text-align: right">Přesnídávka</span><span style="text-align: right">Oběd</span><span style="text-align: right">Svačina</span><span style="text-align: right">Odhlášeno</span>
+            </div>
+            <sc-for list="{{dnes.rows}}" as="r" hint-placeholder-count="4">
+              <div style="{{r.style}}">
+                <span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="{{r.dotStyle}}"></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span></span>
+                <span style="text-align: right">{{r.prs}}</span><span style="text-align: right">{{r.obed}}</span><span style="text-align: right">{{r.sv}}</span><span style="text-align: right; color: #5A5C60">{{r.odhl}}</span>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+        <section aria-label="Diety dnes" style="width: 420px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800">Diety a náhrady</h2>
+          <sc-for list="{{dnes.diets}}" as="d" hint-placeholder-count="3">
+            <div style="{{d.style}}">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span style="font-size: 12px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; flex-grow: 1">{{d.slot}} · bez {{d.bez}}</span>
+                <span style="{{d.aStyle}}">{{d.num}}</span>
+              </div>
+              <span style="font-size: 15px; font-weight: 800">{{d.nahrada}}</span>
+              <span style="font-size: 13px; color: #3A3C40">{{d.kids}}</span>
+              <sc-if value="{{d.missing}}" hint-placeholder-val="{{false}}">
+                <button type="button" onClick="{{d.fix}}" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #FFFFFF; font-size: 13px; font-weight: 800; color: #8A4513; cursor: pointer">Doplnit náhradu</button>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{dnes.noDiets}}" hint-placeholder-val="{{false}}">
+            <div style="font-size: 15px; color: #5A5C60">Dnes žádné dítě nepotřebuje náhradu.</div>
+          </sc-if>
+          <sc-if value="{{dnes.hasAway}}" hint-placeholder-val="{{false}}">
+            <div style="font-size: 13px; color: #5A5C60; padding-top: 4px">{{dnes.away}}</div>
+          </sc-if>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== JÍDELNÍČEK -->
+    <sc-if value="{{is.jidelnicek}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <button type="button" onClick="{{wk.prev}}" aria-label="Předchozí týden" style="width: 44px; height: 44px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 18px; font-weight: 800; cursor: pointer; color: #17181A">‹</button>
+        <span style="font-size: 18px; font-weight: 800; min-width: 210px; text-align: center">{{wk.label}}</span>
+        <button type="button" onClick="{{wk.next}}" aria-label="Další týden" style="width: 44px; height: 44px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 18px; font-weight: 800; cursor: pointer; color: #17181A">›</button>
+        <span style="{{wk.statusStyle}}">{{wk.status}}</span>
+        <span style="flex-grow: 1"></span>
+        <sc-if value="{{wk.canCopy}}" hint-placeholder-val="{{false}}">
+          <button type="button" onClick="{{wk.copy}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Doplnit z minulého týdne</button>
+        </sc-if>
+        <button type="button" onClick="{{wk.print}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Vytisknout na nástěnku</button>
+      </div>
+      <section aria-label="Jídelníček na týden" style="background: #FFFFFF; border-radius: 24px; padding: 14px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-height: 0">
+        <div style="display: grid; grid-template-columns: 112px repeat(5, minmax(0, 1fr)); gap: 8px">
+          <span></span>
+          <sc-for list="{{wk.days}}" as="d" hint-placeholder-count="5">
+            <span style="{{d.style}}">{{d.label}}</span>
+          </sc-for>
+        </div>
+        <sc-for list="{{wk.rows}}" as="r" hint-placeholder-count="5">
+          <div style="display: grid; grid-template-columns: 112px repeat(5, minmax(0, 1fr)); gap: 8px; flex: 1 1 0; min-height: 0">
+            <span style="display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-left: 6px"><span style="font-size: 14px; font-weight: 800">{{r.label}}</span><span style="font-size: 12px; color: #5A5C60">{{r.time}}</span></span>
+            <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5">
+              <button type="button" onClick="{{c.pick}}" aria-label="{{c.aria}}" style="{{c.style}}">
+                <span style="{{c.nameStyle}}">{{c.name}}</span>
+                <span style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+                  <sc-if value="{{c.hasA}}" hint-placeholder-val="{{true}}"><span style="height: 20px; padding: 0 8px; border-radius: 10px; background: #F3F4F2; color: #3A3C40; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center">{{c.alergeny}}</span></sc-if>
+                  <sc-if value="{{c.hasDiet}}" hint-placeholder-val="{{false}}"><span style="{{c.dietStyle}}">{{c.diet}}</span></sc-if>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-for>
+      </section>
+      <div style="display: flex; gap: 14px">
+        <section aria-label="Pestrost týdne" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 20px; padding: 12px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+          <span style="font-size: 12px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px">Pestrost týdne</span>
+          <sc-for list="{{wk.kos}}" as="k" hint-placeholder-count="4">
+            <span style="{{k.style}}">{{k.label}}</span>
+          </sc-for>
+        </section>
+        <section aria-label="Alergeny" style="width: 470px; flex-shrink: 0; background: #FFFFFF; border-radius: 20px; padding: 10px 16px; font-size: 12px; line-height: 17px; color: #5A5C60">
+          <b style="color: #17181A">Alergeny:</b> {{legend}}
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== JÍDLA -->
+    <sc-if value="{{is.jidla}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <section aria-label="Seznam jídel" style="width: 400px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0">
+          <input type="search" aria-label="Hledat jídlo" placeholder="Hledat jídlo nebo surovinu…" value="{{jid.q}}" onInput="{{jid.onQ}}" style="flex-shrink: 0; height: 44px; border-radius: 22px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 15px; background: #F8F9F7; color: #17181A">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0">
+            <sc-for list="{{jid.types}}" as="t" hint-placeholder-count="5">
+              <button type="button" onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px">
+            <sc-for list="{{jid.list}}" as="j" hint-placeholder-count="8">
+              <button type="button" onClick="{{j.open}}" style="{{j.style}}">
+                <span style="font-size: 15px; font-weight: 700">{{j.name}}</span>
+                <span style="font-size: 12px; color: #5A5C60">{{j.sub}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+        <sc-if value="{{jid.has}}" hint-placeholder-val="{{true}}">
+          <section aria-label="Jídlo" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 800; color: #5A5C60">Název jídla
+              <input type="text" value="{{jid.d.name}}" onInput="{{jid.d.onName}}" style="height: 52px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 20px; font-weight: 800; color: #17181A">
+            </label>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 13px; font-weight: 800; color: #5A5C60">Kdy se podává</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{jid.d.types}}" as="t" hint-placeholder-count="4">
+                  <button type="button" onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 13px; font-weight: 800; color: #5A5C60">Suroviny</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{jid.d.ings}}" as="i" hint-placeholder-count="4">
+                  <button type="button" onClick="{{i.remove}}" aria-label="Odebrat {{i.name}}" style="{{i.style}}">{{i.label}} <span aria-hidden="true" style="color: #8A8C90">×</span></button>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <input type="search" aria-label="Přidat surovinu" placeholder="Přidat surovinu…" value="{{jid.d.ingQ}}" onInput="{{jid.d.onIngQ}}" style="height: 40px; width: 260px; border-radius: 20px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 14px; color: #17181A">
+                <button type="button" onClick="{{jid.d.newIng}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">+ Nová surovina</button>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{jid.d.sugg}}" as="i" hint-placeholder-count="6">
+                  <button type="button" onClick="{{i.add}}" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px dashed #C9CCC8; background: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer; color: #3A3C40">+ {{i.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 18px; background: #F8F9F7">
+              <span style="font-size: 13px; font-weight: 800; color: #5A5C60">Alergeny <span style="font-weight: 600">· načtené ze surovin</span></span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{jid.d.alergeny}}" as="a" hint-placeholder-count="3">
+                  <span style="height: 34px; padding: 0 12px 0 4px; border-radius: 17px; background: #FFFFFF; border: 1px solid #E5E7E4; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700"><span style="width: 26px; height: 26px; border-radius: 13px; background: #F7DCC6; color: #8A4513; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center">{{a.n}}</span>{{a.name}}</span>
+                </sc-for>
+                <sc-if value="{{jid.d.noA}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #3A3C40">Bez alergenů</span></sc-if>
+              </div>
+            </div>
+            <sc-if value="{{jid.d.hasSubs}}" hint-placeholder-val="{{true}}">
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <span style="font-size: 13px; font-weight: 800; color: #5A5C60">Náhrada pro děti s dietou</span>
+                <sc-for list="{{jid.d.subs}}" as="s" hint-placeholder-count="2">
+                  <label style="display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; align-items: center; font-size: 14px; font-weight: 700">{{s.label}}
+                    <input type="text" placeholder="{{s.ph}}" value="{{s.value}}" onInput="{{s.onInput}}" style="height: 44px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 12px; font-size: 15px; font-weight: 500; color: #17181A">
+                  </label>
+                </sc-for>
+              </div>
+            </sc-if>
+            <span style="font-size: 13px; color: #5A5C60">{{jid.d.used}}</span>
+          </section>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== DIETY -->
+    <sc-if value="{{is.diety}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <section aria-label="Děti s dietou" style="width: 380px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800">Děti s dietou</h2>
+          <sc-for list="{{die.kids}}" as="k" hint-placeholder-count="5">
+            <div style="padding: 12px 14px; border-radius: 16px; background: #F8F9F7; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span style="{{k.dotStyle}}"></span>
+                <span style="font-size: 15px; font-weight: 800; flex-grow: 1">{{k.name}}</span>
+                <span style="font-size: 13px; color: #5A5C60">{{k.cls}}</span>
+              </div>
+              <span style="font-size: 14px; color: #3A3C40">Bez: <b>{{k.bez}}</b> {{k.pozn}}</span>
+              <button type="button" onClick="{{k.toggle}}" aria-pressed="{{k.ok}}" style="{{k.okStyle}}">{{k.okLabel}}</button>
+            </div>
+          </sc-for>
+          <span style="font-size: 12px; color: #5A5C60; line-height: 17px">Alergie zapisuje ředitelka v kartotéce dítěte. Dietu školka poskytuje s doporučením lékaře.</span>
+        </section>
+        <section aria-label="Náhrady na týden" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Náhrady · {{wk.label}}</h2>
+            <button type="button" onClick="{{wk.prev}}" aria-label="Předchozí týden" style="width: 40px; height: 40px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 17px; font-weight: 800; cursor: pointer; color: #17181A">‹</button>
+            <button type="button" onClick="{{wk.next}}" aria-label="Další týden" style="width: 40px; height: 40px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 17px; font-weight: 800; cursor: pointer; color: #17181A">›</button>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px">
+            <sc-for list="{{die.days}}" as="d" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{d.label}}</span>
+                <sc-for list="{{d.rows}}" as="r" hint-placeholder-count="2">
+                  <div style="{{r.style}}">
+                    <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                      <span style="font-size: 12px; font-weight: 700; color: #5A5C60">{{r.slot}}</span>
+                      <span style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.dish}}</span>
+                      <span style="font-size: 12px; color: #3A3C40">bez {{r.bez}} · {{r.kids}}</span>
+                    </span>
+                    <input type="text" aria-label="Náhrada" placeholder="Napište náhradu…" value="{{r.value}}" onInput="{{r.onInput}}" style="{{r.inputStyle}}">
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+            <sc-if value="{{die.none}}" hint-placeholder-val="{{false}}">
+              <div style="font-size: 15px; color: #5A5C60">Tento týden žádné jídlo nekoliduje s dietou.</div>
+            </sc-if>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ========================================================== KUCHAŘKY -->
+    <sc-if value="{{is.kucharky}}" hint-placeholder-val="{{false}}">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; overflow-y: auto; padding: 2px">
+        <sc-for list="{{staff}}" as="t" hint-placeholder-count="4">
+          <div style="background: #FFFFFF; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <span style="{{t.av.box}}"><sc-if value="{{t.av.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{t.av.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{t.av.drawn}}" hint-placeholder-val="{{true}}"><span style="{{t.av.back}}"></span><span style="{{t.av.body}}"></span><span style="{{t.av.head}}"></span><span style="{{t.av.front}}"></span><span style="{{t.av.eyes}}"></span></sc-if></span>
+              <span style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+                <span style="font-size: 16px; font-weight: 800">{{t.name}}</span>
+                <span style="font-size: 13px; color: #5A5C60">{{t.role}}</span><span style="font-size: 13px; color: #5A5C60">{{t.phone}}</span>
+              </span>
+              <button type="button" onClick="{{t.edit}}" aria-label="Upravit profil {{t.name}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">Upravit</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Úvazek</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{t.uvazky}}" as="u" hint-placeholder-count="4">
+                  <button type="button" onClick="{{u.pick}}" aria-pressed="{{u.on}}" style="{{u.style}}">{{u.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #EEF0ED">
+              <sc-for list="{{t.checks}}" as="c" hint-placeholder-count="2">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 14px">
+                  <span style="{{c.dotStyle}}"></span>
+                  <span style="flex-grow: 1">{{c.label}}</span>
+                  <span style="{{c.valStyle}}">{{c.value}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- ============================================================ FORMULÁŘE -->
+  <sc-if value="{{dlg.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 6">
+      <div role="dialog" aria-label="{{dlg.title}}" style="width: 640px; max-height: 820px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 20px 20px 14px 24px; border-bottom: 1px solid #EEF0ED">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+            <span style="font-size: 13px; font-weight: 600; color: #5A5C60">{{dlg.kicker}}</span>
+            <span style="font-size: 24px; font-weight: 800">{{dlg.title}}</span>
+          </div>
+          <button type="button" onClick="{{dlg.close}}" aria-label="Zavřít" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 18px 24px; display: flex; flex-direction: column; gap: 16px">
+          <sc-if value="{{dlg.hasAvatar}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; align-items: center; gap: 16px">
+              <span style="{{dlg.av.box}}"><sc-if value="{{dlg.av.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{dlg.av.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{dlg.av.drawn}}" hint-placeholder-val="{{true}}"><span style="{{dlg.av.back}}"></span><span style="{{dlg.av.body}}"></span><span style="{{dlg.av.head}}"></span><span style="{{dlg.av.front}}"></span><span style="{{dlg.av.eyes}}"></span></sc-if></span>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <label style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">{{dlg.photoLabel}}<input type="file" accept="image/*" aria-label="Nahrát fotku" onChange="{{dlg.onPhoto}}" style="display: none"></label>
+                <sc-if value="{{dlg.hasPhoto}}" hint-placeholder-val="{{false}}">
+                  <button type="button" onClick="{{dlg.removePhoto}}" style="align-self: flex-start; height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Odebrat fotku</button>
+                </sc-if>
+                <span style="font-size: 13px; color: #5A5C60">Bez fotky se ukáže kreslená postava.</span>
+              </div>
+            </div>
+          </sc-if>
+          <sc-for list="{{dlg.inputs}}" as="f" hint-placeholder-count="2">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">{{f.label}}
+              <input type="{{f.type}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="height: 52px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 17px; font-weight: 500; color: #17181A">
+            </label>
+          </sc-for>
+          <sc-for list="{{dlg.choices}}" as="g" hint-placeholder-count="1">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 15px; font-weight: 800">{{g.label}}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{g.chips}}" as="c" hint-placeholder-count="3">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{dlg.hasList}}" hint-placeholder-val="{{false}}">
+            <input type="search" aria-label="Hledat jídlo" placeholder="Hledat…" value="{{dlg.q}}" onInput="{{dlg.onQ}}" style="flex-shrink: 0; height: 44px; border-radius: 22px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 15px; background: #F8F9F7; color: #17181A">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <sc-for list="{{dlg.list}}" as="j" hint-placeholder-count="6">
+                <button type="button" onClick="{{j.pick}}" aria-pressed="{{j.on}}" style="{{j.style}}">
+                  <span style="font-size: 15px; font-weight: 700; flex-grow: 1">{{j.name}}</span>
+                  <span style="font-size: 12px; font-weight: 800; color: #5A5C60">{{j.alergeny}}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{dlg.hasWarn}}" hint-placeholder-val="{{false}}">
+            <div role="note" style="padding: 12px 14px; border-radius: 16px; background: #FAEBE4; color: #8A4513; font-size: 14px; line-height: 20px; font-weight: 600">{{dlg.warn}}</div>
+          </sc-if>
+        </div>
+        <div style="flex-shrink: 0; padding: 12px 24px 18px; border-top: 1px solid #EEEEEC; display: flex; gap: 8px">
+          <sc-if value="{{dlg.hasExtra}}" hint-placeholder-val="{{false}}">
+            <button type="button" onClick="{{dlg.extra}}" style="min-height: 56px; padding: 0 20px; border: 1px solid #EEEEEC; border-radius: 28px; background: #FFFFFF; color: #8A4513; font-size: 15px; font-weight: 700; cursor: pointer">{{dlg.extraLabel}}</button>
+          </sc-if>
+          <button type="button" onClick="{{dlg.close}}" style="flex-grow: 1; min-height: 56px; border: 1px solid #EEEEEC; border-radius: 28px; background: #F7F7F6; color: #17181A; font-size: 15px; font-weight: 700; cursor: pointer">Zrušit</button>
+          <button type="button" onClick="{{dlg.save}}" aria-disabled="{{dlg.cantSave}}" style="{{dlg.saveStyle}}">{{dlg.saveLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
+    <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #DCE6F2; color: #1F3A5C; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+/* =============================================================================
+   Školní jídelna — počítač v kuchyni
+   -----------------------------------------------------------------------------
+   Kuchařka tu vidí, kolik porcí dnes vařit (podle docházky z tabletů),
+   sestaví jídelníček na týden a u každého jídla se alergeny načtou samy
+   ze surovin (číslování 1–14 podle nařízení EU č. 1169/2011). Dětem
+   s dietou se ke kolidujícímu jídlu nabídne náhrada; zveřejněný
+   jídelníček se ukáže na tabletu učitelek a rodičům v aplikaci.
+   Stravování se řídí vyhláškou č. 107/2005 Sb., o školním stravování.
+   ============================================================================= */
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var t = new Date();
+    t.setHours(0, 0, 0, 0);
+    this.today = t;
+    this.A = [null, ['lepek', 'lepku', 'Obiloviny obsahující lepek'], ['korýši', 'korýšů', 'Korýši'], ['vejce', 'vajec', 'Vejce'], ['ryby', 'ryb', 'Ryby'],
+      ['arašídy', 'arašídů', 'Arašídy'], ['sója', 'sóji', 'Sója'], ['mléko', 'mléka', 'Mléko'], ['ořechy', 'ořechů', 'Skořápkové plody'], ['celer', 'celeru', 'Celer'],
+      ['hořčice', 'hořčice', 'Hořčice'], ['sezam', 'sezamu', 'Sezam'], ['siřičitany', 'siřičitanů', 'Oxid siřičitý a siřičitany'], ['vlčí bob', 'vlčího bobu', 'Vlčí bob'], ['měkkýši', 'měkkýšů', 'Měkkýši']];
+    this.SLOTS = [['prs', 'Přesnídávka', '8:30', 'svacina'], ['pol', 'Polévka', '11:30', 'polevka'], ['obed', 'Oběd', '11:45', 'obed'], ['sv', 'Svačina', '14:15', 'svacina'], ['nap', 'Pitný režim', 'celý den', 'napoj']];
+    this.TYPES = [['svacina', 'Svačiny'], ['polevka', 'Polévky'], ['obed', 'Hlavní jídla'], ['napoj', 'Nápoje']];
+    this.CLASSES = [{ id: 'slunicka', name: 'Sluníčka', color: '#E9C46A', n: 28 }, { id: 'berusky', name: 'Berušky', color: '#E08A80', n: 18 }, { id: 'motylci', name: 'Motýlci', color: '#86A8DE', n: 16 }];
+    this.school = { name: 'MŠ Sluníčko', nazev: 'Mateřská škola Sluníčko, Praha 6', adresa: 'Na Hutích 12, 160 00 Praha 6', telefon: '220 123 456', email: 'skolka@ms-slunicko.cz', ico: '70891234' };
+    try { var r = JSON.parse(localStorage.getItem('skolka-reditel-v1') || 'null'); if (r && r.school) this.school = Object.assign(this.school, r.school); } catch (e) { /* bez ředitelny stačí výchozí údaje */ }
+
+    // Suroviny: [název, alergeny, skupina pro pestrost]
+    var I = {
+      mouka: ['Pšeničná mouka', [1], 'obil'], chleb: ['Chléb', [1], 'obil'], rohlik: ['Rohlík', [1], 'obil'], bezlep: ['Bezlepkové pečivo', [], 'obil'],
+      testoviny: ['Těstoviny', [1, 3], 'obil'], nudle: ['Polévkové nudle', [1, 3], 'obil'], kroupy: ['Kroupy', [1], 'obil'], vlocky: ['Ovesné vločky', [1], 'obil'],
+      krupice: ['Dětská krupice', [1], 'obil'], ryze: ['Rýže', [], 'obil'], brambory: ['Brambory', [], 'brambory'],
+      mleko: ['Mléko', [7], 'mleko'], maslo: ['Máslo', [7], 'tuk'], syr: ['Sýr eidam', [7], 'mleko'], lucina: ['Lučina', [7], 'mleko'], tvaroh: ['Tvaroh', [7], 'mleko'],
+      jogurt: ['Bílý jogurt', [7], 'mleko'], smetana: ['Smetana na vaření', [7], 'mleko'], vejce: ['Vejce', [3], 'vejce'],
+      kure: ['Kuřecí maso', [], 'maso'], hovezi: ['Hovězí maso', [], 'maso'], veprove: ['Vepřové maso', [], 'maso'], sunka: ['Šunka', [], 'maso'],
+      ryba: ['Filé z tresky', [4], 'ryby'], tunak: ['Tuňák', [4], 'ryby'], cocka: ['Čočka', [], 'lusteniny'], cizrna: ['Cizrna', [], 'lusteniny'],
+      tahini: ['Sezamová pasta', [11], ''], arasidy: ['Arašídové máslo', [5], ''], celer: ['Celer', [9], 'zelenina'], mrkev: ['Mrkev', [], 'zelenina'],
+      dyne: ['Dýně', [], 'zelenina'], brokolice: ['Brokolice', [], 'zelenina'], rajcata: ['Rajčata', [], 'zelenina'], okurka: ['Okurka', [], 'zelenina'],
+      paprika: ['Paprika', [], 'zelenina'], cibule: ['Cibule', [], 'zelenina'], jablko: ['Jablko', [], 'ovoce'], banan: ['Banán', [], 'ovoce'],
+      hruska: ['Hruška', [], 'ovoce'], mandarinka: ['Mandarinka', [], 'ovoce'], kakao: ['Kakao', [], ''], cukr: ['Cukr', [], 'cukr'],
+      olej: ['Řepkový olej', [], 'tuk'], horcice: ['Hořčice', [10], ''], caj: ['Ovocný čaj', [], ''], voda: ['Voda', [], ''], sirup: ['Ovocný sirup', [], 'cukr']
+    };
+    this.ings = Object.keys(I).map(function (k) { return { id: k, name: I[k][0], a: I[k][1], cat: I[k][2] }; });
+
+    var D = function (id, type, name, ings, sub) { return { id: id, type: type, name: name, ings: ings, sub: sub || {} }; };
+    this.dishes = [
+      D('s1', 'svacina', 'Chléb se sýrovou pomazánkou, paprika', ['chleb', 'syr', 'lucina', 'paprika'], { 1: 'Bezlepkové pečivo se sýrovou pomazánkou', 7: 'Chléb s cizrnovou pomazánkou, paprika' }),
+      D('s2', 'svacina', 'Rohlík s máslem a šunkou, okurka', ['rohlik', 'maslo', 'sunka', 'okurka'], { 1: 'Bezlepkové pečivo se šunkou', 7: 'Rohlík se šunkou bez másla, okurka' }),
+      D('s3', 'svacina', 'Bílý jogurt s jablkem', ['jogurt', 'jablko'], { 7: 'Rostlinný jogurt s jablkem' }),
+      D('s4', 'svacina', 'Chléb s vaječnou pomazánkou, rajče', ['chleb', 'vejce', 'lucina', 'rajcata'], { 1: 'Bezlepkové pečivo s vaječnou pomazánkou', 3: 'Chléb s tvarohovou pomazánkou, rajče', 7: 'Chléb se šunkou a rajčetem' }),
+      D('s5', 'svacina', 'Ovesná kaše s banánem', ['vlocky', 'mleko', 'banan'], { 1: 'Rýžová kaše s banánem', 7: 'Ovesná kaše na vodě s banánem' }),
+      D('s6', 'svacina', 'Ovocný talíř', ['jablko', 'hruska', 'mandarinka']),
+      D('s7', 'svacina', 'Chléb s tuňákovou pomazánkou, mrkev', ['chleb', 'tunak', 'lucina', 'mrkev'], { 1: 'Bezlepkové pečivo s tuňákovou pomazánkou', 4: 'Chléb s tvarohovou pomazánkou, mrkev', 7: 'Chléb s tuňákem a mrkví' }),
+      D('s8', 'svacina', 'Rohlík s tvarohovou pomazánkou, okurka', ['rohlik', 'tvaroh', 'okurka'], { 1: 'Bezlepkové pečivo s tvarohovou pomazánkou', 7: 'Rohlík se šunkou a okurkou' }),
+      D('s9', 'svacina', 'Rýžové chlebíčky s hummusem, paprika', ['ryze', 'cizrna', 'tahini', 'paprika']),
+      D('s10', 'svacina', 'Mléčná rýže s ovocem', ['ryze', 'mleko', 'cukr', 'jablko'], { 7: 'Rýže na vodě s ovocem' }),
+      D('p1', 'polevka', 'Hovězí vývar s nudlemi', ['hovezi', 'nudle', 'celer', 'mrkev'], { 1: 'Hovězí vývar s rýží', 3: 'Hovězí vývar s rýží' }),
+      D('p2', 'polevka', 'Dýňový krém', ['dyne', 'smetana', 'celer', 'cibule'], { 7: 'Dýňový krém bez smetany' }),
+      D('p3', 'polevka', 'Čočková polévka', ['cocka', 'mouka', 'celer', 'mrkev'], { 1: 'Čočková polévka bez zásmažky' }),
+      D('p4', 'polevka', 'Zeleninová polévka s kroupami', ['kroupy', 'celer', 'mrkev', 'brambory'], { 1: 'Zeleninová polévka s rýží' }),
+      D('p5', 'polevka', 'Bramboračka', ['brambory', 'mouka', 'celer', 'mrkev'], { 1: 'Bramboračka bez zásmažky' }),
+      D('p6', 'polevka', 'Rajská polévka s rýží', ['rajcata', 'ryze', 'celer']),
+      D('p7', 'polevka', 'Brokolicový krém', ['brokolice', 'smetana', 'celer', 'brambory'], { 7: 'Brokolicový krém bez smetany' }),
+      D('p8', 'polevka', 'Kuřecí vývar s kapáním', ['kure', 'mouka', 'vejce', 'celer', 'mrkev'], { 1: 'Kuřecí vývar s rýží', 3: 'Kuřecí vývar s rýží' }),
+      D('o1', 'obed', 'Rizoto se sýrem, okurkový salát', ['ryze', 'syr', 'mrkev', 'celer', 'okurka'], { 7: 'Rizoto bez sýra s olivovým olejem' }),
+      D('o2', 'obed', 'Kuřecí plátek, bramborová kaše', ['kure', 'brambory', 'mleko', 'maslo'], { 7: 'Kuřecí plátek, vařené brambory' }),
+      D('o3', 'obed', 'Rybí filé na másle, brambory', ['ryba', 'maslo', 'brambory'], { 4: 'Kuřecí plátek, brambory', 7: 'Rybí filé na oleji, brambory' }),
+      D('o4', 'obed', 'Špagety s rajčatovou omáčkou a sýrem', ['testoviny', 'rajcata', 'syr', 'cibule'], { 1: 'Bezlepkové špagety s rajčatovou omáčkou', 3: 'Rýže s rajčatovou omáčkou', 7: 'Špagety s rajčatovou omáčkou bez sýra' }),
+      D('o5', 'obed', 'Hovězí guláš, těstoviny', ['hovezi', 'cibule', 'mouka', 'testoviny', 'paprika'], { 1: 'Hovězí guláš bez mouky, rýže', 3: 'Hovězí guláš, rýže' }),
+      D('o6', 'obed', 'Čočka na kyselo, vejce, okurka', ['cocka', 'mouka', 'vejce', 'okurka'], { 1: 'Čočka bez zásmažky, vejce, okurka', 3: 'Čočka na kyselo, šunka, okurka' }),
+      D('o7', 'obed', 'Krupicová kaše s kakaem', ['krupice', 'mleko', 'maslo', 'kakao', 'cukr'], { 1: 'Rýžová kaše s kakaem', 7: 'Krupicová kaše na rostlinném mléce' }),
+      D('o8', 'obed', 'Vepřová pečeně, dušená mrkev, brambory', ['veprove', 'mrkev', 'brambory', 'cibule']),
+      D('o9', 'obed', 'Zapečené těstoviny s brokolicí', ['testoviny', 'brokolice', 'vejce', 'smetana', 'syr'], { 1: 'Zapečené brambory s brokolicí', 3: 'Rýže s brokolicí a sýrem', 7: 'Těstoviny s brokolicí na oleji' }),
+      D('o10', 'obed', 'Kuřecí rizoto se zeleninou', ['ryze', 'kure', 'mrkev', 'paprika', 'celer']),
+      D('o11', 'obed', 'Pečené kuře, rýže, mrkvový salát', ['kure', 'ryze', 'mrkev', 'jablko']),
+      D('n1', 'napoj', 'Ovocný čaj, voda', ['caj', 'voda']),
+      D('n2', 'napoj', 'Mléko, voda', ['mleko', 'voda'], { 7: 'Ovocný čaj' }),
+      D('n3', 'napoj', 'Kakao, voda', ['mleko', 'kakao', 'cukr', 'voda'], { 7: 'Ovocný čaj' }),
+      D('n4', 'napoj', 'Bylinkový čaj se sirupem', ['caj', 'sirup', 'voda'])
+    ];
+
+    // Děti s dietou — stejné děti a alergie jako na tabletu učitelek.
+    this.diets = [
+      { id: 'oliver', name: 'Oliver N.', cls: 'slunicka', a: [5], ok: true, pozn: '' },
+      { id: 'ema', name: 'Ema K.', cls: 'slunicka', a: [7], ok: true, pozn: '' },
+      { id: 'jonas', name: 'Jonáš P.', cls: 'slunicka', a: [7], ok: true, pozn: '' },
+      { id: 'anna', name: 'Anna B.', cls: 'slunicka', a: [1], ok: true, pozn: '· bezlepková dieta' },
+      { id: 'sofie', name: 'Sofie R.', cls: 'slunicka', a: [3], ok: false, pozn: '' },
+      { id: 'berusky-3', name: 'Adéla G.', cls: 'berusky', a: [7], ok: true, pozn: '' },
+      { id: 'motylci-3', name: 'Dominika D.', cls: 'motylci', a: [7], ok: true, pozn: '' }
+    ];
+
+    var back = function (m) { var d = new Date(t); d.setMonth(d.getMonth() - m); return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-15'; };
+    this.staff = [
+      { id: 'k1', name: 'Jaroslava Benešová', role: 'Vedoucí školní jídelny', phone: '220 123 470', uvazek: '1,0', zp: true, hyg: back(4) },
+      { id: 'k2', name: 'Marie Dvořáková', role: 'Hlavní kuchařka', phone: '604 218 330', uvazek: '1,0', zp: true, hyg: back(14) },
+      { id: 'k3', name: 'Ilona Šťastná', role: 'Kuchařka', phone: '731 552 104', uvazek: '0,75', zp: true, hyg: back(4) },
+      { id: 'k4', name: 'Pavla Krejčí', role: 'Pomocná kuchařka', phone: '722 905 611', uvazek: '0,5', zp: false, hyg: back(4) }
+    ];
+
+    // Jídelníčky po týdnech (klíč = pondělí). Minulý a tento zveřejněný, příští rozpracovaný.
+    var W = function (rows, pub) { return { days: rows.map(function (r) { return { prs: r[0], pol: r[1], obed: r[2], sv: r[3], nap: r[4] }; }), published: pub, subs: {} }; };
+    var m0 = this.serviceMonday();
+    this.weeks = {};
+    this.weeks[this.addDays(m0, -7)] = W([['s4', 'p7', 'o5', 's3', 'n2'], ['s2', 'p4', 'o8', 's6', 'n1'], ['s1', 'p8', 'o6', 's10', 'n3'], ['s9', 'p2', 'o9', 's8', 'n1'], ['s5', 'p1', 'o10', 's6', 'n2']], true);
+    this.weeks[m0] = W([['s1', 'p2', 'o1', 's6', 'n1'], ['s5', 'p1', 'o2', 's4', 'n2'], ['s2', 'p3', 'o3', 's3', 'n1'], ['s7', 'p5', 'o4', 's9', 'n3'], ['s8', 'p6', 'o7', 's6', 'n1']], true);
+    this.weeks[this.addDays(m0, 7)] = W([['s2', 'p8', 'o11', 's3', 'n1'], ['s1', 'p4', 'o6', 's6', 'n2'], ['s7', 'p7', 'o9', 's5', 'n1'], ['s4', 'p3', 'o8', 's8', 'n3'], [null, null, null, null, null]], false);
+
+    this.state = { page: 'prehled', me: 'k2', weekOff: 0, jidloId: 'o1', q: '', typ: 'vse', ingQ: '', dlg: null, df: {}, toast: null };
+    this.restore();
+  }
+
+  /* -------------------------------------------------- data a ukládání */
+  iso(d) { return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate(); }
+  fromIso(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  addDays(isoStr, n) { var d = this.fromIso(isoStr); d.setDate(d.getDate() + n); return this.iso(d); }
+  /* Den výdeje: o víkendu se kuchyně chystá na pondělí. */
+  serviceDay() { var d = new Date(this.today), w = d.getDay(); if (w === 6) d.setDate(d.getDate() + 2); if (w === 0) d.setDate(d.getDate() + 1); return d; }
+  serviceMonday() { var d = this.serviceDay(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return this.iso(d); }
+
+  persistKeys() { return ['ings', 'dishes', 'diets', 'staff', 'weeks']; }
+  restore() {
+    var raw = null, self = this;
+    try { raw = localStorage.getItem('skolka-jidelna-v1'); } catch (e) { return; }
+    if (!raw) return;
+    var data; try { data = JSON.parse(raw); } catch (e) { return; }
+    this.persistKeys().forEach(function (k) { if (data[k] !== undefined) self[k] = data[k]; });
+    if (data.me) this.state.me = data.me;
+  }
+  save() {
+    var self = this;
+    clearTimeout(this._s);
+    this._s = setTimeout(function () {
+      var data = { me: self.state.me };
+      self.persistKeys().forEach(function (k) { data[k] = self[k]; });
+      try { localStorage.setItem('skolka-jidelna-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
+      self.saveStore();
+    }, 300);
+  }
+  /* Sdílené úložiště s tabletem a ředitelnou (stejné jako u nich). */
+  store() {
+    var w = typeof window !== 'undefined' ? window : {};
+    if (!w.__skolka) {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
+      var d0 = new Date(), today = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate();
+      if (saved && saved.day !== today) { saved.att = {}; saved.kidAtt = null; }
+      w.__skolka = saved || { urazy: [], att: {}, kniha: {}, urazNo: 3 };
+      w.__skolka.day = today;
+    }
+    return w.__skolka;
+  }
+  saveStore() { try { localStorage.setItem('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* nic */ } }
+
+  showToast(text) {
+    var self = this;
+    this.setState({ toast: text });
+    clearTimeout(this._t);
+    this._t = setTimeout(function () { self.setState({ toast: null }); }, 2800);
+  }
+
+  /* -------------------------------------------------- jídla */
+  dish(id) { return this.dishes.filter(function (d) { return d.id === id; })[0] || null; }
+  ing(id) { return this.ings.filter(function (i) { return i.id === id; })[0] || null; }
+  allergens(d) {
+    var self = this, s = {};
+    if (!d) return [];
+    d.ings.forEach(function (id) { var i = self.ing(id); if (i) i.a.forEach(function (n) { s[n] = true; }); });
+    return Object.keys(s).map(Number).sort(function (a, b) { return a - b; });
+  }
+  aStr(list) { return list.length ? list.join(', ') : ''; }
+  week(mon) { if (!this.weeks[mon]) this.weeks[mon] = { days: [0, 1, 2, 3, 4].map(function () { return { prs: null, pol: null, obed: null, sv: null, nap: null }; }), published: false, subs: {} }; return this.weeks[mon]; }
+  /* Střety s dietou v jednom chodu: [{n, kids, text}] — jedna náhrada na alergen. */
+  conflicts(mon, di, slot, kidsIn) {
+    var self = this, W = this.weeks[mon], d = W && this.dish(W.days[di][slot]);
+    if (!d) return [];
+    var A = this.allergens(d), out = [];
+    A.forEach(function (n) {
+      var kids = (kidsIn || self.diets).filter(function (k) { return k.a.indexOf(n) !== -1; });
+      if (!kids.length) return;
+      var key = di + '|' + slot + '|' + n;
+      var text = W.subs[key] != null ? W.subs[key] : (d.sub[n] || '');
+      out.push({ n: n, kids: kids, text: text, key: key, dish: d });
+    });
+    return out;
+  }
+  look(p) {
+    var h = 0, n = p.name || '';
+    for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
+    return p.look || { hair: ['#3B2A20', '#8A5A2B', '#D9A441', '#1E1E1E', '#B5532E'][h % 5], style: h % 2 ? 'long' : 'bun', shirt: ['#9CC06A', '#86A8DE', '#EFB283', '#D67FA3', '#B3A2E6', '#5FA3B3'][(h >>> 3) % 6], skin: ['#F3C9A8', '#E8B48F', '#C98E6A', '#F7D7BE'][(h >>> 5) % 4] };
+  }
+  avatar(p, size) {
+    var S = size || 40, L = this.look(p);
+    var abs = 'position: absolute; display: block; ';
+    var bg = ['#F6E7C8', '#DDE9F7', '#E7F2D6', '#F5DCE6', '#E6E1F7'][(p.name || '').length % 5];
+    var o = { box: 'width: ' + S + 'px; height: ' + S + 'px; border-radius: ' + (S / 2) + 'px; overflow: hidden; position: relative; flex-shrink: 0; display: inline-block; background: ' + bg,
+      hasPhoto: !!p.photo, photo: p.photo || '', drawn: !p.photo };
+    o.back = L.style === 'long' ? abs + 'left: 24%; width: 52%; top: 17%; height: 52%; border-radius: 46% 46% 22% 22%; background: ' + L.hair : (L.style === 'bun' ? abs + 'left: 39%; width: 22%; top: 7%; height: 22%; border-radius: 50%; background: ' + L.hair : 'display: none');
+    o.body = abs + 'left: 16%; width: 68%; bottom: -16%; height: 44%; border-radius: 50% 50% 0 0 / 70% 70% 0 0; background: ' + L.shirt;
+    o.head = abs + 'left: 30%; width: 40%; top: 21%; height: 42%; border-radius: 50%; background: ' + L.skin;
+    o.front = abs + 'left: 27%; width: 46%; top: 17%; height: 18%; border-radius: 50% 50% 35% 35%; background: ' + L.hair;
+    o.eyes = abs + 'left: 41%; top: 42%; width: ' + Math.max(2, S * 0.045) + 'px; height: ' + Math.max(2, S * 0.045) + 'px; border-radius: 50%; background: #2A2A2A; box-shadow: ' + (S * 0.13) + 'px 0 0 #2A2A2A';
+    return o;
+  }
+  readPhoto(file, done) {
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var c = document.createElement('canvas'), m = 192, side = Math.min(img.width, img.height);
+        c.width = m; c.height = m;
+        c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, m, m);
+        try { done(c.toDataURL('image/jpeg', 0.82)); } catch (e) { done(r.result); }
+      };
+      img.onerror = function () { done(null); };
+      img.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+
+  /* -------------------------------------------------- tisk */
+  printDoc(title, body) {
+    var sc = this.school;
+    var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var html = '<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>' + e(title) + '</title><style>'
+      + '@page{size:A4 landscape;margin:14mm}body{font:11pt/1.45 system-ui,sans-serif;color:#17181A;margin:0}'
+      + '.hd{display:flex;align-items:center;gap:14px;border-bottom:2px solid #17181A;padding-bottom:8px;margin-bottom:14px}.hd b{font-size:14pt;display:block}.hd span{font-size:9pt;color:#444}'
+      + 'h1{font-size:17pt;margin:0 0 10px}table{border-collapse:collapse;width:100%;margin-bottom:10px}th,td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top}th{background:#F1F0EA}'
+      + '.a{color:#8A4513;font-size:9pt;font-weight:700}.lg{font-size:8.5pt;color:#333}.ft{margin-top:14px;font-size:8.5pt;color:#666}'
+      + '</style></head><body><div class="hd"><div><b>' + e(sc.nazev) + ' — školní jídelna</b><span>' + e(sc.adresa) + ' · IČO ' + e(sc.ico) + ' · ' + e(sc.telefon) + '</span></div></div>'
+      + body + '</body></html>';
+    var w = null;
+    try { w = window.open('', '_blank'); } catch (err) { w = null; }
+    if (w && w.document) {
+      w.document.open(); w.document.write(html); w.document.close();
+      setTimeout(function () { try { w.focus(); w.print(); } catch (err) { /* vytiskne sám */ } }, 400);
+      this.showToast('V tisku zvolte „Uložit jako PDF“');
+    } else {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      a.download = title.replace(/[^\wÀ-ž]+/g, '-').toLowerCase() + '.html';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  }
+  menuHtml(mon) {
+    var self = this, W = this.week(mon), e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+    var DN = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
+    var head = '<tr><th></th>' + this.SLOTS.map(function (s) { return '<th>' + s[1] + '</th>'; }).join('') + '</tr>';
+    var rows = W.days.map(function (day, i) {
+      var d = self.fromIso(self.addDays(mon, i));
+      return '<tr><th>' + DN[i] + '<br>' + d.getDate() + '. ' + (d.getMonth() + 1) + '.</th>' + self.SLOTS.map(function (s) {
+        var x = self.dish(day[s[0]]); if (!x) return '<td>—</td>';
+        var A = self.allergens(x);
+        return '<td>' + e(x.name) + (A.length ? ' <span class="a">(' + A.join(', ') + ')</span>' : '') + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    var a = this.fromIso(mon), b = this.fromIso(this.addDays(mon, 4));
+    var leg = this.A.slice(1).map(function (x, i) { return (i + 1) + ' ' + x[2].toLowerCase(); }).join(' · ');
+    var ved = (this.staff.filter(function (s) { return /Vedoucí/.test(s.role); })[0] || {}).name || '';
+    return '<h1>Jídelníček ' + a.getDate() + '. ' + (a.getMonth() + 1) + '. – ' + b.getDate() + '. ' + (b.getMonth() + 1) + '. ' + b.getFullYear() + '</h1><table>' + head + rows + '</table>'
+      + '<div class="lg"><b>Alergeny</b> (nařízení EU č. 1169/2011): ' + leg + '.</div>'
+      + '<div class="ft">Pitný režim je zajištěn po celý den. Změna jídelníčku vyhrazena. Jídla jsou určena k okamžité spotřebě.' + (ved ? ' Vedoucí školní jídelny: ' + e(ved) + '.' : '') + '</div>';
+  }
+
+  /* -------------------------------------------------- výpočet dne */
+  dayInfo() {
+    var self = this, S = this.store(), sd = this.serviceDay(), sIso = this.iso(sd), mon = this.serviceMonday();
+    var di = (sd.getDay() + 6) % 7, W = this.weeks[mon], day = W ? W.days[di] : null;
+    var isToday = sIso === this.iso(this.today);
+    // Odhlášky: dnes z docházky na tabletu, jinak (zítřek / pondělí) podle ohlášených omluv.
+    var away = {}, excusedBy = { slunicka: 4, berusky: 2, motylci: 1 };
+    if (isToday && S.kidAtt) {
+      excusedBy = { slunicka: 0, berusky: 0, motylci: 0 };
+      Object.keys(S.kidAtt).forEach(function (id) {
+        if (S.kidAtt[id].att !== 'excused') return;
+        away[id] = true;
+        var c = id.indexOf('-') !== -1 ? id.split('-')[0] : 'slunicka';
+        if (excusedBy[c] != null) excusedBy[c]++;
+      });
+    }
+    return { S: S, sd: sd, sIso: sIso, mon: mon, di: di, day: day, isToday: isToday, away: away, excusedBy: excusedBy };
+  }
+
+  /* Co z jídelníčku uvidí tablet a aplikace rodičů. */
+  /* Alergie zapisuje ředitelka v kartotéce; jídelna si je odtud bere.
+     Co si kuchyně u dítěte vede sama (doporučení lékaře, poznámka), zůstává. */
+  syncDiets() {
+    var deti = this.store().deti;
+    if (!deti) return;
+    var self = this, prev = {};
+    this.diets.forEach(function (k) { prev[k.name] = k; });
+    var WORDS = [[1, /lep|pšeni|mouk|obilov/], [2, /korýš|kreve/], [3, /vej|vaj/], [4, /ryb/], [5, /araš/], [6, /sój|soj/], [7, /mlé|mle|lakt|kasein/],
+      [8, /ořech|orech|mandl|lískov/], [9, /celer/], [10, /hořč|horc/], [11, /sezam/], [12, /siřič|siric|sulfit/], [13, /vlčí|vlci|lupin/], [14, /měkký|mekky/]];
+    var next = [];
+    deti.forEach(function (d) {
+      var t = (d.alergie || '').toLowerCase(), a = [];
+      WORDS.forEach(function (w) { if (w[1].test(t)) a.push(w[0]); });
+      if (!a.length) return;
+      var p = prev[d.name];
+      next.push({ id: p ? p.id : d.id, name: d.name, cls: d.cls, a: a, ok: p ? p.ok : false, pozn: p ? p.pozn : '' });
+    });
+    if (JSON.stringify(next) !== JSON.stringify(this.diets)) this.diets = next;
+  }
+
+  publish() {
+    var self = this, S = this.store(), out = {};
+    Object.keys(this.weeks).forEach(function (mon) {
+      var W = self.weeks[mon];
+      if (!W.published) return;
+      W.days.forEach(function (day, di) {
+        var o = self.dish(day.obed), p = self.dish(day.pol);
+        if (!o) return;
+        var A = {}; [o, p].forEach(function (x) { if (x) self.allergens(x).forEach(function (n) { A[n] = true; }); });
+        var subs = {};
+        ['pol', 'obed'].forEach(function (slot) { self.conflicts(mon, di, slot).forEach(function (c) { if (c.text) subs[self.A[c.n][0]] = (subs[self.A[c.n][0]] ? subs[self.A[c.n][0]] + ' · ' : '') + c.text; }); });
+        out[self.addDays(mon, di)] = { name: o.name, polevka: p ? p.name : '', allergens: Object.keys(A).map(function (n) { return self.A[n][0]; }), nums: Object.keys(A).map(Number), subs: subs };
+      });
+    });
+    S.jidelna = { dny: out };
+  }
+
+  renderVals() {
+    var self = this, st = this.state, df = st.df || {};
+    this.syncDiets();
+    var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'], DN = ['Po', 'Út', 'St', 'Čt', 'Pá'];
+    var MES = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+    var cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };
+    var clsById = {}; this.CLASSES.forEach(function (c) { clsById[c.id] = c; });
+    var dot = function (c, size) { return 'width: ' + (size || 10) + 'px; height: ' + (size || 10) + 'px; border-radius: 6px; flex-shrink: 0; display: inline-block; background: ' + c; };
+    var chip = function (on, small) {
+      return 'height: ' + (small ? 34 : 40) + 'px; padding: 0 ' + (small ? 12 : 14) + 'px; border-radius: 20px; font-size: ' + (small ? 13 : 14) + 'px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; '
+        + (on ? 'background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4');
+    };
+    var primary = function (on) { return 'height: 48px; padding: 0 20px; border-radius: 24px; border: 0; font-size: 15px; font-weight: 800; cursor: ' + (on ? 'pointer' : 'default') + '; ' + (on ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #EDF4E4; color: #2F5212'); };
+    var aBadge = 'height: 22px; padding: 0 9px; border-radius: 11px; background: #F3F4F2; color: #3A3C40; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; white-space: nowrap';
+    var go = function (page, extra) { return function () { self.setState(Object.assign({ page: page }, extra || {})); }; };
+    var ME = this.staff.filter(function (s) { return s.id === st.me; })[0] || this.staff[0];
+    var monthsAgo = function (isoStr) { var d = self.fromIso(isoStr); return (self.today.getFullYear() - d.getFullYear()) * 12 + self.today.getMonth() - d.getMonth(); };
+    var info = this.dayInfo();
+
+    /* -------------------------------------------------- týden */
+    var mon = this.addDays(this.serviceMonday(), 7 * st.weekOff), W = this.week(mon);
+    var wa = this.fromIso(mon), wb = this.fromIso(this.addDays(mon, 4));
+    var wkLabel = wa.getDate() + '. ' + (wa.getMonth() === wb.getMonth() ? '' : (wa.getMonth() + 1) + '. ') + '– ' + wb.getDate() + '. ' + MES[wb.getMonth()];
+    var empty = 0; W.days.forEach(function (d) { self.SLOTS.forEach(function (s) { if (!d[s[0]]) empty++; }); });
+    var weekMissing = function (m) {
+      var n = 0, WW = self.weeks[m]; if (!WW) return 0;
+      WW.days.forEach(function (d, di) { ['prs', 'pol', 'obed', 'sv', 'nap'].forEach(function (slot) { self.conflicts(m, di, slot).forEach(function (c) { if (!c.text) n++; }); }); });
+      return n;
+    };
+    var nextMon = this.addDays(this.serviceMonday(), 7), nextW = this.weeks[nextMon];
+
+    /* -------------------------------------------------- menu */
+    var staffWarn = this.staff.filter(function (s) { return !s.zp || monthsAgo(s.hyg) >= 12; }).length;
+    var curMissing = weekMissing(this.serviceMonday()) + weekMissing(nextMon);
+    var NAV = [
+      ['prehled', 'Dnes v kuchyni', ''],
+      ['#', 'Jídla'], ['jidelnicek', 'Jídelníček', nextW && !nextW.published ? 'návrh' : ''], ['jidla', 'Jídla a suroviny', this.dishes.length], ['diety', 'Diety a náhrady', curMissing || ''],
+      ['#', 'Kuchyně'], ['kucharky', 'Kuchařky', staffWarn || this.staff.length]
+    ];
+    var nav = NAV.map(function (n) {
+      if (n[0] === '#') return { isHead: true, isItem: false, label: n[1], count: '', hasCount: false, current: 'false', countStyle: '', style: '', pick: function () {} };
+      var on = st.page === n[0];
+      var warn = (n[0] === 'diety' && n[2] !== '') || (n[0] === 'kucharky' && staffWarn) || n[2] === 'návrh';
+      return {
+        isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
+        countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
+          + (warn ? 'background: #F7DCC6; color: #8A4513' : 'background: ' + (on ? '#F3F4F2' : '#E5E7E4') + '; color: #3A3C40'),
+        pick: go(n[0], { dlg: null }),
+        style: 'min-height: 36px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
+      };
+    });
+    var is = {}; ['prehled', 'jidelnicek', 'jidla', 'diety', 'kucharky'].forEach(function (p) { is[p] = st.page === p; });
+
+    /* -------------------------------------------------- dialogy */
+    var openPick = function (m, di, slot) {
+      var s = self.SLOTS.filter(function (x) { return x[0] === slot; })[0], d = self.fromIso(self.addDays(m, di));
+      return function () { self.setState({ dlg: 'pick', df: { mon: m, di: di, slot: slot, type: s[3], val: self.week(m).days[di][slot], q: '', kicker: cap(DNY[d.getDay()]) + ' ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.', title: s[1] } }); };
+    };
+    var openStaff = function (p) {
+      return function () { self.setState({ dlg: 'staff', df: p ? { id: p.id, name: p.name, phone: p.phone, role: p.role, hyg: p.hyg, zp: p.zp, photo: p.photo || null } : { id: null, name: '', phone: '', role: 'Kuchařka', hyg: self.iso(self.today), zp: false, photo: null } }); };
+    };
+    var setDF = function (p) { self.setState({ df: Object.assign({}, st.df, p) }); };
+    var dlg = { open: !!st.dlg, title: '', kicker: '', inputs: [], choices: [], hasAvatar: false, av: this.avatar({ name: '' }, 72), photoLabel: '', hasPhoto: false, onPhoto: function () {}, removePhoto: function () {},
+      hasList: false, list: [], q: '', onQ: function () {}, hasWarn: false, warn: '', hasExtra: false, extra: function () {}, extraLabel: '',
+      close: function () { self.setState({ dlg: null }); }, save: function () {}, cantSave: 'false', saveLabel: 'Uložit', saveStyle: '' };
+    var inp = function (label, key, ph, type) { return { label: label, ph: ph || '', type: type || 'text', value: df[key] || '', onInput: function (e) { var o = {}; o[key] = e.target.value; setDF(o); } }; };
+    var canSave = true;
+    if (st.dlg === 'pick') {
+      dlg.kicker = df.kicker; dlg.title = df.title; dlg.hasList = true; dlg.q = df.q;
+      dlg.onQ = function (e) { setDF({ q: e.target.value }); };
+      var ql = (df.q || '').toLowerCase();
+      dlg.list = this.dishes.filter(function (d) { return d.type === df.type && (!ql || d.name.toLowerCase().indexOf(ql) !== -1); }).map(function (d) {
+        var on = df.val === d.id, A = self.allergens(d);
+        return { name: d.name, alergeny: A.length ? 'alergeny ' + A.join(', ') : 'bez alergenů', on: on ? 'true' : 'false', pick: function () { setDF({ val: d.id }); },
+          style: 'flex-shrink: 0; min-height: 48px; padding: 0 14px; border-radius: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; color: #17181A; ' + (on ? 'background: #E6EDF6; border: 2px solid #B4C6DD' : 'background: #FFFFFF; border: 2px solid #EEF0ED') };
+      });
+      var conf = df.val ? (function () { var d = self.dish(df.val), A = self.allergens(d); return self.diets.filter(function (k) { return k.a.some(function (n) { return A.indexOf(n) !== -1; }); }); })() : [];
+      dlg.hasWarn = conf.length > 0;
+      dlg.warn = 'Náhradu bude potřebovat: ' + conf.map(function (k) { return k.name; }).join(', ');
+      dlg.hasExtra = !!this.week(df.mon).days[df.di][df.slot];
+      dlg.extraLabel = 'Vyprázdnit';
+      dlg.extra = function () { self.week(df.mon).days[df.di][df.slot] = null; self.week(df.mon).published = false; self.setState({ dlg: null }); };
+      canSave = !!df.val;
+      dlg.saveLabel = 'Vybrat';
+      dlg.save = function () {
+        if (!df.val) return;
+        var WW = self.week(df.mon), was = WW.published;
+        WW.days[df.di][df.slot] = df.val;
+        self.setState({ dlg: null });
+        self.showToast(was ? 'Uloženo · rodiče vidí změnu v aplikaci' : 'Uloženo do návrhu');
+      };
+    } else if (st.dlg === 'staff') {
+      dlg.title = df.id ? 'Upravit profil' : 'Nová kuchařka';
+      dlg.kicker = df.id ? df.name : 'Kuchyně';
+      dlg.hasAvatar = true; dlg.av = this.avatar({ name: df.name || '?', photo: df.photo }, 72);
+      dlg.hasPhoto = !!df.photo; dlg.photoLabel = df.photo ? 'Vyměnit fotku' : 'Nahrát fotku';
+      dlg.onPhoto = function (e) { var f = e.target.files && e.target.files[0]; if (f) self.readPhoto(f, function (u) { if (u) setDF({ photo: u }); }); };
+      dlg.removePhoto = function () { setDF({ photo: null }); };
+      dlg.inputs = [inp('Jméno a příjmení', 'name', 'např. Jana Nováková'), inp('Telefon', 'phone', '600 000 000', 'tel'), inp('Školení hygieny', 'hyg', '', 'date')];
+      dlg.choices = [{ label: 'Pozice', chips: ['Vedoucí školní jídelny', 'Hlavní kuchařka', 'Kuchařka', 'Pomocná kuchařka'].map(function (r) { return { label: r, on: df.role === r ? 'true' : 'false', style: chip(df.role === r, true), pick: function () { setDF({ role: r }); } }; }) },
+        { label: 'Zdravotní průkaz', chips: [[true, 'Doložila'], [false, 'Zatím nedoložila']].map(function (o) { return { label: o[1], on: !!df.zp === o[0] ? 'true' : 'false', style: chip(!!df.zp === o[0], true), pick: function () { setDF({ zp: o[0] }); } }; }) }];
+      canSave = !!(df.name && df.name.trim().split(/\s+/).length >= 2);
+      dlg.save = function () {
+        if (!canSave) return;
+        var p = df.id ? self.staff.filter(function (s) { return s.id === df.id; })[0] : null;
+        if (!p) { p = { id: 'k' + Date.now(), uvazek: '1,0', zp: false }; self.staff.push(p); }
+        p.name = df.name.trim(); p.phone = df.phone; p.role = df.role; p.hyg = df.hyg || p.hyg; p.zp = !!df.zp; p.photo = df.photo || null;
+        self.setState({ dlg: null });
+        self.showToast(df.id ? 'Profil uložen' : (df.zp ? 'Kuchařka přidána' : 'Kuchařka přidána · ať doloží zdravotní průkaz'));
+      };
+    } else if (st.dlg === 'ing') {
+      dlg.title = 'Nová surovina'; dlg.kicker = 'Jídla a suroviny';
+      dlg.inputs = [inp('Název suroviny', 'name', 'např. Kuskus')];
+      var sel = df.a || [];
+      dlg.choices = [{ label: 'Obsahuje alergeny', chips: this.A.slice(1).map(function (x, i) {
+        var n = i + 1, on = sel.indexOf(n) !== -1;
+        return { label: n + ' · ' + x[0], on: on ? 'true' : 'false', style: chip(on, true), pick: function () { setDF({ a: on ? sel.filter(function (v) { return v !== n; }) : sel.concat([n]) }); } };
+      }) }];
+      canSave = !!(df.name && df.name.trim());
+      dlg.saveLabel = 'Přidat do jídla';
+      dlg.save = function () {
+        if (!canSave) return;
+        var id = 'i' + Date.now();
+        self.ings.push({ id: id, name: df.name.trim(), a: sel.slice().sort(function (a, b) { return a - b; }), cat: '' });
+        var d = self.dish(st.jidloId); if (d) d.ings.push(id);
+        self.setState({ dlg: null, ingQ: '' });
+        self.showToast('Surovina přidána · alergeny se přepočítaly');
+      };
+    }
+    dlg.cantSave = canSave ? 'false' : 'true';
+    dlg.saveStyle = 'flex-grow: 2; min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (canSave ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #8A8C90');
+
+    /* -------------------------------------------------- přehled dne */
+    var sd = info.sd, day = info.day;
+    var excTotal = 0, enrolled = 0;
+    var rows = this.CLASSES.map(function (c) {
+      var ex = info.excusedBy[c.id] || 0, n = c.n - ex; excTotal += ex; enrolled += c.n;
+      return { name: c.name, dotStyle: dot(c.color), prs: n, obed: n, sv: n, odhl: ex || '—', n: n,
+        style: 'display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 110px 110px; gap: 12px; padding: 10px 0; border-top: 1px solid #EEF0ED; font-size: 15px; font-weight: 600' };
+    });
+    var kidsTotal = enrolled - excTotal, adults = 11;
+    rows.push({ name: 'Zaměstnanci', dotStyle: dot('#C9CCC8'), prs: '—', obed: adults, sv: '—', odhl: '—', style: 'display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 110px 110px; gap: 12px; padding: 10px 0; border-top: 1px solid #EEF0ED; font-size: 15px; font-weight: 600; color: #3A3C40' });
+    rows.push({ name: 'Celkem', dotStyle: 'display: none', prs: kidsTotal, obed: kidsTotal + adults, sv: kidsTotal, odhl: excTotal, style: 'display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 110px 110px; gap: 12px; padding: 10px 0; border-top: 2px solid #E5E7E4; font-size: 16px; font-weight: 800' });
+    var presentDiets = this.diets.filter(function (k) { return !info.away[k.id]; });
+    var dietRows = [], missingToday = 0;
+    if (day) this.SLOTS.forEach(function (s) {
+      self.conflicts(info.mon, info.di, s[0], presentDiets).forEach(function (c) {
+        if (!c.text) missingToday++;
+        dietRows.push({ slot: s[1], bez: self.A[c.n][1], num: String(c.n), aStyle: aBadge, nahrada: c.text || 'Chybí náhrada', kids: c.kids.map(function (k) { return k.name; }).join(', '), missing: !c.text,
+          fix: go('diety', { weekOff: 0 }),
+          style: 'padding: 12px 14px; border-radius: 16px; display: flex; flex-direction: column; gap: 4px; background: ' + (c.text ? '#F8F9F7' : '#FCF4EF') });
+      });
+    });
+    var awayDiets = this.diets.filter(function (k) { return info.away[k.id]; });
+    var meals = this.SLOTS.map(function (s) {
+      var d = day && self.dish(day[s[0]]), A = d ? self.allergens(d) : [];
+      var porce = s[0] === 'nap' ? '' : (s[0] === 'pol' || s[0] === 'obed' ? kidsTotal + adults : kidsTotal);
+      return { time: s[2] === 'celý den' ? '' : s[2], slot: s[1], dish: d ? d.name : 'Není v jídelníčku', alergeny: A.length ? 'alergeny ' + A.join(', ') : '', aStyle: A.length ? aBadge : aBadge + '; visibility: hidden', porce: porce ? porce + '×' : '' };
+    });
+    var dnes = {
+      dayLabel: cap(DNY[sd.getDay()]) + ' ' + sd.getDate() + '. ' + MES[sd.getMonth()],
+      meals: meals, rows: rows, countNote: info.isToday ? 'podle docházky z tabletů' : 'podle ohlášených omluv',
+      diets: dietRows, noDiets: dietRows.length === 0,
+      hasAway: awayDiets.length > 0, away: 'Dnes chybí: ' + awayDiets.map(function (k) { return k.name; }).join(', ') + ' — náhradu nevaříte.'
+    };
+    var statStyle = function (warn) { return 'border: 0; text-align: left; cursor: pointer; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #17181A; background: ' + (warn ? '#FCF4EF' : '#FFFFFF'); };
+    var stats = [
+      { label: 'Obědů', value: String(kidsTotal + adults), sub: kidsTotal + ' dětí · ' + adults + ' dospělých', subFg: '#5A5C60', style: statStyle(false), go: function () {} },
+      { label: 'Odhlášeno', value: String(excTotal), sub: info.isToday ? 'omluvené děti z docházky' : 'odhlášky do 7:30', subFg: '#5A5C60', style: statStyle(false), go: function () {} },
+      { label: 'Náhrady', value: String(dietRows.reduce(function (a, r) { return a + r.kids.split(', ').length; }, 0)), sub: missingToday ? 'porcí · chybí ' + missingToday + ' — doplnit' : 'porcí · všechny připravené', subFg: missingToday ? '#8A4513' : '#5A5C60', style: statStyle(missingToday), go: go('diety', { weekOff: 0 }) },
+      { label: 'Příští týden', value: nextW && nextW.published ? 'Hotovo' : 'Návrh', sub: nextW && nextW.published ? 'zveřejněno rodičům' : 'jídelníček zatím nevidí rodiče', subFg: nextW && nextW.published ? '#5A5C60' : '#8A4513', style: statStyle(!(nextW && nextW.published)), go: go('jidelnicek', { weekOff: 1 }) }
+    ];
+
+    /* -------------------------------------------------- jídelníček */
+    var todayIso = info.sIso;
+    var wk = {
+      label: wkLabel, mon: mon,
+      status: W.published ? 'Zveřejněno rodičům' : (empty ? 'Návrh · chybí ' + empty + ' ' + (empty === 1 ? 'jídlo' : empty <= 4 ? 'jídla' : 'jídel') : 'Návrh · připraveno ke zveřejnění'),
+      statusStyle: 'height: 30px; padding: 0 12px; border-radius: 15px; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; ' + (W.published ? 'background: #EDF4E4; color: #2F5212' : 'background: #F7F0DA; color: #5C4300'),
+      prev: function () { self.setState({ weekOff: st.weekOff - 1 }); },
+      next: function () { self.setState({ weekOff: st.weekOff + 1 }); },
+      canCopy: empty > 0 && !!this.weeks[this.addDays(mon, -7)],
+      copy: function () {
+        var prev = self.weeks[self.addDays(mon, -7)], n = 0;
+        W.days.forEach(function (d, i) { self.SLOTS.forEach(function (s) { if (!d[s[0]] && prev.days[i][s[0]]) { d[s[0]] = prev.days[i][s[0]]; n++; } }); });
+        self.forceUpdate(); self.showToast('Doplněno ' + n + ' jídel z minulého týdne');
+      },
+      print: function () { var a = self.fromIso(mon); self.printDoc('Jídelníček ' + a.getDate() + '. ' + (a.getMonth() + 1) + '.', self.menuHtml(mon)); },
+      days: W.days.map(function (d, i) {
+        var x = self.fromIso(self.addDays(mon, i)), isT = self.iso(x) === todayIso;
+        return { label: DN[i] + ' ' + x.getDate() + '. ' + (x.getMonth() + 1) + '.' + (isT ? ' · dnes' : ''), style: 'font-size: 13px; font-weight: 800; padding: 2px 6px; color: ' + (isT ? '#1F3A5C' : '#5A5C60') };
+      }),
+      rows: this.SLOTS.map(function (s) {
+        return { label: s[1], time: s[2], cells: W.days.map(function (d, i) {
+          var x = self.dish(d[s[0]]), A = x ? self.allergens(x) : [], cf = x ? self.conflicts(mon, i, s[0]) : [];
+          var nk = cf.reduce(function (a, c) { return a + c.kids.length; }, 0), miss = cf.some(function (c) { return !c.text; });
+          return {
+            name: x ? x.name : '+ Vybrat jídlo', aria: (x ? x.name : 'Prázdné') + ', ' + s[1] + ', ' + DN[i],
+            nameStyle: 'font-size: 13px; line-height: 17px; text-align: left; ' + (x ? 'font-weight: 700; color: #17181A' : 'font-weight: 700; color: #8A8C90') + '; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden',
+            hasA: A.length > 0, alergeny: A.join(', '),
+            hasDiet: nk > 0, diet: miss ? 'chybí náhrada' : nk + '× náhrada',
+            dietStyle: 'height: 20px; padding: 0 8px; border-radius: 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; ' + (miss ? 'background: #F7DCC6; color: #8A4513' : 'background: #EBF1FA; color: #1F3A5C'),
+            pick: openPick(mon, i, s[0]),
+            style: 'min-height: 0; padding: 8px 10px; border-radius: 14px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; overflow: hidden; '
+              + (x ? 'background: #F8F9F7; border: 1px solid #EEF0ED' : 'background: #FFFFFF; border: 2px dashed #D8DBD7')
+          };
+        }) };
+      })
+    };
+    // Pestrost týdne podle skupin potravin (orientačně ke spotřebnímu koši).
+    var catDays = {}, sweet = 0;
+    W.days.forEach(function (d, i) {
+      self.SLOTS.forEach(function (s) { var x = self.dish(d[s[0]]); if (!x) return; x.ings.forEach(function (id) { var g = self.ing(id); if (g && g.cat) { catDays[g.cat] = catDays[g.cat] || {}; catDays[g.cat][s[0] === 'obed' || s[0] === 'pol' ? 'o' + i : 's' + i] = true; } }); });
+      var o = self.dish(d.obed); if (o && o.ings.indexOf('cukr') !== -1) sweet++;
+    });
+    var cnt = function (cat, pref) { return Object.keys(catDays[cat] || {}).filter(function (k) { return !pref || k.charAt(0) === pref; }).length; };
+    var daysWith = function (cats) { var s = {}; cats.forEach(function (c) { Object.keys(catDays[c] || {}).forEach(function (k) { s[k.slice(1)] = true; }); }); return Object.keys(s).length; };
+    var kosItem = function (ok, label) { return { label: (ok ? '✓ ' : '! ') + label, style: 'height: 30px; padding: 0 12px; border-radius: 15px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; ' + (ok ? 'background: #EDF4E4; color: #2F5212' : 'background: #F7F0DA; color: #5C4300') }; };
+    var ryby = cnt('ryby', 'o'), lus = cnt('lusteniny'), ovz = daysWith(['ovoce', 'zelenina']), ml = daysWith(['mleko']);
+    wk.kos = [kosItem(ryby >= 1, 'Ryby ' + ryby + '×'), kosItem(lus >= 1, 'Luštěniny ' + lus + '×'), kosItem(ovz >= 5, 'Ovoce nebo zelenina ' + ovz + ' z 5 dnů'), kosItem(ml >= 4, 'Mléčné ' + ml + ' z 5 dnů'), kosItem(sweet <= 1, 'Sladký oběd ' + sweet + '×')];
+    var legend = this.A.slice(1).map(function (x, i) { return (i + 1) + ' ' + x[0]; }).join(' · ');
+
+    /* -------------------------------------------------- jídla a suroviny */
+    var q = (st.q || '').toLowerCase();
+    var usedIn = function (id) { var n = 0; Object.keys(self.weeks).forEach(function (m) { self.weeks[m].days.forEach(function (d) { self.SLOTS.forEach(function (s) { if (d[s[0]] === id) n++; }); }); }); return n; };
+    var typeName = {}; this.TYPES.forEach(function (t) { typeName[t[0]] = t[1]; });
+    var list = this.dishes.filter(function (d) {
+      if (st.typ !== 'vse' && d.type !== st.typ) return false;
+      if (!q) return true;
+      return d.name.toLowerCase().indexOf(q) !== -1 || d.ings.some(function (id) { var i = self.ing(id); return i && i.name.toLowerCase().indexOf(q) !== -1; });
+    });
+    var cur = this.dish(st.jidloId);
+    var jid = {
+      q: st.q, onQ: function (e) { self.setState({ q: e.target.value }); },
+      types: [['vse', 'Vše']].concat(this.TYPES).map(function (t) { return { label: t[1], on: st.typ === t[0] ? 'true' : 'false', style: chip(st.typ === t[0], true), pick: function () { self.setState({ typ: t[0] }); } }; }),
+      list: list.map(function (d) {
+        var A = self.allergens(d), on = st.jidloId === d.id;
+        return { name: d.name, sub: typeName[d.type] + ' · ' + (A.length ? 'alergeny ' + A.join(', ') : 'bez alergenů'), open: function () { self.setState({ jidloId: d.id, ingQ: '' }); },
+          style: 'flex-shrink: 0; border: 0; text-align: left; cursor: pointer; padding: 10px 12px; border-radius: 14px; display: flex; flex-direction: column; gap: 2px; color: #17181A; background: ' + (on ? '#E6EDF6' : 'transparent') };
+      }),
+      has: !!cur, d: {}
+    };
+    if (cur) {
+      var A = this.allergens(cur), iq = (st.ingQ || '').toLowerCase();
+      jid.d = {
+        name: cur.name, onName: function (e) { cur.name = e.target.value; self.forceUpdate(); },
+        types: this.TYPES.map(function (t) { return { label: t[1], on: cur.type === t[0] ? 'true' : 'false', style: chip(cur.type === t[0], true), pick: function () { cur.type = t[0]; self.forceUpdate(); } }; }),
+        ings: cur.ings.map(function (id) {
+          var i = self.ing(id) || { name: id, a: [] };
+          return { name: i.name, label: i.name + (i.a.length ? ' (' + i.a.join(', ') + ')' : ''), remove: function () { cur.ings = cur.ings.filter(function (x) { return x !== id; }); self.forceUpdate(); },
+            style: 'height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid ' + (i.a.length ? '#EFC3A3' : '#E5E7E4') + '; background: ' + (i.a.length ? '#FCF4EF' : '#FFFFFF') + '; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; gap: 6px' };
+        }),
+        ingQ: st.ingQ, onIngQ: function (e) { self.setState({ ingQ: e.target.value }); },
+        sugg: iq ? this.ings.filter(function (i) { return cur.ings.indexOf(i.id) === -1 && i.name.toLowerCase().indexOf(iq) !== -1; }).slice(0, 8).map(function (i) {
+          return { label: i.name + (i.a.length ? ' (' + i.a.join(', ') + ')' : ''), add: function () { cur.ings.push(i.id); self.setState({ ingQ: '' }); } };
+        }) : [],
+        newIng: function () { self.setState({ dlg: 'ing', df: { name: st.ingQ || '', a: [] } }); },
+        alergeny: A.map(function (n) { return { n: String(n), name: self.A[n][2] }; }), noA: A.length === 0,
+        hasSubs: A.length > 0,
+        subs: A.map(function (n) {
+          var who = self.diets.filter(function (k) { return k.a.indexOf(n) !== -1; }).length;
+          return { label: 'Bez ' + self.A[n][1] + (who ? ' · ' + who + '×' : ''), ph: who ? 'Co dostanou děti bez ' + self.A[n][1] + '?' : 'Žádné dítě to teď nepotřebuje', value: cur.sub[n] || '', onInput: function (e) { cur.sub[n] = e.target.value; self.forceUpdate(); } };
+        }),
+        used: (function () { var n = usedIn(cur.id); return n ? 'V jídelníčcích ' + n + '× za poslední týdny.' : 'Zatím není v žádném jídelníčku.'; })()
+      };
+    }
+
+    /* -------------------------------------------------- diety */
+    var dieDays = W.days.map(function (d, i) {
+      var x = self.fromIso(self.addDays(mon, i)), rowsD = [];
+      self.SLOTS.forEach(function (s) {
+        self.conflicts(mon, i, s[0]).forEach(function (c) {
+          rowsD.push({ slot: s[1], dish: c.dish.name, bez: self.A[c.n][1], kids: c.kids.map(function (k) { return k.name; }).join(', '), value: c.text,
+            onInput: function (e) { W.subs[c.key] = e.target.value; self.forceUpdate(); },
+            inputStyle: 'height: 44px; border-radius: 12px; padding: 0 12px; font-size: 14px; font-weight: 600; color: #17181A; min-width: 0; border: 1px solid ' + (c.text ? '#E5E7E4' : '#EFC3A3') + '; background: ' + (c.text ? '#FFFFFF' : '#FCF4EF'),
+            style: 'display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 14px; align-items: center; padding: 10px 12px; border-radius: 14px; background: #F8F9F7' });
+        });
+      });
+      return { label: cap(DNY[x.getDay()]) + ' ' + x.getDate() + '. ' + (x.getMonth() + 1) + '.', rows: rowsD };
+    }).filter(function (d) { return d.rows.length; });
+    var die = {
+      kids: this.diets.map(function (k) {
+        return { name: k.name, cls: clsById[k.cls].name, dotStyle: dot(clsById[k.cls].color), bez: k.a.map(function (n) { return self.A[n][0] + ' (' + n + ')'; }).join(', '), pozn: k.pozn,
+          ok: k.ok ? 'true' : 'false', okLabel: k.ok ? '✓ Doporučení lékaře doloženo' : 'Chybí doporučení lékaře',
+          okStyle: 'align-self: flex-start; height: 32px; padding: 0 12px; border-radius: 16px; border: 0; font-size: 13px; font-weight: 800; cursor: pointer; ' + (k.ok ? 'background: #EDF4E4; color: #2F5212' : 'background: #F7DCC6; color: #8A4513'),
+          toggle: function () { k.ok = !k.ok; self.forceUpdate(); } };
+      }),
+      days: dieDays, none: dieDays.length === 0
+    };
+
+    /* -------------------------------------------------- kuchařky */
+    var staff = this.staff.map(function (p) {
+      var hm = monthsAgo(p.hyg), hd = self.fromIso(p.hyg);
+      var check = function (ok, label, value) { return { label: label, value: value, dotStyle: dot(ok ? '#9CC06A' : '#E08A5E', 8), valStyle: 'font-size: 13px; font-weight: 800; color: ' + (ok ? '#2F5212' : '#8A4513') }; };
+      return {
+        name: p.name, role: p.role, phone: p.phone, av: self.avatar(p, 52), edit: openStaff(p),
+        uvazky: ['1,0', '0,75', '0,5', '0,25'].map(function (u) { return { label: u, on: p.uvazek === u ? 'true' : 'false', style: chip(p.uvazek === u, true), pick: function () { p.uvazek = u; self.forceUpdate(); } }; }),
+        checks: [
+          check(p.zp, 'Zdravotní průkaz', p.zp ? 'má' : 'doložit'),
+          check(hm < 12, 'Školení hygieny', hd.getMonth() + 1 + '/' + hd.getFullYear() + (hm >= 12 ? ' · obnovit' : ''))
+        ]
+      };
+    });
+
+    /* -------------------------------------------------- stránka */
+    var publishWeek = function () {
+      if (W.published) return;
+      if (empty) { self.showToast('Nejdřív doplňte ' + empty + ' ' + (empty === 1 ? 'jídlo' : empty <= 4 ? 'jídla' : 'jídel')); return; }
+      W.published = true; self.forceUpdate();
+      self.showToast('Zveřejněno · rodiče vidí jídelníček v aplikaci');
+    };
+    var PAGES = {
+      prehled: [cap(DNY[sd.getDay()]) + ' ' + sd.getDate() + '. ' + MES[sd.getMonth()] + (info.isToday ? ' · odhlášky do 7:30' : ' · další výdej'), 'Dnes v kuchyni', 'Vytisknout výdejní list', function () {
+        var e = function (v) { return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+        var body = '<h1>Výdejní list — ' + cap(DNY[sd.getDay()]) + ' ' + sd.getDate() + '. ' + (sd.getMonth() + 1) + '. ' + sd.getFullYear() + '</h1><table><tr><th>Chod</th><th>Jídlo</th><th>Alergeny</th><th>Porce</th></tr>'
+          + meals.map(function (m) { return '<tr><td>' + m.slot + '</td><td>' + e(m.dish) + '</td><td>' + m.alergeny.replace('alergeny ', '') + '</td><td>' + m.porce + '</td></tr>'; }).join('') + '</table>'
+          + '<table><tr><th>Třída</th><th>Přesnídávka</th><th>Oběd</th><th>Svačina</th><th>Odhlášeno</th></tr>' + rows.map(function (r) { return '<tr><td>' + r.name + '</td><td>' + r.prs + '</td><td>' + r.obed + '</td><td>' + r.sv + '</td><td>' + r.odhl + '</td></tr>'; }).join('') + '</table>'
+          + (dietRows.length ? '<table><tr><th>Chod</th><th>Bez</th><th>Děti</th><th>Náhrada</th></tr>' + dietRows.map(function (d) { return '<tr><td>' + d.slot + '</td><td>' + d.bez + ' (' + d.num + ')</td><td>' + e(d.kids) + '</td><td>' + e(d.nahrada) + '</td></tr>'; }).join('') + '</table>' : '')
+          + '<div class="ft">Vydala: ' + e(ME.name) + '</div>';
+        self.printDoc('Výdejní list', body);
+      }],
+      jidelnicek: ['Týden ' + wkLabel + ' · alergeny se načítají ze surovin', 'Jídelníček', W.published ? '✓ Zveřejněno' : 'Zveřejnit rodičům', publishWeek],
+      jidla: [this.dishes.length + ' jídel · ' + this.ings.length + ' surovin', 'Jídla a suroviny', '+ Nové jídlo', function () {
+        var id = 'j' + Date.now(), t = st.typ !== 'vse' ? st.typ : 'obed';
+        self.dishes.unshift({ id: id, type: t, name: 'Nové jídlo', ings: [], sub: {} });
+        self.setState({ jidloId: id, q: '', ingQ: '' });
+      }],
+      diety: [this.diets.length + ' dětí s dietou · náhrady k jídelníčku', 'Diety a náhrady', '', null],
+      kucharky: [this.staff.length + ' v kuchyni · zdravotní průkaz a hygiena', 'Kuchařky', '+ Přidat kuchařku', openStaff(null)]
+    };
+    var P = PAGES[st.page] || PAGES.prehled;
+    var page = { kicker: P[0], title: P[1], hasAction: !!P[2], actionLabel: P[2], action: P[3] || function () {}, actionStyle: primary(!(st.page === 'jidelnicek' && W.published)) };
+
+    var cycle = function () { var i = self.staff.indexOf(ME); var nx = self.staff[(i + 1) % self.staff.length]; self.setState({ me: nx.id }); self.showToast('Přihlášena: ' + nx.name); };
+    var me = { name: ME.name, role: ME.role, av: this.avatar(ME, 40), profile: openStaff(ME), switch: cycle };
+
+    this.publish();
+    this.save();
+    return {
+      school: this.school, year: (this.today.getMonth() >= 8 ? this.today.getFullYear() : this.today.getFullYear() - 1) + '/' + String((this.today.getMonth() >= 8 ? this.today.getFullYear() : this.today.getFullYear() - 1) + 1).slice(2),
+      nav: nav, is: is, page: page, me: me, stats: stats, dnes: dnes, wk: wk, legend: legend, jid: jid, die: die, staff: staff,
+      dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
+    };
+  }
+}
+</script>
+</body>
+</html>
