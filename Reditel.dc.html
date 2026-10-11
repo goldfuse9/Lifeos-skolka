@@ -17,14 +17,14 @@ button,input,textarea,select{font-family:inherit}
 input::placeholder,textarea::placeholder{color:#8A8C90}
 </style>
 </helmet>
-<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F3F2EC; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; overflow: hidden; position: relative">
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F8F9F7; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; overflow: hidden; position: relative">
 
   <!-- ============================================================ MENU -->
-  <nav aria-label="Ředitelna" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #E4E3DC">
+  <nav aria-label="Ředitelna" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #E5E7E4">
     <div style="padding: 0 10px 6px; display: flex; flex-direction: column; gap: 2px">
       <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{{school.name}}</span>
       <span style="font-size: 13px; color: #5A5C60">Ředitelna · {{year}}</span>
-      <span style="align-self: flex-start; margin-top: 6px; padding: 3px 10px; border-radius: 10px; background: #FBF0C9; color: #5C4300; font-size: 11px; font-weight: 800" title="Všechno funguje, ale nic neodchází ven">Zkušební provoz</span>
+      <span style="align-self: flex-start; margin-top: 6px; padding: 3px 10px; border-radius: 10px; background: #F7F0DA; color: #5C4300; font-size: 11px; font-weight: 800" title="Všechno funguje, ale nic neodchází ven">Zkušební provoz</span>
     </div>
     <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
       <sc-if value="{{n.isHead}}" hint-placeholder-val="{{false}}">
@@ -57,7 +57,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">{{page.title}}</h1>
       </div>
       <sc-if value="{{page.hasAction}}" hint-placeholder-val="{{true}}">
-        <button type="button" onClick="{{page.action}}" style="height: 48px; padding: 0 20px; border-radius: 24px; border: 0; background: #17181A; color: #FFFFFF; font-size: 15px; font-weight: 800; cursor: pointer">{{page.actionLabel}}</button>
+        <button type="button" onClick="{{page.action}}" style="height: 48px; padding: 0 20px; border-radius: 24px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">{{page.actionLabel}}</button>
       </sc-if>
     </header>
 
@@ -92,13 +92,13 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <section aria-label="Třídy dnes" style="width: 420px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
           <h2 style="margin: 0; font-size: 18px; font-weight: 800">Třídy dnes</h2>
           <sc-for list="{{classesToday}}" as="c" hint-placeholder-count="3">
-            <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 18px; background: #F3F2EC">
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 18px; background: #F3F4F2">
               <div style="display: flex; align-items: center; gap: 10px">
                 <span style="{{c.dotStyle}}"></span>
                 <span style="font-size: 16px; font-weight: 800; flex-grow: 1">{{c.name}}</span>
                 <span style="font-size: 14px; font-weight: 700">{{c.present}} / {{c.total}}</span>
               </div>
-              <div style="height: 8px; border-radius: 4px; background: #E4E3DC; overflow: hidden"><div style="{{c.barStyle}}"></div></div>
+              <div style="height: 8px; border-radius: 4px; background: #E5E7E4; overflow: hidden"><div style="{{c.barStyle}}"></div></div>
               <span style="font-size: 13px; color: #5A5C60">{{c.teachers}}</span>
               <span style="{{c.diaryStyle}}">{{c.diary}}</span>
             </div>
@@ -110,7 +110,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     <!-- ========================================================== DĚTI -->
     <sc-if value="{{is.deti}}" hint-placeholder-val="{{false}}">
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-        <input type="search" aria-label="Hledat dítě" placeholder="Hledat jméno…" value="{{deti.q}}" onInput="{{deti.onQ}}" onChange="{{deti.onQ}}" style="height: 44px; width: 240px; border-radius: 22px; border: 1px solid #E4E3DC; padding: 0 16px; font-size: 15px; background: #FFFFFF; color: #17181A">
+        <input type="search" aria-label="Hledat dítě" placeholder="Hledat jméno…" value="{{deti.q}}" onInput="{{deti.onQ}}" onChange="{{deti.onQ}}" style="height: 44px; width: 240px; border-radius: 22px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 15px; background: #FFFFFF; color: #17181A">
         <sc-for list="{{deti.filters}}" as="f" hint-placeholder-count="4">
           <button type="button" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}"><sc-if value="{{f.hasDot}}" hint-placeholder-val="{{false}}"><span style="{{f.dotStyle}}"></span></sc-if>{{f.label}}</button>
         </sc-for>
@@ -119,7 +119,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </div>
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
         <section aria-label="Kartotéka dětí" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
-          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 108px 64px 44px minmax(0, 1.3fr) 84px; gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #F0EFEA">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 108px 64px 44px minmax(0, 1.3fr) 84px; gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
             <span>Dítě</span><span>Třída</span><span>Věk</span><span>PPV</span><span>Zákonný zástupce</span><span>Matrika</span>
           </div>
           <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
@@ -140,18 +140,18 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
              nic dalšího se neotevírá. -->
         <sc-if value="{{kid.open}}" hint-placeholder-val="{{false}}">
           <aside aria-label="Karta dítěte" style="width: 480px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
-            <div style="padding: 18px 20px 14px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid #F0EFEA">
+            <div style="padding: 18px 20px 14px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid #EEF0ED">
               <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
                 <span style="font-size: 22px; font-weight: 800">{{kid.name}}</span>
                 <span style="font-size: 14px; color: #3A3C40">{{kid.line}}</span>
                 <sc-if value="{{kid.hasMissing}}" hint-placeholder-val="{{true}}">
-                  <span style="align-self: flex-start; margin-top: 4px; padding: 5px 10px; border-radius: 10px; background: #FDE6DC; color: #9A3412; font-size: 12px; line-height: 16px; font-weight: 800">Do matriky chybí: {{kid.missingText}}</span>
+                  <span style="align-self: flex-start; margin-top: 4px; padding: 5px 10px; border-radius: 10px; background: #FAEBE4; color: #9A3412; font-size: 12px; line-height: 16px; font-weight: 800">Do matriky chybí: {{kid.missingText}}</span>
                 </sc-if>
               </div>
               <sc-if value="{{kid.canEdit}}" hint-placeholder-val="{{true}}">
                 <button type="button" onClick="{{kid.toggleEdit}}" aria-pressed="{{kid.editing}}" style="{{kid.editStyle}}">{{kid.editLabel}}</button>
               </sc-if>
-              <button type="button" onClick="{{kid.close}}" aria-label="Zavřít kartu" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F2EC; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0">
+              <button type="button" onClick="{{kid.close}}" aria-label="Zavřít kartu" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
               </button>
             </div>
@@ -178,7 +178,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                         </sc-if>
                         <sc-if value="{{f.isList}}" hint-placeholder-val="{{false}}">
                           <sc-for list="{{f.items}}" as="it" hint-placeholder-count="2">
-                            <span style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 12px; background: #F3F2EC">
+                            <span style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 12px; background: #F3F4F2">
                               <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{it.label}}</span><span style="font-size: 12px; color: #5A5C60">{{it.sub}}</span></span>
                               <sc-if value="{{it.canRemove}}" hint-placeholder-val="{{true}}">
                                 <button type="button" onClick="{{it.remove}}" aria-label="Odebrat {{it.label}}" style="width: 30px; height: 30px; border-radius: 15px; border: 0; background: #FFFFFF; cursor: pointer; font-size: 16px; color: #5A5C60">×</button>
@@ -188,8 +188,8 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                         </sc-if>
                         <sc-if value="{{f.isAdd}}" hint-placeholder-val="{{false}}">
                           <span style="display: flex; gap: 6px">
-                            <input type="text" aria-label="{{f.label}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="flex-grow: 1; min-width: 0; height: 36px; border-radius: 12px; border: 1px solid #E4E3DC; padding: 0 12px; font-size: 14px; color: #17181A">
-                            <button type="button" onClick="{{f.add}}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #17181A; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Přidat</button>
+                            <input type="text" aria-label="{{f.label}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="flex-grow: 1; min-width: 0; height: 36px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 12px; font-size: 14px; color: #17181A">
+                            <button type="button" onClick="{{f.add}}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Přidat</button>
                           </span>
                         </sc-if>
                         <sc-if value="{{f.hasNote}}" hint-placeholder-val="{{false}}">
@@ -202,10 +202,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               </sc-for>
             </div>
             <sc-if value="{{kid.hasFooter}}" hint-placeholder-val="{{true}}">
-              <div style="flex-shrink: 0; padding: 12px 20px; border-top: 1px solid #F0EFEA; display: flex; align-items: center; gap: 10px">
+              <div style="flex-shrink: 0; padding: 12px 20px; border-top: 1px solid #EEF0ED; display: flex; align-items: center; gap: 10px">
                 <span style="font-size: 13px; color: #5A5C60; flex-grow: 1">{{kid.footerText}}</span>
                 <sc-if value="{{kid.canEnd}}" hint-placeholder-val="{{true}}">
-                  <button type="button" onClick="{{kid.end}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; color: #9A3412; cursor: pointer">Ukončit docházku</button>
+                  <button type="button" onClick="{{kid.end}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; color: #9A3412; cursor: pointer">Ukončit docházku</button>
                 </sc-if>
               </div>
             </sc-if>
@@ -238,10 +238,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 <span style="font-size: 13px; color: #5A5C60">{{t.role}} · {{t.contact}}</span>
               </span>
               <sc-if value="{{t.invited}}" hint-placeholder-val="{{false}}">
-                <span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FBF0C9; color: #5C4300; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center">Pozvánka</span>
+                <span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #F7F0DA; color: #5C4300; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center">Pozvánka</span>
               </sc-if>
               <sc-if value="{{t.canEdit}}" hint-placeholder-val="{{true}}">
-                <button type="button" onClick="{{t.edit}}" aria-label="Upravit profil {{t.name}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">Upravit</button>
+                <button type="button" onClick="{{t.edit}}" aria-label="Upravit profil {{t.name}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">Upravit</button>
               </sc-if>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
@@ -260,7 +260,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 </sc-for>
               </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #F0EFEA">
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #EEF0ED">
               <button type="button" onClick="{{t.toggleAbsent}}" aria-pressed="{{t.absent}}" style="{{t.absentStyle}}">{{t.absentLabel}}</button>
               <sc-if value="{{t.absent}}" hint-placeholder-val="{{false}}">
                 <span style="font-size: 12px; font-weight: 700; color: #5A5C60">Zastoupí:</span>
@@ -287,9 +287,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span style="font-size: 13px; font-weight: 700; color: #3A3C40">{{c.code}}</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-              <div style="padding: 10px 12px; border-radius: 14px; background: #F3F2EC"><div style="font-size: 20px; font-weight: 800">{{c.count}}</div><div style="font-size: 12px; color: #5A5C60">z {{c.capacity}} míst</div></div>
-              <div style="padding: 10px 12px; border-radius: 14px; background: #E8EFFD"><div style="font-size: 20px; font-weight: 800">{{c.ppv}}</div><div style="font-size: 12px; color: #27407A">povinné PV</div></div>
-              <div style="padding: 10px 12px; border-radius: 14px; background: #F3F2EC"><div style="font-size: 20px; font-weight: 800">{{c.ages}}</div><div style="font-size: 12px; color: #5A5C60">věk</div></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #F3F4F2"><div style="font-size: 20px; font-weight: 800">{{c.count}}</div><div style="font-size: 12px; color: #5A5C60">z {{c.capacity}} míst</div></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #EBF1FA"><div style="font-size: 20px; font-weight: 800">{{c.ppv}}</div><div style="font-size: 12px; color: #27407A">povinné PV</div></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #F3F4F2"><div style="font-size: 20px; font-weight: 800">{{c.ages}}</div><div style="font-size: 12px; color: #5A5C60">věk</div></div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Druh provozu</span>
@@ -328,8 +328,8 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </div>
             <div style="font-size: 15px; color: #3A3C40">{{mat.deadline}}</div>
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-              <div style="padding: 12px; border-radius: 16px; background: #F3F2EC"><div style="font-size: 24px; font-weight: 800">{{mat.total}}</div><div style="font-size: 13px; color: #3A3C40; font-weight: 700">dětí k datu</div></div>
-              <div style="padding: 12px; border-radius: 16px; background: #EAF6D3"><div style="font-size: 24px; font-weight: 800">{{mat.ok}}</div><div style="font-size: 13px; color: #2F5212; font-weight: 700">v pořádku</div></div>
+              <div style="padding: 12px; border-radius: 16px; background: #F3F4F2"><div style="font-size: 24px; font-weight: 800">{{mat.total}}</div><div style="font-size: 13px; color: #3A3C40; font-weight: 700">dětí k datu</div></div>
+              <div style="padding: 12px; border-radius: 16px; background: #EDF4E4"><div style="font-size: 24px; font-weight: 800">{{mat.ok}}</div><div style="font-size: 13px; color: #2F5212; font-weight: 700">v pořádku</div></div>
               <div style="{{mat.errBoxStyle}}"><div style="font-size: 24px; font-weight: 800">{{mat.errCount}}</div><div style="font-size: 13px; font-weight: 700">s chybou</div></div>
             </div>
           </section>
@@ -337,7 +337,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <section aria-label="Kontrola" style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
             <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800">Kontrola před odevzdáním</h2>
             <sc-for list="{{mat.errors}}" as="e" hint-placeholder-count="4">
-              <div style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 8px 6px 14px; border-radius: 14px; background: #FFF4EE">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 8px 6px 14px; border-radius: 14px; background: #FCF4EF">
                 <span style="font-size: 15px; font-weight: 800; width: 190px; flex-shrink: 0">{{e.name}}</span>
                 <span style="font-size: 14px; color: #3A3C40; flex-grow: 1">{{e.problem}}</span>
                 <button type="button" onClick="{{e.fix}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #FFFFFF; font-size: 14px; font-weight: 800; color: #17181A; cursor: pointer">Doplnit</button>
@@ -353,7 +353,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <h2 style="margin: 0; font-size: 18px; font-weight: 800">Údaje školy pro MŠMT</h2>
               <span style="font-size: 14px; color: #3A3C40; line-height: 20px">{{mat.schoolSummary}}</span>
             </div>
-            <button type="button" onClick="{{mat.goSettings}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">Upravit v Nastavení</button>
+            <button type="button" onClick="{{mat.goSettings}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">Upravit v Nastavení</button>
           </section>
         </div>
 
@@ -362,20 +362,20 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <button type="button" onClick="{{mat.build}}" style="{{mat.buildStyle}}">{{mat.buildLabel}}</button>
           <sc-if value="{{mat.hasFiles}}" hint-placeholder-val="{{false}}">
             <sc-for list="{{mat.files}}" as="x" hint-placeholder-count="2">
-              <div style="display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: 14px; background: #F3F2EC">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: 14px; background: #F3F4F2">
                 <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0">
                   <span style="font-size: 14px; font-weight: 800">{{x.name}}</span>
                   <span style="font-size: 12px; color: #5A5C60">{{x.meta}}</span>
                 </span>
                 <button type="button" onClick="{{x.preview}}" style="height: 38px; padding: 0 12px; border-radius: 19px; border: 0; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Náhled</button>
-                <button type="button" onClick="{{x.download}}" style="height: 38px; padding: 0 12px; border-radius: 19px; border: 0; background: #17181A; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Stáhnout</button>
+                <button type="button" onClick="{{x.download}}" style="height: 38px; padding: 0 12px; border-radius: 19px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Stáhnout</button>
               </div>
             </sc-for>
             <sc-if value="{{mat.hasPreview}}" hint-placeholder-val="{{false}}">
               <pre style="margin: 0; padding: 12px; border-radius: 14px; background: #17181A; color: #E8E8E3; font-size: 11px; line-height: 16px; overflow: auto; max-height: 260px; white-space: pre">{{mat.preview}}</pre>
             </sc-if>
           </sc-if>
-          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; background: #E8EFFD; color: #27407A; font-size: 14px; line-height: 20px">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; background: #EBF1FA; color: #27407A; font-size: 14px; line-height: 20px">
             <span style="font-weight: 800">Jak odevzdat</span>
             <span>1. Přihlaste se na matrika.msmt.cz (RED_IZO a heslo).</span>
             <span>2. Nahrajte soubory, nebo nastavte API token.</span>
@@ -408,12 +408,12 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </sc-for>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; padding: 0 20px 12px">
-            <input type="search" aria-label="Hledat žádost" placeholder="Hledat jméno nebo registrační číslo…" value="{{zap.q}}" onInput="{{zap.onQ}}" onChange="{{zap.onQ}}" style="flex-grow: 1; min-width: 0; height: 42px; border-radius: 21px; border: 1px solid #E4E3DC; padding: 0 16px; font-size: 15px; background: #FFFFFF; color: #17181A">
-            <button type="button" onClick="{{zap.toggleFilter}}" aria-expanded="{{zap.filterOpen}}" style="{{zap.filterStyle}}">Filtr<sc-if value="{{zap.hasFilterCount}}" hint-placeholder-val="{{false}}"><span style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; background: #F28C28; color: #FFFFFF; font-size: 12px; display: inline-flex; align-items: center; justify-content: center">{{zap.filterCount}}</span></sc-if></button>
+            <input type="search" aria-label="Hledat žádost" placeholder="Hledat jméno nebo registrační číslo…" value="{{zap.q}}" onInput="{{zap.onQ}}" onChange="{{zap.onQ}}" style="flex-grow: 1; min-width: 0; height: 42px; border-radius: 21px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 15px; background: #FFFFFF; color: #17181A">
+            <button type="button" onClick="{{zap.toggleFilter}}" aria-expanded="{{zap.filterOpen}}" style="{{zap.filterStyle}}">Filtr<sc-if value="{{zap.hasFilterCount}}" hint-placeholder-val="{{false}}"><span style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; background: #F7DCC6; color: #8A4513; font-size: 12px; display: inline-flex; align-items: center; justify-content: center">{{zap.filterCount}}</span></sc-if></button>
             <span style="font-size: 13px; color: #5A5C60; white-space: nowrap">{{zap.shown}}</span>
           </div>
           <sc-if value="{{zap.filterOpen}}" hint-placeholder-val="{{false}}">
-            <div role="group" aria-label="Filtr žádostí" style="margin: 0 20px 12px; padding: 14px 16px; border-radius: 18px; background: #F7F6F1; display: flex; flex-direction: column; gap: 10px">
+            <div role="group" aria-label="Filtr žádostí" style="margin: 0 20px 12px; padding: 14px 16px; border-radius: 18px; background: #F7F8F6; display: flex; flex-direction: column; gap: 10px">
               <sc-for list="{{zap.groups}}" as="g" hint-placeholder-count="2">
                 <div style="display: flex; flex-direction: column; gap: 6px">
                   <span style="font-size: 12px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{g.label}}</span>
@@ -425,13 +425,13 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 </div>
               </sc-for>
               <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
-                <button type="button" onClick="{{zap.allPriority}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #17181A; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Vybrat všechna prioritní</button>
-                <button type="button" onClick="{{zap.clearFilter}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Zrušit filtr</button>
+                <button type="button" onClick="{{zap.allPriority}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Vybrat všechna prioritní</button>
+                <button type="button" onClick="{{zap.clearFilter}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Zrušit filtr</button>
                 <span style="font-size: 13px; color: #5A5C60">Ukazují se žádosti, které splňují všechna zaškrtnutá kritéria.</span>
               </div>
             </div>
           </sc-if>
-          <div style="display: grid; grid-template-columns: 90px minmax(0, 1.8fr) 90px 70px 90px 64px 120px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid #F0EFEA; border-bottom: 1px solid #F0EFEA">
+          <div style="display: grid; grid-template-columns: 90px minmax(0, 1.8fr) 90px 70px 90px 64px 120px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid #EEF0ED; border-bottom: 1px solid #EEF0ED">
             <span>Reg. č.</span><span>Dítě</span><span>Věk k 31. 8.</span><span>Spád</span><span>Sourozenec</span><span>Pořadí</span><span>Výsledek</span>
           </div>
           <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
@@ -439,7 +439,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <div style="padding: 24px 20px; font-size: 15px; color: #5A5C60">Žádná žádost neodpovídá hledání nebo filtru.</div>
             </sc-if>
             <sc-for list="{{zap.rows}}" as="r" hint-placeholder-count="8">
-              <div style="display: grid; grid-template-columns: 90px minmax(0, 1.8fr) 90px 70px 90px 64px 120px; gap: 10px; padding: 10px 20px; align-items: center; border-bottom: 1px solid #F3F2EC; font-size: 14px">
+              <div style="display: grid; grid-template-columns: 90px minmax(0, 1.8fr) 90px 70px 90px 64px 120px; gap: 10px; padding: 10px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
                 <span style="font-weight: 800">{{r.reg}}</span>
                 <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.note}}</span></span>
                 <span>{{r.age}}</span>
@@ -455,7 +455,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <section aria-label="Kritéria" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Kritéria přijetí</h2>
             <sc-for list="{{zap.criteria}}" as="c" hint-placeholder-count="4">
-              <div style="display: flex; gap: 10px; font-size: 14px; line-height: 20px"><span style="width: 24px; height: 24px; border-radius: 12px; background: #F3F2EC; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">{{c.n}}</span><span>{{c.text}}</span></div>
+              <div style="display: flex; gap: 10px; font-size: 14px; line-height: 20px"><span style="width: 24px; height: 24px; border-radius: 12px; background: #F3F4F2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800">{{c.n}}</span><span>{{c.text}}</span></div>
             </sc-for>
           </section>
           <section aria-label="Postup" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
@@ -483,18 +483,18 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </div>
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
         <section aria-label="Docházka za měsíc" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
-          <div style="display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, 96px); gap: 10px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #F0EFEA">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, 96px); gap: 10px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
             <span>Dítě</span><span>Přítomno</span><span>Omluveno</span><span>Neomluveno</span><span>Obědy</span>
           </div>
           <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
             <sc-for list="{{doch.rows}}" as="r" hint-placeholder-count="10">
-              <div style="display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, 96px); gap: 10px; padding: 9px 20px; align-items: center; border-bottom: 1px solid #F3F2EC; font-size: 14px">
-                <span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><sc-if value="{{r.ppv}}" hint-placeholder-val="{{false}}"><span style="padding: 1px 6px; border-radius: 8px; background: #E8EFFD; color: #27407A; font-size: 10px; font-weight: 800">PPV</span></sc-if></span>
-                <span>{{r.p}}</span><span>{{r.o}}</span><span><sc-if value="{{r.hasN}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{r.msg}}" title="Napsat rodičům" aria-label="Neomluveno {{r.n}} — napsat rodičům" style="height: 30px; padding: 0 10px; border-radius: 15px; border: 0; background: #FDE6DC; color: #9A3412; font-size: 13px; font-weight: 800; cursor: pointer">{{r.n}} · napsat</button></sc-if><sc-if value="{{r.noN}}" hint-placeholder-val="{{true}}"><span style="color: #5A5C60">0</span></sc-if></span><span>{{r.meals}}</span>
+              <div style="display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, 96px); gap: 10px; padding: 9px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                <span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><sc-if value="{{r.ppv}}" hint-placeholder-val="{{false}}"><span style="padding: 1px 6px; border-radius: 8px; background: #EBF1FA; color: #27407A; font-size: 10px; font-weight: 800">PPV</span></sc-if></span>
+                <span>{{r.p}}</span><span>{{r.o}}</span><span><sc-if value="{{r.hasN}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{r.msg}}" title="Napsat rodičům" aria-label="Neomluveno {{r.n}} — napsat rodičům" style="height: 30px; padding: 0 10px; border-radius: 15px; border: 0; background: #FAEBE4; color: #9A3412; font-size: 13px; font-weight: 800; cursor: pointer">{{r.n}} · napsat</button></sc-if><sc-if value="{{r.noN}}" hint-placeholder-val="{{true}}"><span style="color: #5A5C60">0</span></sc-if></span><span>{{r.meals}}</span>
               </div>
             </sc-for>
           </div>
-          <div style="display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, 96px); gap: 10px; padding: 12px 20px; border-top: 1px solid #F0EFEA; font-size: 14px; font-weight: 800">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, 96px); gap: 10px; padding: 12px 20px; border-top: 1px solid #EEF0ED; font-size: 14px; font-weight: 800">
             <span>Celkem · {{doch.count}}</span><span>{{doch.sumP}}</span><span>{{doch.sumO}}</span><span>{{doch.sumN}}</span><span>{{doch.sumMeals}}</span>
           </div>
         </section>
@@ -508,9 +508,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <section aria-label="Neomluvená absence" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Neomluvená absence u PPV</h2>
             <sc-for list="{{doch.neoml}}" as="k" hint-placeholder-count="1">
-              <div style="padding: 12px 14px; border-radius: 16px; background: #FFF4EE; display: flex; flex-direction: column; gap: 8px">
+              <div style="padding: 12px 14px; border-radius: 16px; background: #FCF4EF; display: flex; flex-direction: column; gap: 8px">
                 <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 800">{{k.name}}</span><span style="font-size: 13px; color: #9A3412">{{k.sub}}</span></span>
-                <span style="display: flex; gap: 6px"><button type="button" onClick="{{k.msg}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #17181A; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Napsat rodičům</button><button type="button" onClick="{{k.open}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Karta</button></span>
+                <span style="display: flex; gap: 6px"><button type="button" onClick="{{k.msg}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Napsat rodičům</button><button type="button" onClick="{{k.open}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Karta</button></span>
               </div>
             </sc-for>
             <sc-if value="{{doch.noNeoml}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #2F5212; font-weight: 700">Žádná.</span></sc-if>
@@ -529,9 +529,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <button type="button" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="{{m.style}}">{{m.label}}</button>
         </sc-for>
         <span style="flex-grow: 1"></span>
-        <label style="height: 44px; padding: 0 18px; border-radius: 22px; background: #17181A; color: #FFFFFF; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Načíst výpis z banky<input type="file" accept=".csv,.txt,text/csv,text/plain" aria-label="Výpis z banky (CSV)" onChange="{{pay.onFile}}" style="display: none"></label>
-        <button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Ukázkový výpis</button>
-        <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Export pro účetnictví</button>
+        <label style="height: 44px; padding: 0 18px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Načíst výpis z banky<input type="file" accept=".csv,.txt,text/csv,text/plain" aria-label="Výpis z banky (CSV)" onChange="{{pay.onFile}}" style="display: none"></label>
+        <button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Ukázkový výpis</button>
+        <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Export pro účetnictví</button>
       </div>
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
         <sc-for list="{{pay.stats}}" as="s" hint-placeholder-count="3">
@@ -544,17 +544,17 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </div>
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
         <section aria-label="Předpisy plateb" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
-          <div style="display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-bottom: 1px solid #F0EFEA">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-bottom: 1px solid #EEF0ED">
             <sc-for list="{{pay.filters}}" as="f" hint-placeholder-count="3">
               <button type="button" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}">{{f.label}}</button>
             </sc-for>
           </div>
-          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 70px 76px 92px 84px 104px 104px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #F0EFEA">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 70px 76px 92px 84px 104px 104px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
             <span>Dítě</span><span>VS</span><span>Školné</span><span>Stravné</span><span>Celkem</span><span>Stav</span><span></span>
           </div>
           <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
             <sc-for list="{{pay.rows}}" as="r" hint-placeholder-count="10">
-              <div style="display: grid; grid-template-columns: minmax(0, 2fr) 70px 76px 92px 84px 104px 104px; gap: 10px; padding: 9px 20px; align-items: center; border-bottom: 1px solid #F3F2EC; font-size: 14px">
+              <div style="display: grid; grid-template-columns: minmax(0, 2fr) 70px 76px 92px 84px 104px 104px; gap: 10px; padding: 9px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
                 <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.cls}}</span></span>
                 <span style="font-variant-numeric: tabular-nums">{{r.vs}}</span>
                 <span>{{r.skolne}}</span>
@@ -563,7 +563,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 <span style="{{r.stateStyle}}">{{r.state}}</span>
                 <span>
                   <sc-if value="{{r.canRemind}}" hint-placeholder-val="{{false}}">
-                    <button type="button" onClick="{{r.remind}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">{{r.remindLabel}}</button>
+                    <button type="button" onClick="{{r.remind}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">{{r.remindLabel}}</button>
                   </sc-if>
                 </span>
               </div>
@@ -574,14 +574,14 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <section aria-label="Sazby" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Sazby</h2>
             <sc-for list="{{pay.rates}}" as="f" hint-placeholder-count="3">
-              <label style="display: flex; align-items: center; gap: 10px; font-size: 14px"><span style="flex-grow: 1">{{f.label}}</span><input type="text" inputmode="numeric" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="width: 72px; height: 38px; border-radius: 12px; border: 1px solid #E4E3DC; padding: 0 10px; font-size: 15px; text-align: right; color: #17181A"><span style="width: 52px; color: #5A5C60">{{f.unit}}</span></label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 14px"><span style="flex-grow: 1">{{f.label}}</span><input type="text" inputmode="numeric" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="width: 72px; height: 38px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 10px; font-size: 15px; text-align: right; color: #17181A"><span style="width: 52px; color: #5A5C60">{{f.unit}}</span></label>
             </sc-for>
             <span style="font-size: 13px; color: #5A5C60; line-height: 18px">Děti s povinným předškolním vzděláváním školné neplatí.</span>
           </section>
           <section aria-label="Nespárované platby" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Nespárované platby</h2>
             <sc-for list="{{pay.unmatched}}" as="u" hint-placeholder-count="1">
-              <div style="padding: 10px 12px; border-radius: 14px; background: #FBF0C9; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 800">{{u.amount}}</span><span style="font-size: 12px; color: #5C4300">{{u.sub}}</span></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #F7F0DA; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 800">{{u.amount}}</span><span style="font-size: 12px; color: #5C4300">{{u.sub}}</span></div>
             </sc-for>
             <sc-if value="{{pay.noUnmatched}}" hint-placeholder-val="{{true}}"><span style="font-size: 14px; color: #5A5C60">Žádné.</span></sc-if>
           </section>
@@ -603,10 +603,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </div>
           </div>
           <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">Předmět
-            <input id="zprava-predmet" type="text" placeholder="Např. Uzavření školky v pátek" value="{{msg.title}}" onInput="{{msg.onTitle}}" onChange="{{msg.onTitle}}" style="height: 50px; border-radius: 14px; border: 1px solid #E4E3DC; padding: 0 14px; font-size: 16px; font-weight: 500; color: #17181A">
+            <input id="zprava-predmet" type="text" placeholder="Např. Uzavření školky v pátek" value="{{msg.title}}" onInput="{{msg.onTitle}}" onChange="{{msg.onTitle}}" style="height: 50px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 16px; font-weight: 500; color: #17181A">
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">Text
-            <textarea id="zprava-text" rows="6" placeholder="Co mají rodiče vědět" value="{{msg.text}}" onInput="{{msg.onText}}" onChange="{{msg.onText}}" style="border-radius: 14px; border: 1px solid #E4E3DC; padding: 12px 14px; font-size: 16px; font-weight: 500; color: #17181A; resize: none"></textarea>
+            <textarea id="zprava-text" rows="6" placeholder="Co mají rodiče vědět" value="{{msg.text}}" onInput="{{msg.onText}}" onChange="{{msg.onText}}" style="border-radius: 14px; border: 1px solid #E5E7E4; padding: 12px 14px; font-size: 16px; font-weight: 500; color: #17181A; resize: none"></textarea>
           </label>
           <sc-if value="{{msg.hasDelivery}}" hint-placeholder-val="{{true}}">
             <div style="display: flex; flex-direction: column; gap: 6px">
@@ -627,7 +627,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <div style="background: #FFFFFF; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
               <span style="display: flex; gap: 10px; align-items: baseline"><span style="font-size: 16px; font-weight: 800; flex-grow: 1">{{m.title}}</span><span style="font-size: 12px; color: #5A5C60">{{m.meta}}</span></span>
               <span style="font-size: 14px; color: #3A3C40; line-height: 20px">{{m.text}}</span>
-              <span style="display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #F3F2EC; overflow: hidden"><span style="{{m.barStyle}}"></span></span><span style="font-size: 12px; font-weight: 700; color: #3A3C40">{{m.read}}</span></span>
+              <span style="display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #F3F4F2; overflow: hidden"><span style="{{m.barStyle}}"></span></span><span style="font-size: 12px; font-weight: 700; color: #3A3C40">{{m.read}}</span></span>
             </div>
           </sc-for>
         </section>
@@ -643,7 +643,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </sc-for>
         <span style="flex-grow: 1"></span>
         <span style="font-size: 13px; color: #5A5C60">{{por.count}}</span>
-        <button type="button" onClick="{{por.exportYear}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Celý rok do PDF</button>
+        <button type="button" onClick="{{por.exportYear}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Celý rok do PDF</button>
       </div>
       <div style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1; min-height: 0; overflow-y: auto">
         <sc-for list="{{por.items}}" as="p" hint-placeholder-count="2">
@@ -652,7 +652,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span style="{{p.typeStyle}}">{{p.type}}</span>
               <span style="font-size: 17px; font-weight: 800; flex-grow: 1">{{p.title}}</span>
               <span style="font-size: 13px; color: #5A5C60">{{p.date}}</span>
-              <button type="button" onClick="{{p.pdf}}" aria-label="Uložit do PDF: {{p.title}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">PDF</button>
+              <button type="button" onClick="{{p.pdf}}" aria-label="Uložit do PDF: {{p.title}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">PDF</button>
             </span>
             <span style="font-size: 14px; line-height: 20px"><b style="font-weight: 800">Program:</b> {{p.program}}</span>
             <span style="font-size: 14px; line-height: 20px"><b style="font-weight: 800">Usnesení:</b> {{p.usneseni}}</span>
@@ -677,11 +677,11 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <section aria-label="Údaje školy" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Kontakty a údaje</h2>
             <span style="font-size: 14px; color: #3A3C40; line-height: 20px">{{web.summary}}</span>
-            <button type="button" onClick="{{web.goSettings}}" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 18px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Upravit v Nastavení</button>
+            <button type="button" onClick="{{web.goSettings}}" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 18px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Upravit v Nastavení</button>
           </section>
           <section aria-label="O nás" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
             <label for="web-onas" style="font-size: 16px; font-weight: 800">O školce</label>
-            <textarea id="web-onas" rows="4" value="{{web.about}}" onInput="{{web.onAbout}}" onChange="{{web.onAbout}}" style="border-radius: 14px; border: 1px solid #E4E3DC; padding: 10px 12px; font-size: 14px; line-height: 20px; color: #17181A; resize: none"></textarea>
+            <textarea id="web-onas" rows="4" value="{{web.about}}" onInput="{{web.onAbout}}" onChange="{{web.onAbout}}" style="border-radius: 14px; border: 1px solid #E5E7E4; padding: 10px 12px; font-size: 14px; line-height: 20px; color: #17181A; resize: none"></textarea>
             <span style="font-size: 15px; font-weight: 800; margin-top: 4px">Na webu ukázat</span>
             <div style="display: flex; flex-wrap: wrap; gap: 6px">
               <sc-for list="{{web.sections}}" as="c" hint-placeholder-count="6">
@@ -692,12 +692,12 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <section aria-label="Dokumenty" style="background: #FFFFFF; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Dokumenty na webu</h2>
             <sc-for list="{{web.docs}}" as="d" hint-placeholder-count="4">
-              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; background: #F3F2EC">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; background: #F3F4F2">
                 <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{d.label}}</span><span style="{{d.subStyle}}">{{d.sub}}</span></span>
                 <button type="button" onClick="{{d.toggle}}" aria-pressed="{{d.on}}" aria-disabled="{{d.off}}" style="{{d.style}}">{{d.action}}</button>
               </div>
             </sc-for>
-            <button type="button" onClick="{{web.goDocs}}" style="align-self: flex-start; height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Upravit v Dokumentech</button>
+            <button type="button" onClick="{{web.goDocs}}" style="align-self: flex-start; height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Upravit v Dokumentech</button>
           </section>
         </div>
         <section aria-label="Náhled webu" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 22px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px">
@@ -706,7 +706,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
             </sc-for>
             <span style="flex-grow: 1; font-size: 13px; color: #5A5C60; text-align: center">{{web.domain}}</span>
-            <button type="button" onClick="{{web.download}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #17181A; color: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer">Stáhnout web</button>
+            <button type="button" onClick="{{web.download}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Stáhnout web</button>
           </div>
           <div style="{{web.frameWrap}}">
             <iframe title="Náhled webu školky" srcdoc="{{web.html}}" style="{{web.frameStyle}}"></iframe>
@@ -770,7 +770,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </sc-for>
           </div>
           <span style="{{docsP.noteStyle}}">{{docsP.note}}</span>
-          <textarea id="dokument-text" aria-label="Text dokumentu" value="{{docsP.text}}" onInput="{{docsP.onText}}" onChange="{{docsP.onText}}" style="flex-grow: 1; min-height: 0; border-radius: 14px; border: 1px solid #E4E3DC; padding: 14px 16px; font-size: 14px; line-height: 21px; color: #17181A; resize: none; font-family: inherit"></textarea>
+          <textarea id="dokument-text" aria-label="Text dokumentu" value="{{docsP.text}}" onInput="{{docsP.onText}}" onChange="{{docsP.onText}}" style="flex-grow: 1; min-height: 0; border-radius: 14px; border: 1px solid #E5E7E4; padding: 14px 16px; font-size: 14px; line-height: 21px; color: #17181A; resize: none; font-family: inherit"></textarea>
         </section>
       </div>
     </sc-if>
@@ -783,15 +783,15 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <h2 style="margin: 0; font-size: 18px; font-weight: 800">Spisový a skartační plán</h2>
             <span style="font-size: 13px; color: #5A5C60">Lhůty jsou ukázkové — přepište je podle spisového řádu školy.</span>
           </div>
-          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 110px 70px minmax(0, 1.4fr); gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid #F0EFEA; border-bottom: 1px solid #F0EFEA">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 110px 70px minmax(0, 1.4fr); gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid #EEF0ED; border-bottom: 1px solid #EEF0ED">
             <span>Dokument</span><span>Uchovat</span><span>Znak</span><span>Teď k vyřazení</span>
           </div>
           <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
             <sc-for list="{{arch.plan}}" as="r" hint-placeholder-count="8">
-              <div style="display: grid; grid-template-columns: minmax(0, 2fr) 110px 70px minmax(0, 1.4fr); gap: 10px; padding: 10px 20px; align-items: center; border-bottom: 1px solid #F3F2EC; font-size: 14px">
+              <div style="display: grid; grid-template-columns: minmax(0, 2fr) 110px 70px minmax(0, 1.4fr); gap: 10px; padding: 10px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
                 <span style="font-weight: 700">{{r.doc}}</span>
                 <sc-if value="{{r.editable}}" hint-placeholder-val="{{true}}">
-                  <span style="display: flex; align-items: center; gap: 4px"><input type="text" inputmode="numeric" aria-label="Lhůta pro {{r.doc}}" value="{{r.years}}" onInput="{{r.onYears}}" onChange="{{r.onYears}}" style="width: 44px; height: 32px; border-radius: 10px; border: 1px solid #E4E3DC; padding: 0 8px; font-size: 14px; text-align: right; color: #17181A"><span style="color: #5A5C60">let</span></span>
+                  <span style="display: flex; align-items: center; gap: 4px"><input type="text" inputmode="numeric" aria-label="Lhůta pro {{r.doc}}" value="{{r.years}}" onInput="{{r.onYears}}" onChange="{{r.onYears}}" style="width: 44px; height: 32px; border-radius: 10px; border: 1px solid #E5E7E4; padding: 0 8px; font-size: 14px; text-align: right; color: #17181A"><span style="color: #5A5C60">let</span></span>
                 </sc-if>
                 <sc-if value="{{r.fixed}}" hint-placeholder-val="{{false}}"><span>{{r.years}} let</span></sc-if>
                 <span style="font-weight: 800">{{r.znak}}</span>
@@ -805,9 +805,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <h2 style="margin: 0; font-size: 18px; font-weight: 800">Historie změn</h2>
             <span style="font-size: 13px; color: #5A5C60">Kdo co v ředitelně změnil — pro kontrolu a GDPR.</span>
           </div>
-          <div style="flex-grow: 1; min-height: 0; overflow-y: auto; border-top: 1px solid #F0EFEA">
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto; border-top: 1px solid #EEF0ED">
             <sc-for list="{{arch.log}}" as="l" hint-placeholder-count="6">
-              <div style="padding: 10px 20px; border-bottom: 1px solid #F3F2EC; display: flex; flex-direction: column; gap: 2px">
+              <div style="padding: 10px 20px; border-bottom: 1px solid #F3F4F2; display: flex; flex-direction: column; gap: 2px">
                 <span style="font-size: 14px; font-weight: 700">{{l.what}}</span>
                 <span style="font-size: 12px; color: #5A5C60">{{l.who}} · {{l.when}}</span>
               </div>
@@ -820,15 +820,15 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     <!-- ========================================================== KNIHA ÚRAZŮ -->
     <sc-if value="{{is.urazy}}" hint-placeholder-val="{{false}}">
       <section aria-label="Kniha úrazů" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
-        <div style="display: grid; grid-template-columns: 58px 92px minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.3fr) 150px 170px; gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #F0EFEA">
+        <div style="display: grid; grid-template-columns: 58px 92px minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.3fr) 150px 170px; gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
           <span>Č.</span><span>Kdy</span><span>Dítě</span><span>Co se stalo</span><span>Ošetření</span><span>Rodičům</span><span>Záznam pro ČŠI</span>
         </div>
         <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
           <sc-for list="{{urazy}}" as="u" hint-placeholder-count="3">
-            <div style="display: grid; grid-template-columns: 58px 92px minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.3fr) 150px 170px; gap: 12px; padding: 12px 20px; align-items: center; border-bottom: 1px solid #F3F2EC; font-size: 14px">
+            <div style="display: grid; grid-template-columns: 58px 92px minmax(0, 1.15fr) minmax(0, 2fr) minmax(0, 1.3fr) 150px 170px; gap: 12px; padding: 12px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
               <span style="font-weight: 800">{{u.no}}</span>
               <span style="display: flex; flex-direction: column"><span>{{u.when}}</span><span style="font-size: 12px; color: #5A5C60">{{u.by}}</span></span>
-              <button type="button" onClick="{{u.open}}" aria-label="Detail úrazu {{u.no}}" style="border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; display: flex; flex-direction: column; color: #17181A"><span style="font-weight: 700; text-decoration: underline; text-decoration-color: #D9D7CE; text-underline-offset: 3px">{{u.child}}</span><span style="font-size: 12px; color: #5A5C60">{{u.cls}}</span></button>
+              <button type="button" onClick="{{u.open}}" aria-label="Detail úrazu {{u.no}}" style="border: 0; background: transparent; padding: 0; text-align: left; cursor: pointer; display: flex; flex-direction: column; color: #17181A"><span style="font-weight: 700; text-decoration: underline; text-decoration-color: #D8DBD7; text-underline-offset: 3px">{{u.child}}</span><span style="font-size: 12px; color: #5A5C60">{{u.cls}}</span></button>
               <span>{{u.what}}</span>
               <span>{{u.care}}</span>
               <span>
@@ -836,7 +836,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               </span>
               <span style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start">
                 <sc-if value="{{u.needsRecord}}" hint-placeholder-val="{{false}}">
-                  <button type="button" onClick="{{u.record}}" style="height: 38px; padding: 0 14px; border-radius: 19px; border: 0; background: #F28C28; color: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer">Vyplnit do {{u.deadline}}</button>
+                  <button type="button" onClick="{{u.record}}" style="height: 38px; padding: 0 14px; border-radius: 19px; border: 0; background: #F7DCC6; color: #8A4513; font-size: 13px; font-weight: 800; cursor: pointer">Vyplnit do {{u.deadline}}</button>
                 </sc-if>
                 <sc-if value="{{u.recordDone}}" hint-placeholder-val="{{false}}">
                   <span style="font-size: 13px; font-weight: 800; color: #2F5212">Odesláno {{u.doneAt}}</span>
@@ -849,7 +849,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </div>
           </sc-for>
         </div>
-        <div style="padding: 12px 20px; font-size: 13px; line-height: 18px; color: #5A5C60; border-top: 1px solid #F0EFEA">Úrazy zapisují učitelky na tabletu. Klepnutím na jméno otevřete detail a zapíšete, kolik dní dítě chybělo. Od 2 dnů je potřeba záznam o úrazu pro ČŠI a pojišťovnu (do 5. dne dalšího měsíce). Rodičům jde zápis jen do mobilní aplikace — kde ji rodiče nemají, tlačítko nejde.</div>
+        <div style="padding: 12px 20px; font-size: 13px; line-height: 18px; color: #5A5C60; border-top: 1px solid #EEF0ED">Úrazy zapisují učitelky na tabletu. Klepnutím na jméno otevřete detail a zapíšete, kolik dní dítě chybělo. Od 2 dnů je potřeba záznam o úrazu pro ČŠI a pojišťovnu (do 5. dne dalšího měsíce). Rodičům jde zápis jen do mobilní aplikace — kde ji rodiče nemají, tlačítko nejde.</div>
       </section>
     </sc-if>
   </main>
@@ -858,9 +858,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
   <sc-if value="{{dlg.open}}" hint-placeholder-val="{{false}}">
     <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 6">
       <div role="dialog" aria-label="{{dlg.title}}" style="width: 640px; max-height: 820px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
-        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 20px 20px 14px 24px; border-bottom: 1px solid #F0EFEA">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 20px 20px 14px 24px; border-bottom: 1px solid #EEF0ED">
           <div style="font-size: 24px; font-weight: 800; flex-grow: 1">{{dlg.title}}</div>
-          <button type="button" onClick="{{dlg.close}}" aria-label="Zavřít" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #F3F2EC; display: flex; align-items: center; justify-content: center; cursor: pointer">
+          <button type="button" onClick="{{dlg.close}}" aria-label="Zavřít" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
           </button>
         </div>
@@ -869,16 +869,16 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <div style="display: flex; align-items: center; gap: 16px">
               <span style="{{dlg.av.box}}"><sc-if value="{{dlg.av.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{dlg.av.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{dlg.av.drawn}}" hint-placeholder-val="{{true}}"><span style="{{dlg.av.back}}"></span><span style="{{dlg.av.body}}"></span><span style="{{dlg.av.head}}"></span><span style="{{dlg.av.front}}"></span><span style="{{dlg.av.eyes}}"></span></sc-if></span>
               <div style="display: flex; flex-direction: column; gap: 8px">
-                <label style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; background: #17181A; color: #FFFFFF; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">{{dlg.photoLabel}}<input type="file" accept="image/*" aria-label="Nahrát fotku" onChange="{{dlg.onPhoto}}" style="display: none"></label>
+                <label style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">{{dlg.photoLabel}}<input type="file" accept="image/*" aria-label="Nahrát fotku" onChange="{{dlg.onPhoto}}" style="display: none"></label>
                 <sc-if value="{{dlg.hasPhoto}}" hint-placeholder-val="{{false}}">
-                  <button type="button" onClick="{{dlg.removePhoto}}" style="align-self: flex-start; height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Odebrat fotku</button>
+                  <button type="button" onClick="{{dlg.removePhoto}}" style="align-self: flex-start; height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Odebrat fotku</button>
                 </sc-if>
                 <span style="font-size: 13px; color: #5A5C60">Bez fotky se ukáže kreslená postava.</span>
               </div>
             </div>
           </sc-if>
           <sc-if value="{{dlg.hasInfo}}" hint-placeholder-val="{{false}}">
-            <div style="display: flex; flex-direction: column; border-radius: 16px; background: #F7F6F1; padding: 6px 14px">
+            <div style="display: flex; flex-direction: column; border-radius: 16px; background: #F7F8F6; padding: 6px 14px">
               <sc-for list="{{dlg.info}}" as="r" hint-placeholder-count="4">
                 <div style="display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-bottom: 1px solid #EDEBE4; font-size: 14px; line-height: 19px"><span style="color: #5A5C60">{{r.label}}</span><span style="font-weight: 600">{{r.value}}</span></div>
               </sc-for>
@@ -886,7 +886,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           </sc-if>
           <sc-for list="{{dlg.inputs}}" as="f" hint-placeholder-count="3">
             <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">{{f.label}}
-              <input type="{{f.type}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="height: 52px; border-radius: 14px; border: 1px solid #E4E3DC; padding: 0 14px; font-size: 17px; font-weight: 500; color: #17181A">
+              <input type="{{f.type}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="height: 52px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 17px; font-weight: 500; color: #17181A">
               <sc-if value="{{f.hasHint}}" hint-placeholder-val="{{false}}">
                 <span style="{{f.hintStyle}}">{{f.hint}}</span>
               </sc-if>
@@ -894,7 +894,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           </sc-for>
           <sc-for list="{{dlg.areas}}" as="f" hint-placeholder-count="1">
             <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">{{f.label}}
-              <textarea rows="3" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="border-radius: 14px; border: 1px solid #E4E3DC; padding: 12px 14px; font-size: 16px; font-weight: 500; color: #17181A; resize: none"></textarea>
+              <textarea rows="3" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="border-radius: 14px; border: 1px solid #E5E7E4; padding: 12px 14px; font-size: 16px; font-weight: 500; color: #17181A; resize: none"></textarea>
             </label>
           </sc-for>
           <sc-for list="{{dlg.choices}}" as="g" hint-placeholder-count="2">
@@ -908,10 +908,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </div>
           </sc-for>
           <sc-if value="{{dlg.hasExtra}}" hint-placeholder-val="{{false}}">
-            <button type="button" onClick="{{dlg.extra}}" style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; border: 2px solid #E4E3DC; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">{{dlg.extraLabel}}</button>
+            <button type="button" onClick="{{dlg.extra}}" style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">{{dlg.extraLabel}}</button>
           </sc-if>
           <sc-if value="{{dlg.hasWarn}}" hint-placeholder-val="{{false}}">
-            <div role="note" style="padding: 12px 14px; border-radius: 16px; background: #FDE6DC; color: #9A3412; font-size: 14px; line-height: 20px; font-weight: 600">{{dlg.warn}}</div>
+            <div role="note" style="padding: 12px 14px; border-radius: 16px; background: #FAEBE4; color: #9A3412; font-size: 14px; line-height: 20px; font-weight: 600">{{dlg.warn}}</div>
           </sc-if>
         </div>
         <div style="flex-shrink: 0; padding: 12px 24px 18px; border-top: 1px solid #EEEEEC; display: flex; flex-direction: column; gap: 10px">
@@ -926,7 +926,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
   </sc-if>
 
   <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
-    <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #17181A; color: #FFFFFF; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
+    <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #DCE6F2; color: #1F3A5C; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
   </sc-if>
 </div>
 </x-dc>
@@ -1062,7 +1062,7 @@ class Component extends DCLogic {
 
     /* ---------------------------------------------- role a historie změn */
     this.users = {
-      reditelka: { name: 'Ivana Pokorná', role: 'ředitelka', initials: 'IP', bg: '#D7F26B' },
+      reditelka: { name: 'Ivana Pokorná', role: 'ředitelka', initials: 'IP', bg: '#E4ECCB' },
       hospodarka: { name: 'Hana Veselá', role: 'hospodářka', initials: 'HV', bg: '#C9E4F5' }
     };
     this.audit = [
@@ -1866,9 +1866,9 @@ class Component extends DCLogic {
     var dot = function (c, size) { return 'width: ' + (size || 10) + 'px; height: ' + (size || 10) + 'px; border-radius: 6px; flex-shrink: 0; display: inline-block; background: ' + c; };
     var chip = function (on, small) {
       return 'height: ' + (small ? 34 : 44) + 'px; padding: 0 ' + (small ? 12 : 16) + 'px; border-radius: 22px; font-size: ' + (small ? 13 : 14) + 'px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; '
-        + (on ? 'background: #17181A; color: #FFFFFF; border: 2px solid #17181A' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E4E3DC');
+        + (on ? 'background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4');
     };
-    var bigBtn = function (on) { return 'flex-grow: 2; min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (on ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #5A5C60'); };
+    var bigBtn = function (on) { return 'flex-grow: 2; min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (on ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #5A5C60'); };
     var go = function (page, extra) { return function () { self.setState(Object.assign({ page: page }, extra || {})); }; };
     var nDeti = function (n) { return n === 1 ? '1 dítě' : n + (n >= 2 && n <= 4 ? ' děti' : ' dětí'); };
     var openKid = function (k) { return function () { self.setState({ page: 'deti', kidId: k.id, editAll: false, povName: '', editKeys: st.role === 'reditelka' ? self.missing(k).map(function (m) { return m[0]; }) : [] }); }; };
@@ -1911,7 +1911,7 @@ class Component extends DCLogic {
       return {
         isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
-          + (warn ? 'background: #F28C28; color: #FFFFFF' : 'background: ' + (on ? '#F3F2EC' : '#E4E3DC') + '; color: #3A3C40'),
+          + (warn ? 'background: #F7DCC6; color: #8A4513' : 'background: ' + (on ? '#F3F4F2' : '#E5E7E4') + '; color: #3A3C40'),
         pick: go(n[0], { kidId: null, editAll: false }),
         style: 'min-height: 32px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
       };
@@ -1951,34 +1951,34 @@ class Component extends DCLogic {
     var statCard = function (bg) { return 'border: 0; text-align: left; cursor: pointer; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #17181A; background: ' + bg; };
     var stats = [
       { label: 'Dnes ve školce', value: presentAll + ' / ' + kids.length, sub: 'z ' + CL.length + ' tříd', subFg: '#5A5C60', style: statCard('#FFFFFF'), go: go('tridy') },
-      { label: 'Povinné předškolní', value: String(ppvKids.length), sub: neoml.length ? nDeti(neoml.length) + ' s neomluvenou absencí' : 'bez neomluvené absence', subFg: neoml.length ? '#9A3412' : '#2F5212', style: statCard('#E8EFFD'), go: go('deti', { clsFilter: 'ppv' }) },
-      { label: 'Matrika k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.'), value: matErr.length ? nChyb(matErr.length) : 'Hotovo', sub: 'odevzdat do ' + deadline, subFg: matErr.length ? '#9A3412' : '#2F5212', style: statCard(matErr.length ? '#FDE6DC' : '#EAF6D3'), go: go('matrika') },
+      { label: 'Povinné předškolní', value: String(ppvKids.length), sub: neoml.length ? nDeti(neoml.length) + ' s neomluvenou absencí' : 'bez neomluvené absence', subFg: neoml.length ? '#9A3412' : '#2F5212', style: statCard('#EBF1FA'), go: go('deti', { clsFilter: 'ppv' }) },
+      { label: 'Matrika k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.'), value: matErr.length ? nChyb(matErr.length) : 'Hotovo', sub: 'odevzdat do ' + deadline, subFg: matErr.length ? '#9A3412' : '#2F5212', style: statCard(matErr.length ? '#FAEBE4' : '#EDF4E4'), go: go('matrika') },
       { label: 'Obsazenost', value: kids.length + ' / ' + capAll, sub: (capAll - kids.length) + ' volných míst', subFg: '#5A5C60', style: statCard('#FFFFFF'), go: go('tridy') }
     ];
     var todoItem = function (bg, dotC, title, sub, action, fn, pg) { return { pg: pg || 'deti', title: title, sub: sub, action: action, go: fn, dotStyle: dot(dotC, 12), style: 'display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 16px; border-radius: 18px; background: ' + bg }; };
     var todo = [];
-    if (matErr.length) todo.push(todoItem('#FFF4EE', '#F28C28', 'Matrika: ' + nDeti(matErr.length) + ' s chybějícími údaji', 'Sběr k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.') + ', odevzdání do ' + deadline + ' na matrika.msmt.cz', 'Opravit', go('matrika'), 'matrika'));
+    if (matErr.length) todo.push(todoItem('#FCF4EF', '#F28C28', 'Matrika: ' + nDeti(matErr.length) + ' s chybějícími údaji', 'Sběr k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.') + ', odevzdání do ' + deadline + ' na matrika.msmt.cz', 'Opravit', go('matrika'), 'matrika'));
     urazPending.forEach(function (u) {
       var d = new Date(u.date); var dl = new Date(d.getFullYear(), d.getMonth() + 1, 5);
-      todo.push(todoItem('#FFF4EE', '#E0302B', 'Záznam o úrazu: ' + u.child, 'Chybí ' + u.absent + ' dny po úrazu ' + self.cz(d) + ' — ČŠI a pojišťovně do ' + self.cz(dl), 'Vyplnit', go('urazy'), 'urazy'));
+      todo.push(todoItem('#FCF4EF', '#E0302B', 'Záznam o úrazu: ' + u.child, 'Chybí ' + u.absent + ' dny po úrazu ' + self.cz(d) + ' — ČŠI a pojišťovně do ' + self.cz(dl), 'Vyplnit', go('urazy'), 'urazy'));
     });
-    neoml.forEach(function (k) { todo.push(todoItem('#FFF4EE', '#2F6FDB', 'Neomluvená absence: ' + k.first + ' ' + k.last, k.neoml + ' dny · PPV · ' + (k.absStep === 0 ? 'vyzvěte rodiče' : k.absStep === 1 ? 'výzva odeslána ' + self.cz(new Date(k.absDate)) : 'oznámeno OSPOD'), 'Karta', openKid(k))); });
-    this.teachers.filter(function (x) { return x.absent && !x.sub; }).forEach(function (x) { todo.unshift(todoItem('#FFF4EE', '#E0302B', 'Dnes chybí ' + x.name, 'Vyberte, kdo ji dnes zastoupí', 'Zástup', go('ucitele'), 'ucitele')); });
+    neoml.forEach(function (k) { todo.push(todoItem('#FCF4EF', '#2F6FDB', 'Neomluvená absence: ' + k.first + ' ' + k.last, k.neoml + ' dny · PPV · ' + (k.absStep === 0 ? 'vyzvěte rodiče' : k.absStep === 1 ? 'výzva odeslána ' + self.cz(new Date(k.absDate)) : 'oznámeno OSPOD'), 'Karta', openKid(k))); });
+    this.teachers.filter(function (x) { return x.absent && !x.sub; }).forEach(function (x) { todo.unshift(todoItem('#FCF4EF', '#E0302B', 'Dnes chybí ' + x.name, 'Vyberte, kdo ji dnes zastoupí', 'Zástup', go('ucitele'), 'ucitele')); });
     allKids.forEach(function (k) {
-      if (k.poSt >= 2 && k.spzDo) { var dd = Math.round((new Date(k.spzDo) - self.today) / 86400000); if (dd <= 60) todo.push(todoItem('#F3F2EC', '#8B5CF6', k.first + ' ' + k.last + ': doporučení ŠPZ končí ' + self.cz(new Date(k.spzDo)), 'Podpůrná opatření ' + k.poSt + '. stupně — rodiče musí objednat nové vyšetření', 'Karta', openKid(k))); }
-      if (k.poSt === 1 && k.plppDo) { var d2 = Math.round((new Date(k.plppDo) - self.today) / 86400000); if (d2 <= 30) todo.push(todoItem('#F3F2EC', '#8B5CF6', k.first + ' ' + k.last + ': vyhodnotit plán pedagogické podpory', 'Do ' + self.cz(new Date(k.plppDo)) + ' — s třídní učitelkou', 'Karta', openKid(k))); }
-      if (self.ppv(k) && /34b/.test(k.zpusob) && !k.ivOvereni) todo.push(todoItem('#F3F2EC', '#2F6FDB', k.first + ' ' + k.last + ': ověření individuálního vzdělávání', 'Termín ' + self.cz(self.ivTerm()) + ', náhradní v prosinci — pozvěte rodiče', 'Karta', openKid(k)));
+      if (k.poSt >= 2 && k.spzDo) { var dd = Math.round((new Date(k.spzDo) - self.today) / 86400000); if (dd <= 60) todo.push(todoItem('#F3F4F2', '#8B5CF6', k.first + ' ' + k.last + ': doporučení ŠPZ končí ' + self.cz(new Date(k.spzDo)), 'Podpůrná opatření ' + k.poSt + '. stupně — rodiče musí objednat nové vyšetření', 'Karta', openKid(k))); }
+      if (k.poSt === 1 && k.plppDo) { var d2 = Math.round((new Date(k.plppDo) - self.today) / 86400000); if (d2 <= 30) todo.push(todoItem('#F3F4F2', '#8B5CF6', k.first + ' ' + k.last + ': vyhodnotit plán pedagogické podpory', 'Do ' + self.cz(new Date(k.plppDo)) + ' — s třídní učitelkou', 'Karta', openKid(k))); }
+      if (self.ppv(k) && /34b/.test(k.zpusob) && !k.ivOvereni) todo.push(todoItem('#F3F4F2', '#2F6FDB', k.first + ' ' + k.last + ': ověření individuálního vzdělávání', 'Termín ' + self.cz(self.ivTerm()) + ', náhradní v prosinci — pozvěte rodiče', 'Karta', openKid(k)));
     });
-    if (unpaidPrev.length) todo.push(todoItem('#FBF0C9', '#C99A00', 'Nezaplaceno za ' + self.monthName(prevMonth) + ': ' + nDeti(unpaidPrev.length), unpaidPrev.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — pošlete upomínku', 'Platby', go('platby', { payMonth: prevMonth, payFilter: 'unpaid' }), 'platby'));
+    if (unpaidPrev.length) todo.push(todoItem('#F7F0DA', '#C99A00', 'Nezaplaceno za ' + self.monthName(prevMonth) + ': ' + nDeti(unpaidPrev.length), unpaidPrev.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — pošlete upomínku', 'Platby', go('platby', { payMonth: prevMonth, payFilter: 'unpaid' }), 'platby'));
     var noPhoto = kids.filter(function (k) { return !k.souhlasFoto; });
-    if (noPhoto.length) todo.push(todoItem('#F3F2EC', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — učitelky to vidí v galerii', 'Seznam', go('deti'), 'deti'));
+    if (noPhoto.length) todo.push(todoItem('#F3F4F2', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — učitelky to vidí v galerii', 'Seznam', go('deti'), 'deti'));
     var noVax = kids.filter(function (k) { return !k.ockovani && !self.ppv(k); });
-    noVax.forEach(function (k) { todo.push(todoItem('#F3F2EC', '#8A8C90', 'Chybí doklad o očkování: ' + k.first + ' ' + k.last, 'Dítě mimo povinné předškolní vzdělávání musí mít doklad o očkování', 'Karta', openKid(k))); });
+    noVax.forEach(function (k) { todo.push(todoItem('#F3F4F2', '#8A8C90', 'Chybí doklad o očkování: ' + k.first + ' ' + k.last, 'Dítě mimo povinné předškolní vzdělávání musí mít doklad o očkování', 'Karta', openKid(k))); });
     CL.forEach(function (c) {
       var ped = self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && (t.role === 'Učitelka'); }).length;
-      if (ped < 2) todo.push(todoItem('#F3F2EC', c.color, 'Třída ' + c.name + ': jen ' + ped + ' učitelka', 'Celodenní provoz obvykle potřebuje dvě — přiřaďte v Učitelích', 'Přiřadit', go('tridy'), 'tridy'));
+      if (ped < 2) todo.push(todoItem('#F3F4F2', c.color, 'Třída ' + c.name + ': jen ' + ped + ' učitelka', 'Celodenní provoz obvykle potřebuje dvě — přiřaďte v Učitelích', 'Přiřadit', go('tridy'), 'tridy'));
     });
-    this.docs.filter(function (d) { return d.required && !d.approved; }).forEach(function (d) { todo.push(todoItem('#F3F2EC', '#8A8C90', 'Dokument: ' + d.title, 'Předvyplněná šablona čeká na kontrolu a schválení', 'Otevřít', go('dokumenty', { docSel: d.key }), 'dokumenty')); });
+    this.docs.filter(function (d) { return d.required && !d.approved; }).forEach(function (d) { todo.push(todoItem('#F3F4F2', '#8A8C90', 'Dokument: ' + d.title, 'Předvyplněná šablona čeká na kontrolu a schválení', 'Otevřít', go('dokumenty', { docSel: d.key }), 'dokumenty')); });
     todo = todo.filter(function (x) { return allowed(x.pg); });
     var classesToday = CL.map(function (c) {
       var tot = kids.filter(function (k) { return k.cls === c.id; }).length, p = present(c);
@@ -2004,7 +2004,7 @@ class Component extends DCLogic {
       q: st.q || '', onQ: function (e) { self.setState({ q: e.target.value }); },
       filters: FILTERS.map(function (f) { var on = st.clsFilter === f[0]; return { label: f[1], on: on, style: chip(on, true), hasDot: !!f[2], dotStyle: f[2] ? dot(f[2]) : '', pick: function () { self.setState({ clsFilter: f[0] }); } }; }),
       onlyMissing: st.onlyMissing, missingCount: errKids.length,
-      missingStyle: chip(st.onlyMissing, true).replace('#17181A; color: #FFFFFF; border: 2px solid #17181A', '#F28C28; color: #FFFFFF; border: 2px solid #F28C28'),
+      missingStyle: chip(st.onlyMissing, true).replace('#17181A; color: #FFFFFF; border: 2px solid #17181A', '#F7DCC6; color: #8A4513; border: 2px solid #EFC3A3'),
       toggleMissing: function () { self.setState({ onlyMissing: !self.state.onlyMissing }); },
       rows: list.map(function (k) {
         var miss = self.missing(k), on = st.kidId === k.id;
@@ -2015,9 +2015,9 @@ class Component extends DCLogic {
           ppv: self.ppv(k) ? 'PPV' : '',
           parent: k.zastupce || '—',
           state: k.ended ? 'ukončeno' : k.zahajeni > todayIso ? 'od ' + self.cz(new Date(k.zahajeni)).replace(/ \d{4}$/, '') : miss.length ? 'chybí ' + miss.length : 'v pořádku',
-          stateStyle: 'justify-self: start; height: 26px; padding: 0 10px; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; white-space: nowrap; ' + (k.ended || k.zahajeni > todayIso ? 'background: #F3F2EC; color: #3A3C40' : miss.length ? 'background: #FDE6DC; color: #9A3412' : 'background: #EAF6D3; color: #2F5212'),
+          stateStyle: 'justify-self: start; height: 26px; padding: 0 10px; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; white-space: nowrap; ' + (k.ended || k.zahajeni > todayIso ? 'background: #F3F4F2; color: #3A3C40' : miss.length ? 'background: #FAEBE4; color: #9A3412' : 'background: #EDF4E4; color: #2F5212'),
           open: openKid(k),
-          style: 'width: 100%; display: grid; grid-template-columns: minmax(0, 2fr) 108px 64px 44px minmax(0, 1.3fr) 84px; gap: 12px; align-items: center; padding: 10px 20px; border: 0; border-bottom: 1px solid #F3F2EC; text-align: left; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F2EC' : '#FFFFFF')
+          style: 'width: 100%; display: grid; grid-template-columns: minmax(0, 2fr) 108px 64px 44px minmax(0, 1.3fr) 84px; gap: 12px; align-items: center; padding: 10px 20px; border: 0; border-bottom: 1px solid #F3F4F2; text-align: left; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F4F2' : '#FFFFFF')
         };
       })
     };
@@ -2036,7 +2036,7 @@ class Component extends DCLogic {
         if (editAll || edit.indexOf(key) !== -1) {
           var must = edit.indexOf(key) !== -1;
           return { label: label, isInput: true, value: K[key] || '', ph: ph || '', onInput: upd(key),
-            inputStyle: 'width: 100%; box-sizing: border-box; height: 36px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; ' + (must ? 'border: 2px solid #F2C3AE; background: #FFF8F4' : 'border: 1px solid #E4E3DC; background: #FFFFFF') };
+            inputStyle: 'width: 100%; box-sizing: border-box; height: 36px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; ' + (must ? 'border: 2px solid #F2C3AE; background: #FFF8F4' : 'border: 1px solid #E5E7E4; background: #FFFFFF') };
         }
         return { label: label, isText: true, value: value || '—', valueStyle: 'font-size: 14px; font-weight: 600; color: ' + (value ? '#17181A' : '#9A3412') };
       };
@@ -2062,7 +2062,7 @@ class Component extends DCLogic {
       kid.canEdit = canEdit && !K.ended;
       kid.editing = !!st.editAll;
       kid.editLabel = st.editAll ? 'Hotovo' : 'Upravit';
-      kid.editStyle = 'height: 44px; padding: 0 16px; border-radius: 22px; border: 0; font-size: 14px; font-weight: 800; cursor: pointer; flex-shrink: 0; ' + (st.editAll ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #17181A');
+      kid.editStyle = 'height: 44px; padding: 0 16px; border-radius: 22px; border: 0; font-size: 14px; font-weight: 800; cursor: pointer; flex-shrink: 0; ' + (st.editAll ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #17181A');
       kid.toggleEdit = function () { if (st.editAll) self.log('Upravena karta: ' + K.first + ' ' + K.last); self.setState({ editAll: !st.editAll }); };
 
       /* zástupci a vyzvedávání */
@@ -2167,22 +2167,22 @@ class Component extends DCLogic {
 
     var gTag = function (bg, fg) { return 'min-width: 40px; height: 22px; padding: 0 8px; box-sizing: border-box; border-radius: 11px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; background: ' + bg + '; color: ' + fg; };
     var gloss = [
-      ['PPV', 'Povinné předškolní vzdělávání', 'Děti, které do 31. 8. dovršily 5 let. Chodí každý pracovní den 8–12 h, nepřítomnost musí rodiče omluvit a školné neplatí.', '#E8EFFD', '#27407A'],
-      ['chybí 2', 'Údaje do matriky', 'Kolik povinných údajů chybí pro MŠMT. Matrika se odesílá k 30. 9. a 31. 3.', '#FDE6DC', '#9A3412'],
-      ['IV', 'Individuální vzdělávání', 'Předškolák se vzdělává doma; do školky přijde jen na ověření v listopadu (náhradní termín v prosinci).', '#F3F2EC', '#3A3C40'],
-      ['PO', 'Podpůrná opatření', 'Pomoc dítěti ve stupních 1–5. První stupeň dává školka sama, od druhého na doporučení poradny.', '#EFE8FB', '#5B3AA8'],
-      ['ŠPZ', 'Školské poradenské zařízení', 'Pedagogicko-psychologická poradna nebo speciálně pedagogické centrum. Vydává doporučení s datem platnosti.', '#EFE8FB', '#5B3AA8'],
-      ['PLPP', 'Plán pedagogické podpory', 'Plán pro 1. stupeň podpůrných opatření; sestavuje třídní učitelka a za 3 měsíce ho vyhodnotí.', '#EFE8FB', '#5B3AA8'],
-      ['IVP', 'Individuální vzdělávací plán', 'Plán na doporučení poradny (od 2. stupně); se souhlasem rodičů.', '#EFE8FB', '#5B3AA8'],
-      ['AP', 'Asistent pedagoga', 'Druhý dospělý ve třídě pro děti s podpůrnými opatřeními.', '#EFE8FB', '#5B3AA8'],
-      ['OSPOD', 'Sociálně-právní ochrana dětí', 'Úřad, kterému ředitelka oznamuje opakovanou neomluvenou absenci dítěte s PPV.', '#F3F2EC', '#3A3C40'],
-      ['RČ', 'Rodné číslo', 'Děti bez českého rodného čísla mají náhradní kód (datum narození + X + pořadí).', '#F3F2EC', '#3A3C40'],
-      ['Spád', 'Spádový obvod', 'Trvalý pobyt v obvodu, který školce určil zřizovatel. Má přednost při zápisu.', '#F3F2EC', '#3A3C40']
+      ['PPV', 'Povinné předškolní vzdělávání', 'Děti, které do 31. 8. dovršily 5 let. Chodí každý pracovní den 8–12 h, nepřítomnost musí rodiče omluvit a školné neplatí.', '#EBF1FA', '#27407A'],
+      ['chybí 2', 'Údaje do matriky', 'Kolik povinných údajů chybí pro MŠMT. Matrika se odesílá k 30. 9. a 31. 3.', '#FAEBE4', '#9A3412'],
+      ['IV', 'Individuální vzdělávání', 'Předškolák se vzdělává doma; do školky přijde jen na ověření v listopadu (náhradní termín v prosinci).', '#F3F4F2', '#3A3C40'],
+      ['PO', 'Podpůrná opatření', 'Pomoc dítěti ve stupních 1–5. První stupeň dává školka sama, od druhého na doporučení poradny.', '#F0ECF8', '#5B3AA8'],
+      ['ŠPZ', 'Školské poradenské zařízení', 'Pedagogicko-psychologická poradna nebo speciálně pedagogické centrum. Vydává doporučení s datem platnosti.', '#F0ECF8', '#5B3AA8'],
+      ['PLPP', 'Plán pedagogické podpory', 'Plán pro 1. stupeň podpůrných opatření; sestavuje třídní učitelka a za 3 měsíce ho vyhodnotí.', '#F0ECF8', '#5B3AA8'],
+      ['IVP', 'Individuální vzdělávací plán', 'Plán na doporučení poradny (od 2. stupně); se souhlasem rodičů.', '#F0ECF8', '#5B3AA8'],
+      ['AP', 'Asistent pedagoga', 'Druhý dospělý ve třídě pro děti s podpůrnými opatřeními.', '#F0ECF8', '#5B3AA8'],
+      ['OSPOD', 'Sociálně-právní ochrana dětí', 'Úřad, kterému ředitelka oznamuje opakovanou neomluvenou absenci dítěte s PPV.', '#F3F4F2', '#3A3C40'],
+      ['RČ', 'Rodné číslo', 'Děti bez českého rodného čísla mají náhradní kód (datum narození + X + pořadí).', '#F3F4F2', '#3A3C40'],
+      ['Spád', 'Spádový obvod', 'Trvalý pobyt v obvodu, který školce určil zřizovatel. Má přednost při zápisu.', '#F3F4F2', '#3A3C40']
     ].map(function (g) { return { tag: g[0], name: g[1], text: g[2], tagStyle: gTag(g[3], g[4]) }; });
 
     /* -------------------------------------------------- učitelé */
     var initials = function (n) { return n.split(' ').map(function (p) { return p.charAt(0); }).join('').slice(0, 2).toUpperCase(); };
-    var AV = ['#F6C6D8', '#C9E4F5', '#D7F26B', '#FBE2B5', '#D9D2F4', '#C8EBD9'];
+    var AV = ['#F6C6D8', '#C9E4F5', '#E4ECCB', '#FBE2B5', '#D9D2F4', '#C8EBD9'];
     var teachers = this.teachers.map(function (t, i) {
       return {
         name: t.name, role: t.role, contact: t.email + (t.phone ? ' · ' + t.phone : ''), initials: initials(t.name), invited: !!t.invited,
@@ -2191,7 +2191,7 @@ class Component extends DCLogic {
         uvazky: [[1, '1,0'], [0.75, '0,75'], [0.5, '0,5'], [0.25, '0,25']].map(function (u) { var on = t.uvazek === u[0]; return { label: u[1], on: on, style: chip(on, true), pick: function () { if (on) return; t.uvazek = u[0]; self.log('Úvazek ' + t.name + ': ' + u[1]); self.forceUpdate(); } }; }),
         absent: !!t.absent,
         absentLabel: t.absent ? 'Dnes chybí' + (t.sub ? ' · zastupuje ' + self.teachers.filter(function (x) { return x.id === t.sub; })[0].name.split(' ')[0] : ' · bez zástupu') : 'Dnes ve školce',
-        absentStyle: 'align-self: flex-start; height: 34px; padding: 0 14px; border-radius: 17px; font-size: 13px; font-weight: 800; cursor: pointer; ' + (t.absent ? 'border: 0; background: ' + (t.sub ? '#FBF0C9; color: #5C4300' : '#FDE6DC; color: #9A3412') : 'border: 2px solid #E4E3DC; background: #FFFFFF; color: #2F5212'),
+        absentStyle: 'align-self: flex-start; height: 34px; padding: 0 14px; border-radius: 17px; font-size: 13px; font-weight: 800; cursor: pointer; ' + (t.absent ? 'border: 0; background: ' + (t.sub ? '#F7F0DA; color: #5C4300' : '#FAEBE4; color: #9A3412') : 'border: 2px solid #E5E7E4; background: #FFFFFF; color: #2F5212'),
         toggleAbsent: function () { t.absent = !t.absent; if (!t.absent) t.sub = null; self.log(t.name + (t.absent ? ' dnes chybí' : ' je zpět ve školce')); self.forceUpdate(); },
         subs: self.teachers.filter(function (x) { return x.id !== t.id && !x.absent && x.role !== 'Ředitelka'; }).map(function (x) {
           var on = t.sub === x.id;
@@ -2244,12 +2244,12 @@ class Component extends DCLogic {
         ? 'Stav k 30. 9. — odevzdat do 15. 10., opravy do 22. 10. Podpůrná opatření se předávají jen na podzim.'
         : 'Stav k 31. 3. — jarní sběr. Omluvené a neomluvené dny se předávají za uplynulé pololetí.',
       total: matKids.length, ok: matKids.length - matErr.length, errCount: matErr.length,
-      errBoxStyle: 'padding: 12px; border-radius: 16px; ' + (matErr.length ? 'background: #FDE6DC; color: #9A3412' : 'background: #F3F2EC; color: #3A3C40'),
+      errBoxStyle: 'padding: 12px; border-radius: 16px; ' + (matErr.length ? 'background: #FAEBE4; color: #9A3412' : 'background: #F3F4F2; color: #3A3C40'),
       errors: errors, noErrors: errors.length === 0,
       schoolSummary: 'IZO ' + sch.izo + ' · RED_IZO ' + sch.redizo + ' · část ' + sch.cast + ' · průměrně ' + sch.doba + ' h denně · kontakt ' + sch.kontakt, goSettings: go('nastaveni'),
       rozliseni: [['bez', 'Bez rozlišení'], ['lesni', 'Lesní MŠ'], ['firemni', 'Firemní MŠ']].map(function (r) { var on = sch.rozliseni === r[0]; return { label: r[1], on: on, style: chip(on, true), pick: function () { sch.rozliseni = r[0]; self.forceUpdate(); } }; }),
       buildLabel: canBuild ? 'Vytvořit soubory XML' : 'Nejdřív opravte ' + nChyb(matErr.length, true),
-      buildStyle: 'min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (canBuild ? 'background: #17181A; color: #FFFFFF' : 'background: #F3F2EC; color: #5A5C60'),
+      buildStyle: 'min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (canBuild ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #5A5C60'),
       build: function () {
         if (!canBuild) { self.showToast('Doplňte chybějící údaje — MŠMT by soubor vrátilo'); return; }
         self.setState({ files: self.buildXml(), previewIdx: 0 });
@@ -2280,7 +2280,7 @@ class Component extends DCLogic {
         parentsOff: !app || !!u.parents,
         parentsHint: !app ? 'Rodiče nemají mobilní aplikaci — povolíte ji v kartě dítěte' : '',
         parentsLabel: !app ? 'Bez aplikace' : u.parents ? 'Posláno ' + self.cz(new Date(u.parents)).replace(/ \d{4}$/, '') : 'Poslat rodičům',
-        parentsStyle: 'height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 800; ' + (!app ? 'border: 0; background: #F3F2EC; color: #A0A2A6; cursor: not-allowed' : u.parents ? 'border: 0; background: #EAF6D3; color: #2F5212; cursor: default' : 'border: 0; background: #17181A; color: #FFFFFF; cursor: pointer'),
+        parentsStyle: 'height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 800; ' + (!app ? 'border: 0; background: #F3F4F2; color: #A0A2A6; cursor: not-allowed' : u.parents ? 'border: 0; background: #EDF4E4; color: #2F5212; cursor: default' : 'border: 0; background: #DCE6F2; color: #1F3A5C; cursor: pointer'),
         sendParents: function () { if (!app || u.parents) return; u.parents = self.iso(self.today); self.log('Úraz č. ' + u.no + ' poslán rodičům do aplikace — ' + u.child); self.forceUpdate(); self.showToast('Rodiče ' + u.child.split(' ')[0] + ' dostali zápis o úrazu do aplikace'); }
       };
     });
@@ -2290,7 +2290,7 @@ class Component extends DCLogic {
     var nPri = Z.apps.filter(function (a) { return a.result === 'prijato'; }).length;
     var nNe = Z.apps.filter(function (a) { return a.result === 'neprijato'; }).length;
     var zStat = function (bg) { return 'border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; background: ' + bg; };
-    var actBtn = function (on, primary) { return 'height: 40px; padding: 0 14px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: ' + (on ? 'pointer' : 'default') + '; ' + (on ? (primary ? 'border: 0; background: #17181A; color: #FFFFFF' : 'border: 2px solid #E4E3DC; background: #FFFFFF; color: #17181A') : 'border: 0; background: #F3F2EC; color: #A0A2A6'); };
+    var actBtn = function (on, primary) { return 'height: 40px; padding: 0 14px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: ' + (on ? 'pointer' : 'default') + '; ' + (on ? (primary ? 'border: 0; background: #DCE6F2; color: #1F3A5C' : 'border: 2px solid #E5E7E4; background: #FFFFFF; color: #17181A') : 'border: 0; background: #F3F4F2; color: #A0A2A6'); };
     var nextStep = !Z.decided ? 0 : !Z.published ? 1 : !Z.sent ? 2 : !Z.moved ? 3 : 4;
     /* Hledání a filtr: kritéria musí platit všechna, výsledky stačí kterýkoli. */
     var plainZ = function (x) { return String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
@@ -2307,8 +2307,8 @@ class Component extends DCLogic {
     var zap = {
       stats: [
         { label: 'Žádosti', value: String(Z.apps.length), sub: 'pod registračními čísly', style: zStat('#FFFFFF') },
-        { label: 'Volná místa od září', value: String(free), sub: 'po odchodu předškoláků do ZŠ', style: zStat('#E8EFFD') },
-        { label: 'Přijato', value: String(nPri), sub: nPri > free ? 'víc než volných míst!' : 'z ' + free + ' míst', style: zStat(nPri > free ? '#FDE6DC' : '#EAF6D3') },
+        { label: 'Volná místa od září', value: String(free), sub: 'po odchodu předškoláků do ZŠ', style: zStat('#EBF1FA') },
+        { label: 'Přijato', value: String(nPri), sub: nPri > free ? 'víc než volných míst!' : 'z ' + free + ' míst', style: zStat(nPri > free ? '#FAEBE4' : '#EDF4E4') },
         { label: 'Nepřijato', value: String(nNe), sub: Z.sent ? 'rozhodnutí odeslána' : 'zatím nerozhodnuto', style: zStat('#FFFFFF') }
       ],
       actions: [
@@ -2337,18 +2337,18 @@ class Component extends DCLogic {
       q: st.zapQ || '', onQ: function (ev) { self.setState({ zapQ: ev.target.value }); },
       filterOpen: !!st.zapFilterOpen, toggleFilter: function () { self.setState({ zapFilterOpen: !st.zapFilterOpen }); },
       filterCount: String((st.zapF || []).length), hasFilterCount: (st.zapF || []).length > 0,
-      filterStyle: 'height: 42px; padding: 0 16px; border-radius: 21px; font-size: 14px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; ' + (st.zapFilterOpen || (st.zapF || []).length ? 'border: 2px solid #17181A; background: #17181A; color: #FFFFFF' : 'border: 2px solid #E4E3DC; background: #FFFFFF; color: #17181A'),
+      filterStyle: 'height: 42px; padding: 0 16px; border-radius: 21px; font-size: 14px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; ' + (st.zapFilterOpen || (st.zapF || []).length ? 'border: 2px solid #B4C6DD; background: #E6EDF6; color: #1F3A5C' : 'border: 2px solid #E5E7E4; background: #FFFFFF; color: #17181A'),
       groups: [['Kritéria', [['ppv', 'Povinné předškolní (5+ let)'], ['spad', 'Spádový obvod'], ['sib', 'Sourozenec ve školce'], ['older3', 'Do 31. 8. dovrší 3 let'], ['young', 'Mladší 3 let']]],
         ['Výsledek', [['prijato', 'Přijato'], ['neprijato', 'Nepřijato'], ['ceka', 'Čeká']]]].map(function (g) {
         return { label: g[0], items: g[1].map(function (c) { var on = (st.zapF || []).indexOf(c[0]) !== -1; return { label: c[1], on: on ? 'true' : 'false', tick: on ? '✓' : '',
           boxStyle: 'width: 18px; height: 18px; border-radius: 5px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; ' + (on ? 'background: #FFFFFF; color: #17181A' : 'border: 2px solid #C9C7BF'),
-          style: 'height: 36px; padding: 0 12px 0 10px; border-radius: 18px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; ' + (on ? 'border: 2px solid #17181A; background: #17181A; color: #FFFFFF' : 'border: 2px solid #E4E3DC; background: #FFFFFF; color: #17181A'),
+          style: 'height: 36px; padding: 0 12px 0 10px; border-radius: 18px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; ' + (on ? 'border: 2px solid #B4C6DD; background: #E6EDF6; color: #1F3A5C' : 'border: 2px solid #E5E7E4; background: #FFFFFF; color: #17181A'),
           pick: function () { var cur = (st.zapF || []).slice(); var i = cur.indexOf(c[0]); if (i === -1) cur.push(c[0]); else cur.splice(i, 1); self.setState({ zapF: cur }); } }; }) };
       }),
       allPriority: function () { self.setState({ zapF: ['ppv', 'spad', 'sib'] }); },
       clearFilter: function () { self.setState({ zapF: [], zapQ: '' }); },
       rows: zFiltered.map(function (a) {
-        var stt = a.result === 'prijato' ? ['Přijato', '#EAF6D3', '#2F5212'] : a.result === 'neprijato' ? ['Nepřijato', '#FDE6DC', '#9A3412'] : ['Čeká', '#F3F2EC', '#5A5C60'];
+        var stt = a.result === 'prijato' ? ['Přijato', '#EDF4E4', '#2F5212'] : a.result === 'neprijato' ? ['Nepřijato', '#FAEBE4', '#9A3412'] : ['Čeká', '#F3F4F2', '#5A5C60'];
         return { reg: a.reg, name: a.name, note: (a.age < 3 ? 'mladší 3 let · ' : a.age >= 5 ? 'povinné předškolní · ' : '') + 'nar. ' + self.cz(a.birth), age: a.age + (a.age < 5 ? ' roky' : ' let'), spad: a.spad ? 'ano' : 'ne', sib: a.sib ? 'ano' : '—', order: a.order + '.',
           state: stt[0], stateStyle: 'height: 32px; padding: 0 12px; border-radius: 16px; border: 0; font-size: 13px; font-weight: 800; cursor: ' + (Z.decided && !Z.sent && canEdit ? 'pointer' : 'default') + '; background: ' + stt[1] + '; color: ' + stt[2],
           toggle: function () { if (!Z.decided || Z.sent || !canEdit) return; a.result = a.result === 'prijato' ? 'neprijato' : 'prijato'; self.log('Zápis: ' + a.reg + ' změněno na ' + (a.result === 'prijato' ? 'přijato' : 'nepřijato')); self.forceUpdate(); } };
@@ -2366,7 +2366,7 @@ class Component extends DCLogic {
         ['Seznam pod reg. čísly na 15 dní', !!Z.published, Z.published ? self.cz(new Date(Z.published)) : ''],
         ['Rozhodnutí zástupcům', !!Z.sent, Z.sent ? self.cz(new Date(Z.sent)) : ''],
         ['Do kartotéky s nástupem 1. 9.', Z.moved, '']
-      ].map(function (x) { return { text: x[0], when: x[2], dotStyle: 'width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; box-sizing: border-box; ' + (x[1] ? 'background: #7FB23A' : 'border: 2px solid #D9D7CE') }; })
+      ].map(function (x) { return { text: x[0], when: x[2], dotStyle: 'width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; box-sizing: border-box; ' + (x[1] ? 'background: #7FB23A' : 'border: 2px solid #D8DBD7') }; })
     };
 
     /* -------------------------------------------------- docházka */
@@ -2399,15 +2399,15 @@ class Component extends DCLogic {
     var payList = payAll.filter(function (x) { return st.payFilter === 'all' || (st.payFilter === 'unpaid' ? (x.st === 'open' || x.st === 'part') : x.st === 'ok' || x.st === 'over'); });
     var tDue = payAll.reduce(function (a, x) { return a + x.d.total; }, 0), tPaid = payAll.reduce(function (a, x) { return a + Math.min(x.p, x.d.total); }, 0);
     var nOpen = payAll.filter(function (x) { return x.st === 'open' || x.st === 'part'; }).length;
-    var STP = { ok: ['Zaplaceno', '#EAF6D3', '#2F5212'], over: ['Přeplatek', '#E8EFFD', '#27407A'], part: ['Část', '#FBF0C9', '#5C4300'], open: ['Čeká', '#FDE6DC', '#9A3412'] };
+    var STP = { ok: ['Zaplaceno', '#EDF4E4', '#2F5212'], over: ['Přeplatek', '#EBF1FA', '#27407A'], part: ['Část', '#F7F0DA', '#5C4300'], open: ['Čeká', '#FAEBE4', '#9A3412'] };
     var rateF = function (label, key, unit) { return { label: label, unit: unit, value: self.rates[key], onInput: function (e) { self.rates[key] = e.target.value.replace(/[^\d]/g, ''); self.forceUpdate(); } }; };
     var pay = {
       months: this.monthKeys.map(function (m) { var on = pM === m; return { label: self.monthName(m), on: on, style: chip(on, true), pick: function () { self.setState({ payMonth: m }); } }; }),
       filters: [['all', 'Všechny ' + payAll.length], ['unpaid', 'Nezaplacené ' + nOpen], ['paid', 'Zaplacené ' + (payAll.length - nOpen)]].map(function (f) { var on = st.payFilter === f[0]; return { label: f[1], on: on, style: chip(on, true), pick: function () { self.setState({ payFilter: f[0] }); } }; }),
       stats: [
         { label: 'Předepsáno · ' + self.monthName(pM), value: self.kc(tDue), sub: 'školné a stravné', style: zStat('#FFFFFF') },
-        { label: 'Zaplaceno', value: self.kc(tPaid), sub: (payAll.length - nOpen) + ' z ' + payAll.length + ' dětí', style: zStat('#EAF6D3') },
-        { label: 'Chybí', value: self.kc(tDue - tPaid), sub: nOpen ? nDeti(nOpen) + ' nezaplaceno' : 'vše uhrazeno', style: zStat(nOpen ? '#FDE6DC' : '#FFFFFF') }
+        { label: 'Zaplaceno', value: self.kc(tPaid), sub: (payAll.length - nOpen) + ' z ' + payAll.length + ' dětí', style: zStat('#EDF4E4') },
+        { label: 'Chybí', value: self.kc(tDue - tPaid), sub: nOpen ? nDeti(nOpen) + ' nezaplaceno' : 'vše uhrazeno', style: zStat(nOpen ? '#FAEBE4' : '#FFFFFF') }
       ],
       rows: payList.map(function (x) {
         var key = pM + ':' + x.k.id, rem = self.reminded[key];
@@ -2468,9 +2468,9 @@ class Component extends DCLogic {
       text: st.msgText, onText: function (e) { self.setState({ msgText: e.target.value }); },
       summary: !(st.msgTitle.trim() && st.msgText.trim()) ? 'Vyberte komu, napište předmět a text.' : 'Do aplikace: ' + viaApp.length + ' · e-mailem: ' + viaMail.length + (noCont.length ? ' · bez kontaktu: ' + noCont.length : ''),
       hasDelivery: toSel[2] > 0, delivery: [
-        { label: 'Do aplikace', value: rList.length === 1 ? (viaApp.length ? 'ano' : 'ne') : nRod(viaApp.length), sub: 'rodiče s mobilní aplikací — uvidí, kdo si zprávu přečetl', style: delStyle('#EAF6D3', '#2F5212') },
-        { label: 'E-mailem', value: rList.length === 1 ? (viaMail.length ? viaMail[0].email : 'není potřeba') : nRod(viaMail.length), sub: 'na adresu ze zápisu, když aplikaci nemají', style: delStyle('#E8EFFD', '#27407A') }
-      ].concat(noCont.length ? [{ label: 'Bez kontaktu', value: noCont.map(function (k) { return k.first + ' ' + k.last; }).join(', '), sub: 'nemají aplikaci ani e-mail — doplňte v kartě dítěte', style: delStyle('#FDE6DC', '#9A3412') }] : []),
+        { label: 'Do aplikace', value: rList.length === 1 ? (viaApp.length ? 'ano' : 'ne') : nRod(viaApp.length), sub: 'rodiče s mobilní aplikací — uvidí, kdo si zprávu přečetl', style: delStyle('#EDF4E4', '#2F5212') },
+        { label: 'E-mailem', value: rList.length === 1 ? (viaMail.length ? viaMail[0].email : 'není potřeba') : nRod(viaMail.length), sub: 'na adresu ze zápisu, když aplikaci nemají', style: delStyle('#EBF1FA', '#27407A') }
+      ].concat(noCont.length ? [{ label: 'Bez kontaktu', value: noCont.map(function (k) { return k.first + ' ' + k.last; }).join(', '), sub: 'nemají aplikaci ani e-mail — doplňte v kartě dítěte', style: delStyle('#FAEBE4', '#9A3412') }] : []),
       cantSend: !mOk, sendStyle: bigBtn(mOk).replace('flex-grow: 2; ', ''), sendLabel: mOk ? 'Poslat rodičům' : 'Napište zprávu',
       send: function () {
         if (!mOk) return;
@@ -2503,7 +2503,7 @@ class Component extends DCLogic {
       items: pList.map(function (p) {
         var ped = /pedagog/i.test(p.title);
         return { title: p.title, date: self.cz(new Date(p.date)), program: p.program, usneseni: p.usneseni || '—', pritomni: p.pritomni,
-          type: ped ? 'Pedagogická rada' : 'Provozní porada', typeStyle: 'height: 24px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; flex-shrink: 0; ' + (ped ? 'background: #E8EFFD; color: #27407A' : 'background: #F3F2EC; color: #3A3C40'),
+          type: ped ? 'Pedagogická rada' : 'Provozní porada', typeStyle: 'height: 24px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; flex-shrink: 0; ' + (ped ? 'background: #EBF1FA; color: #27407A' : 'background: #F3F4F2; color: #3A3C40'),
           pdf: function () { self.printDoc(p.title + ' ' + self.cz(new Date(p.date)), self.poradaHtml(p)); self.log('Export zápisu z porady ' + self.cz(new Date(p.date)) + ' do PDF'); } };
       })
     };
@@ -2522,7 +2522,7 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- web */
     var W = this.webCfg, checks = this.webChecks(), okN = checks.filter(function (c) { return c.ok; }).length;
-    var wField = function (label, key, ph) { return { label: label, value: self.school[key] || '', ph: ph || '', style: 'height: 38px; border-radius: 12px; padding: 0 12px; font-size: 14px; font-weight: 500; color: #17181A; ' + (self.school[key] ? 'border: 1px solid #E4E3DC; background: #FFFFFF' : 'border: 2px solid #F2C3AE; background: #FFF8F4'), onInput: function (ev) { self.school[key] = ev.target.value; self.forceUpdate(); } }; };
+    var wField = function (label, key, ph) { return { label: label, value: self.school[key] || '', ph: ph || '', style: 'height: 38px; border-radius: 12px; padding: 0 12px; font-size: 14px; font-weight: 500; color: #17181A; ' + (self.school[key] ? 'border: 1px solid #E5E7E4; background: #FFFFFF' : 'border: 2px solid #F2C3AE; background: #FFF8F4'), onInput: function (ev) { self.school[key] = ev.target.value; self.forceUpdate(); } }; };
     var pc = W.device === 'pc';
     var web = {
       score: okN + ' z ' + checks.length, scoreStyle: 'font-size: 13px; font-weight: 800; color: ' + (okN === checks.length ? '#2F5212' : '#9A3412'),
@@ -2536,14 +2536,14 @@ class Component extends DCLogic {
           sub: !d.approved ? 'nejdřív schválit v Dokumentech' : on ? 'na webu' : (d.required ? 'musí být na webu' : 'jen ve školce'),
           subStyle: 'font-size: 12px; color: ' + (!d.approved || (!on && d.required) ? '#9A3412' : '#5A5C60'),
           action: on ? 'Skrýt' : 'Zveřejnit',
-          style: 'height: 34px; padding: 0 12px; border-radius: 17px; border: 0; font-size: 13px; font-weight: 800; flex-shrink: 0; ' + (!d.approved ? 'background: #FFFFFF; color: #A0A2A6; cursor: not-allowed' : on ? 'background: #FFFFFF; color: #17181A; cursor: pointer' : 'background: #17181A; color: #FFFFFF; cursor: pointer'),
+          style: 'height: 34px; padding: 0 12px; border-radius: 17px; border: 0; font-size: 13px; font-weight: 800; flex-shrink: 0; ' + (!d.approved ? 'background: #FFFFFF; color: #A0A2A6; cursor: not-allowed' : on ? 'background: #FFFFFF; color: #17181A; cursor: pointer' : 'background: #DCE6F2; color: #1F3A5C; cursor: pointer'),
           toggle: function () { if (!d.approved) return; d.onWeb = !d.onWeb; self.log((d.onWeb ? 'Zveřejněn na webu: ' : 'Stažen z webu: ') + d.title); self.forceUpdate(); } };
       }),
       goDocs: go('dokumenty'),
       devices: [['pc', 'Počítač'], ['mobil', 'Mobil']].map(function (x) { var on = W.device === x[0]; return { label: x[1], on: on, style: chip(on, true), pick: function () { W.device = x[0]; self.forceUpdate(); } }; }),
       domain: self.school.web,
       html: is.web ? this.buildWeb() : '',
-      frameWrap: 'flex-grow: 1; min-height: 0; border-radius: 14px; overflow: hidden; background: #E4E3DC; display: flex; justify-content: center; position: relative',
+      frameWrap: 'flex-grow: 1; min-height: 0; border-radius: 14px; overflow: hidden; background: #E5E7E4; display: flex; justify-content: center; position: relative',
       frameStyle: pc ? 'border: 0; width: 1280px; height: 1320px; transform: scale(0.54); transform-origin: 0 0; position: absolute; left: 0; top: 0; background: #FFFFFF' : 'border: 0; width: 390px; height: 100%; background: #FFFFFF',
       download: function () {
         self.download({ name: 'index.html', text: self.buildWeb(), type: 'text/html' });
@@ -2570,17 +2570,17 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- dokumenty */
     var DS = this.docs.filter(function (d) { return d.key === st.docSel; })[0] || this.docs[0];
-    var dStat = function (d) { return d.approved ? (d.edited ? ['Upraveno', '#FBF0C9', '#5C4300'] : d.onWeb ? ['Na webu', '#EAF6D3', '#2F5212'] : ['Schváleno', '#E8EFFD', '#27407A']) : (d.required ? ['Chybí', '#FDE6DC', '#9A3412'] : ['Koncept', '#F3F2EC', '#5A5C60']); };
-    var docBtn = function (primary, off) { return 'height: 40px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 800; flex-shrink: 0; ' + (off ? 'border: 0; background: #F3F2EC; color: #A0A2A6; cursor: default' : primary ? 'border: 0; background: #17181A; color: #FFFFFF; cursor: pointer' : 'border: 2px solid #E4E3DC; background: #FFFFFF; color: #17181A; cursor: pointer'); };
+    var dStat = function (d) { return d.approved ? (d.edited ? ['Upraveno', '#F7F0DA', '#5C4300'] : d.onWeb ? ['Na webu', '#EDF4E4', '#2F5212'] : ['Schváleno', '#EBF1FA', '#27407A']) : (d.required ? ['Chybí', '#FAEBE4', '#9A3412'] : ['Koncept', '#F3F4F2', '#5A5C60']); };
+    var docBtn = function (primary, off) { return 'height: 40px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 800; flex-shrink: 0; ' + (off ? 'border: 0; background: #F3F4F2; color: #A0A2A6; cursor: default' : primary ? 'border: 0; background: #DCE6F2; color: #1F3A5C; cursor: pointer' : 'border: 2px solid #E5E7E4; background: #FFFFFF; color: #17181A; cursor: pointer'); };
     var needApprove = !DS.approved || DS.edited;
     var docsP = {
       list: this.docs.map(function (d) { var on = d === DS, stt = dStat(d); return { title: d.title, law: d.law, current: on ? 'true' : 'false', pick: function () { self.setState({ docSel: d.key }); },
         pill: stt[0], pillStyle: 'height: 24px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; flex-shrink: 0; background: ' + stt[1] + '; color: ' + stt[2],
-        style: 'width: 100%; border: 0; border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F2EC' : 'transparent') }; }),
+        style: 'width: 100%; border: 0; border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F4F2' : 'transparent') }; }),
       title: DS.title,
       meta: DS.law + ' · ' + (DS.approved ? 'schváleno ' + this.cz(new Date(DS.approved)) + ', verze ' + DS.version : 'zatím neschváleno') + (DS.webable ? (DS.onWeb && DS.approved ? ' · na webu' : ' · není na webu') : ' · jen ve školce'),
       note: DS.text ? 'Upravený text — údaje školky se do něj už samy nepropisují. „Vrátit šablonu“ ho znovu poskládá z aktuálních údajů.' : 'Předvyplněno z údajů školky podle předpisů platných k polovině roku 2026. Před schválením si text přečtěte a upravte podle školky.',
-      noteStyle: 'font-size: 13px; line-height: 18px; padding: 8px 12px; border-radius: 12px; ' + (DS.text ? 'background: #FBF0C9; color: #5C4300' : 'background: #E8EFFD; color: #27407A'),
+      noteStyle: 'font-size: 13px; line-height: 18px; padding: 8px 12px; border-radius: 12px; ' + (DS.text ? 'background: #F7F0DA; color: #5C4300' : 'background: #EBF1FA; color: #27407A'),
       text: DS.text || this.docTemplate(DS.key),
       onText: function (ev) { DS.text = ev.target.value; if (DS.approved) DS.edited = true; self.forceUpdate(); },
       actions: [
@@ -2601,7 +2601,7 @@ class Component extends DCLogic {
       var o = obj || sc;
       return { label: label, isInput: true, isChips: false, isText: false, isButton: false, value: o[key] || '', ph: ph || '', chips: [],
         wrap: 'display: flex; flex-direction: column; gap: 4px; min-width: 0; ' + (full ? 'grid-column: 1 / -1' : ''),
-        style: 'height: 40px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; min-width: 0; ' + (o[key] ? 'border: 1px solid #E4E3DC; background: #FFFFFF' : 'border: 2px solid #F2C3AE; background: #FFF8F4'),
+        style: 'height: 40px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; min-width: 0; ' + (o[key] ? 'border: 1px solid #E5E7E4; background: #FFFFFF' : 'border: 2px solid #F2C3AE; background: #FFF8F4'),
         onInput: function (ev) { o[key] = obj === self.rates ? ev.target.value.replace(/[^\d]/g, '') : ev.target.value; self.forceUpdate(); } };
     };
     var fCh = function (label, key, opts, full) {
@@ -2611,7 +2611,7 @@ class Component extends DCLogic {
     };
     var fTx = function (label, text) { return { label: label, isInput: false, isChips: false, isText: true, isButton: false, value: text, ph: '', chips: [], style: '', onInput: function () {}, wrap: 'display: flex; flex-direction: column; gap: 4px; grid-column: 1 / -1' }; };
     var fBt = function (label, text, fn, danger) { return { label: label, isInput: false, isChips: false, isText: false, isButton: true, value: text, ph: '', chips: [], onInput: function () {}, onClick: fn,
-      style: 'align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 800; cursor: pointer; ' + (danger ? 'border: 2px solid #F2C3AE; background: #FFFFFF; color: #9A3412' : 'border: 0; background: #17181A; color: #FFFFFF'),
+      style: 'align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 800; cursor: pointer; ' + (danger ? 'border: 2px solid #F2C3AE; background: #FFFFFF; color: #9A3412' : 'border: 0; background: #DCE6F2; color: #1F3A5C'),
       wrap: 'display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1' }; };
     var dirName = (this.teachers.filter(function (x) { return x.role === 'Ředitelka'; })[0] || {}).name || '';
     var set = { cards: [
