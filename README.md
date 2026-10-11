@@ -9,6 +9,25 @@ a rodinná aplikace nemíchaly.
 Offline, žádný server, žádný cloud. Data jsou ukázková a drží se v paměti
 tabletu — po zavření aplikace se vrátí do výchozího stavu.
 
+## Přihlášení a kdo kam smí
+
+Aplikace začíná přihlášením (`#prihlaseni`). Podle účtu se otevře jen to, kam
+člověk patří — ostatní adresy ho vrátí na jeho desku:
+
+| Účet | Kam se dostane |
+| --- | --- |
+| Ředitelka | ředitelna (webová aplikace vedení) + školní jídelna |
+| Zástupkyně ředitelky | ředitelna + tablet své třídy (když učí) |
+| Hospodářka | ředitelna — jen přehled, děti, docházka, platby, zprávy, archiv |
+| Vedoucí jídelny, kuchařka | jen školní jídelna |
+| Učitelka | jen tablet své třídy |
+
+Odhlášení je vlevo dole (ředitelna, jídelna) nebo po klepnutí na své jméno
+vpravo nahoře (tablet). Ve zkušebním provozu jsou účty v `shell.js` a heslo
+se nekontroluje; v ostrém provozu je nahradí Supabase Auth s rolemi ze
+`supabase/schema.sql`. Všechny části sdílejí jedna data — a stejnou databázi
+použije i mobilní aplikace LifeOS pro rodiče (role `rodic`).
+
 ## Co umí
 
 | Část | Co v ní je |
@@ -21,7 +40,7 @@ tabletu — po zavření aplikace se vrátí do výchozího stavu.
 | **Docházka** | celá třída; klepnutí zapíše příchod, další odchod (s tím, kdo vyzvedává), omluvenky od rodičů, tlačítko Vrátit |
 | **Teplota** | zapisovatelná hodnota (pole + −/+ 0,1 + rychlé volby), kde měřeno, od 38 °C se samo předvybere „Musí přijet“ |
 | **Není mu dobře** | stejné tváře a odrážky jako zápis příznaků v LifeOS (+ zvracení, průjem, bolest ucha, vyrážka); u „Teplota“ se objeví pole na hodnotu; u dušnosti upozornění na 155 |
-| **Úraz** | místo na těle (+ strana), co se stalo, ošetření, kde, svědek; dostane číslo v knize úrazů, zapíše se, kdo zapisuje a kdy |
+| **Úraz** | místo na těle (+ strana), co se stalo, ošetření, kde, svědek, komentář; dostane číslo v knize úrazů, zapíše se, kdo zapisuje a kdy |
 | **Poznámka** | rychlé volby (spal, jedl…) + vlastní text |
 | **Třídy** (klepnout na nadpis) | tři třídy; přepnout, **sloučit** dnes (hned / od 12, 14, 15 h) a zase rozdělit; **přesunout děti** do jiné třídy jen na dnes nebo natrvalo — děti z jiné třídy mají tečku v barvě třídy |
 | **Fotky** | alba zakládají učitelky (název + pro koho: třída / celá školka); fotky z tabletu (fotoaparát i galerie), prohlížení, mazání; rodiče album uvidí až po „Zveřejnit rodičům“; upozornění na děti bez souhlasu s focením |

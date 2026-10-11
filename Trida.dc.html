@@ -68,7 +68,17 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}<sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{false}}"><span style="{{t.badgeStyle}}">{{t.badge}}</span></sc-if></button>
       </sc-for>
     </nav>
-    <span aria-label="Přihlášena {{meName}}" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 4px 14px 4px 4px; border-radius: 28px; background: #FFFFFF"><span style="{{meAv.box}}"><sc-if value="{{meAv.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{meAv.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{meAv.drawn}}" hint-placeholder-val="{{true}}"><span style="{{meAv.back}}"></span><span style="{{meAv.body}}"></span><span style="{{meAv.head}}"></span><span style="{{meAv.front}}"></span><span style="{{meAv.eyes}}"></span></sc-if></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-size: 14px; font-weight: 700; white-space: nowrap">{{meName}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap">{{meRole}}</span></span></span>
+    <span style="position: relative; flex-shrink: 0">
+      <button type="button" onClick="{{meMenu.toggle}}" aria-label="Přihlášena {{meName}} — odhlásit" aria-expanded="{{meMenu.open}}" style="display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 28px; border: 0; background: #FFFFFF; cursor: pointer; text-align: left; color: #17181A"><span style="{{meAv.box}}"><sc-if value="{{meAv.hasPhoto}}" hint-placeholder-val="{{false}}"><img src="{{meAv.photo}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-if><sc-if value="{{meAv.drawn}}" hint-placeholder-val="{{true}}"><span style="{{meAv.back}}"></span><span style="{{meAv.body}}"></span><span style="{{meAv.head}}"></span><span style="{{meAv.front}}"></span><span style="{{meAv.eyes}}"></span></sc-if></span><span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-size: 14px; font-weight: 700; white-space: nowrap">{{meName}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap">{{meRole}}</span></span></button>
+      <sc-if value="{{meMenu.open}}" hint-placeholder-val="{{false}}">
+        <div role="menu" style="position: absolute; right: 0; top: 60px; width: 220px; background: #FFFFFF; border-radius: 18px; padding: 8px; box-shadow: 0 12px 32px rgba(23,24,26,0.16); display: flex; flex-direction: column; gap: 2px; z-index: 9">
+          <sc-if value="{{meMenu.reditelna}}" hint-placeholder-val="{{false}}">
+            <a role="menuitem" href="Reditel.dc.html" style="min-height: 44px; padding: 0 12px; border-radius: 12px; display: flex; align-items: center; font-size: 15px; font-weight: 600; text-decoration: none; color: #17181A">Ředitelna</a>
+          </sc-if>
+          <button type="button" role="menuitem" onClick="{{meMenu.logout}}" style="min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; cursor: pointer; color: #8A4513; text-align: left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 17l-5-5 5-5"></path><path d="M5 12h11"></path></svg>Odhlásit</button>
+        </div>
+      </sc-if>
+    </span>
   </header>
 
   <sc-if value="{{tab.isTrida}}" hint-placeholder-val="{{true}}">
@@ -710,6 +720,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 </sc-for>
               </div>
             </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <label for="uraz-komentar" style="font-size: 15px; font-weight: 700">Komentář <span style="font-weight: 500; color: #5A5C60">— nepovinné</span></label>
+              <textarea id="uraz-komentar" rows="3" placeholder="Např. zakopl o obrubník, plakal jen chvíli" value="{{uraz.text}}" onInput="{{uraz.onText}}" onChange="{{uraz.onText}}" style="border-radius: 18px; border: 1px solid #E5E7E4; padding: 14px 16px; font-size: 16px; resize: none; color: #17181A"></textarea>
+            </div>
             <div role="note" style="padding: 12px 14px; border-radius: 16px; background: #F3F4F2; color: #3A3C40; font-size: 14px; line-height: 20px">
               <b style="font-weight: 700">Kniha úrazů č. {{uraz.no}}</b> · zapisuje {{uraz.by}} · {{uraz.when}}<br>
               Když bude {{uraz.kidName}} kvůli úrazu chybět 2 a více dní, ředitelka vyplní záznam pro ČŠI a pojišťovnu.
@@ -1113,7 +1127,7 @@ class Component extends DCLogic {
     /* Kdo je přihlášená a kdo ještě učí ve třídě (svědci úrazu). */
     this.me = 'Petra Horáková';
     this.staff = {
-      slunicka: ['Alena Benešová', 'Tomáš Roubal'],
+      slunicka: ['Petra Horáková', 'Alena Benešová', 'Tomáš Roubal'],
       berusky: ['Jana Králová', 'Marta Svobodová', 'Věra Nová'],
       motylci: ['Lucie Malá']
     };
@@ -1172,6 +1186,12 @@ class Component extends DCLogic {
       dlg: null, df: {}, albumId: null, viewer: null, akceSel: null,
       kn: null
     };
+    /* Kdo je přihlášená, určuje shell.js: učitelka vidí svou třídu. */
+    this.ucet = typeof window !== 'undefined' && window.SkolkaUcet ? window.SkolkaUcet.aktualni() : null;
+    if (this.ucet) {
+      this.me = this.ucet.jmeno;
+      if (this.ucet.trida) { this.state.viewCls = this.ucet.trida; this.state.picked = this.ucet.trida === 'slunicka' ? 'oliver' : this.ucet.trida + '-0'; }
+    }
   }
 
   /* Sdílený stav s ředitelnou (v jednom okně aplikace). Naostro server. */
@@ -1594,8 +1614,9 @@ class Component extends DCLogic {
       whats: single('what', ['Upadl', 'Narazil se', 'Strkanice', 'Kousnutí', 'Štípnutí', 'Jiné']),
       cares: multi('care', ['Studený obklad', 'Vyčištěno', 'Náplast', 'Dezinfekce', 'K lékaři', 'Bez ošetření']),
       places: single('place', ['Třída', 'Zahrada', 'Umývárna', 'Vycházka']),
-      witnesses: single('witness', (self.staff[s.todayCls || s.cls] || []).concat(['Nikdo další'])),
-      no: (this.urazNo + 1) + '/' + this.syStart, by: this.me, when: 'dnes ' + this.now(), kidName: s.name.split(' ')[0]
+      witnesses: single('witness', (self.staff[s.todayCls || s.cls] || []).filter(function (n) { return n !== self.me; }).concat(['Nikdo další'])),
+      no: (this.urazNo + 1) + '/' + this.syStart, by: this.me, when: 'dnes ' + this.now(), kidName: s.name.split(' ')[0],
+      text: f.text || '', onText: function (e) { self.setF({ text: e.target.value }); }
     };
 
     // Poznámka
@@ -1670,8 +1691,8 @@ class Component extends DCLogic {
         self.urazNo++;
         var ST = self.store();
         ST.urazNo = self.urazNo;
-        ST.urazy.push({ id: 'tab-' + Date.now(), no: self.urazNo, date: self.iso(new Date()), time: t, place: f.place ? PLACE[f.place].replace(/^(ve|na|v) /, '') : '', child: k.name, cls: k.cls, what: f.what + ' — ' + areaLabel + (f.place ? ' ' + PLACE[f.place] : ''), care: (f.care || []).join(', ') || 'bez ošetření', by: self.me, witness: f.witness || '' });
-        self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'kniha úrazů č. ' + self.urazNo + (f.witness && f.witness !== 'Nikdo další' ? ' · svědek ' + f.witness : '') });
+        ST.urazy.push({ id: 'tab-' + Date.now(), no: self.urazNo, date: self.iso(new Date()), time: t, place: f.place ? PLACE[f.place].replace(/^(ve|na|v) /, '') : '', child: k.name, cls: k.cls, what: f.what + ' — ' + areaLabel + (f.place ? ' ' + PLACE[f.place] : ''), care: (f.care || []).join(', ') || 'bez ošetření', by: self.me, witness: f.witness || '', comment: (f.text || '').trim() });
+        self.addLog(k, { t: t, type: 'uraz', title: f.what + ' — ' + areaLabel, sub: (f.care && f.care.length ? f.care.join(', ') + ' · ' : '') + 'kniha úrazů č. ' + self.urazNo + (f.witness && f.witness !== 'Nikdo další' ? ' · svědek ' + f.witness : '') + ((f.text || '').trim() ? ' · ' + f.text.trim() : '') });
       }
       if (kind === 'poznamka') {
         self.addLog(k, { t: t, type: 'poznamka', title: summary, sub: '' });
@@ -2166,7 +2187,10 @@ class Component extends DCLogic {
     return {
       dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
       kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
-      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(44), meName: this.me, meRole: 'Učitelka · ' + ((CL.filter(function (c) { return self.me.indexOf(c.teacher.replace('.', '')) === 0; })[0] || clsById[home]).name),
+      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(44), meName: this.me, meRole: this.ucet ? this.ucet.role.charAt(0).toUpperCase() + this.ucet.role.slice(1) : 'Učitelka · ' + ((CL.filter(function (c) { return self.me.indexOf(c.teacher.replace('.', '')) === 0; })[0] || clsById[home]).name),
+      meMenu: { open: !!st.meMenu, reditelna: !!this.ucet && this.ucet.desky.indexOf('reditel') !== -1,
+        toggle: function () { self.setState({ meMenu: !self.state.meMenu }); },
+        logout: function () { self.setState({ meMenu: false }); if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); } },
       dlg: dlg, gal: gal, viewer: viewer, akce: akce, meet: meet, kons: kons,
       openTridy: openDlg('tridy', { from: 'Od 14:00', with: [] }),
       toast: { show: !!st.toast, text: st.toast || '' },
