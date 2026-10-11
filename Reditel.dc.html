@@ -99,7 +99,8 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 <span style="font-size: 14px; font-weight: 700">{{c.present}} / {{c.total}}</span>
               </div>
               <div style="height: 8px; border-radius: 4px; background: #E5E7E4; overflow: hidden"><div style="{{c.barStyle}}"></div></div>
-              <span style="font-size: 13px; color: #5A5C60">{{c.teachers}}</span>
+              <span style="font-size: 13px; color: #3A3C40">{{c.teachers}}</span>
+              <sc-if value="{{c.assts}}" hint-placeholder-val="{{true}}"><span style="font-size: 13px; color: #5A5C60">Asistenti: {{c.assts}}</span></sc-if>
               <span style="{{c.diaryStyle}}">{{c.diary}}</span>
             </div>
           </sc-for>
@@ -308,6 +309,12 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Učitelé — klepnutím přiřadíte</span>
               <div style="display: flex; flex-wrap: wrap; gap: 6px">
                 <sc-for list="{{c.teachers}}" as="t" hint-placeholder-count="4">
+                  <button type="button" onClick="{{t.toggle}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
+                </sc-for>
+              </div>
+              <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px">Asistenti a chůvy</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{c.assistants}}" as="t" hint-placeholder-count="2">
                   <button type="button" onClick="{{t.toggle}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
                 </sc-for>
               </div>
@@ -1991,7 +1998,8 @@ class Component extends DCLogic {
       return { name: c.name, present: p, total: tot, dotStyle: dot(c.color, 12),
         diary: diary ? 'Třídní kniha dnes zapsána' : 'Třídní kniha dnes zatím nezapsána',
         diaryStyle: 'font-size: 12px; font-weight: 700; color: ' + (diary ? '#2F5212' : '#8A8C90'),
-        teachers: self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1; }).map(function (t) { return t.name; }).join(', ') || 'bez učitelky',
+        teachers: 'Učitelky: ' + (self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && !(t.role === 'Asistent pedagoga' || t.role === 'Chůva'); }).map(function (t) { return t.name; }).join(', ') || 'žádná'),
+        assts: self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && (t.role === 'Asistent pedagoga' || t.role === 'Chůva'); }).map(function (t) { return t.name + (t.role === 'Chůva' ? ' (chůva)' : ''); }).join(', '),
         barStyle: 'height: 100%; border-radius: 4px; width: ' + (tot ? Math.round(p / tot * 100) : 0) + '%; background: ' + c.color };
     });
 
@@ -2217,6 +2225,14 @@ class Component extends DCLogic {
     });
 
     /* -------------------------------------------------- třídy */
+    var isAsst = function (t) { return t.role === 'Asistent pedagoga' || t.role === 'Chůva'; };
+    var staffChips = function (c, asst) {
+      return self.teachers.filter(function (t) { return t.role !== 'Ředitelka' && isAsst(t) === asst; }).map(function (t) {
+        var on = t.classes.indexOf(c.id) !== -1;
+        return { label: t.name + (asst ? ' · ' + (t.role === 'Chůva' ? 'chůva' : 'asistent') : t.role === 'Zástupkyně' ? ' · zástupkyně' : ''), on: on, style: chip(on, true),
+          toggle: function () { t.classes = on ? t.classes.filter(function (x) { return x !== c.id; }) : t.classes.concat([c.id]); self.log(t.name + (on ? ' už není ' : ' nově je ') + 've třídě ' + c.name); self.forceUpdate(); } };
+      });
+    };
     var classCards = CL.map(function (c) {
       var ck = kids.filter(function (k) { return k.cls === c.id; });
       var ages = ck.map(function (k) { return self.age(k.birth); });
@@ -2226,11 +2242,8 @@ class Component extends DCLogic {
         ppv: ck.filter(function (k) { return self.ppv(k); }).length,
         ages: ages.length ? Math.min.apply(null, ages) + '–' + Math.max.apply(null, ages) : '—',
         provoz: [['C', 'Celodenní'], ['P', 'Polodenní']].map(function (p) { var on = c.provoz === p[0]; return { label: p[1], on: on, style: chip(on, true), pick: function () { c.provoz = p[0]; self.forceUpdate(); } }; }),
-        teachers: self.teachers.filter(function (t) { return t.role !== 'Ředitelka'; }).map(function (t) {
-          var on = t.classes.indexOf(c.id) !== -1;
-          return { label: t.name + (t.role !== 'Učitelka' ? ' · ' + t.role.toLowerCase() : ''), on: on, style: chip(on, true),
-            toggle: function () { t.classes = on ? t.classes.filter(function (x) { return x !== c.id; }) : t.classes.concat([c.id]); self.forceUpdate(); } };
-        }),
+        teachers: staffChips(c, false),
+        assistants: staffChips(c, true),
         warn: ped < 2 || ck.length > c.capacity,
         warnText: ck.length > c.capacity ? 'Překročená kapacita třídy' : 'Chybí druhá učitelka'
       };
