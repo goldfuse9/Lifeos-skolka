@@ -121,6 +121,16 @@ Počítač v kuchyni. Přihlášená kuchařka je vlevo dole (⇄ přepne na jin
 
 Zveřejněný jídelníček se propíše do tabletu učitelky (karta Oběd). Ředitelna má jídelnu v menu (Školka → Školní jídelna).
 
+### Import dětí z Excelu
+
+V Kartotéce dětí tlačítko **Import z Excelu** načte tabulku (.xlsx nebo CSV)
+přímo v prohlížeči. Sloupce se poznají podle názvů (Jméno, Příjmení nebo
+Jméno a příjmení, Rodné číslo, Datum narození, Třída, Zákonný zástupce,
+Telefon, E-mail, Adresa/Trvalý pobyt, Obec, Pojišťovna, Alergie, Nástup).
+Před importem je náhled: kdo je nový, kdo už v kartotéce je (podle RČ nebo
+jména a data narození — přeskočí se) a komu co chybí. Dětem bez třídy se
+třída vybere jedním klepnutím. Vzorová tabulka se dá stáhnout.
+
 ### Editor dokumentů
 
 Dokumenty v ředitelně se upravují jako v textovém editoru: styl (text, nadpis,

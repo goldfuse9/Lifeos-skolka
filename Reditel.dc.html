@@ -128,6 +128,13 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </sc-for>
         <span style="flex-grow: 1"></span>
         <button type="button" onClick="{{deti.toggleMissing}}" aria-pressed="{{deti.onlyMissing}}" style="{{deti.missingStyle}}">Jen s chybějícími údaji · {{deti.missingCount}}</button>
+        <sc-if value="{{imp.can}}" hint-placeholder-val="{{true}}">
+          <label for="import-soubor" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2F7A4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8l4 5M12 8l-4 5M14 9h3M14 13h3M8 17h9"></path></svg>
+            Import z Excelu
+          </label>
+          <input id="import-soubor" type="file" accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" onChange="{{imp.onFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none">
+        </sc-if>
       </div>
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
         <section aria-label="Kartotéka dětí" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
@@ -1093,6 +1100,64 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     </div>
   </sc-if>
 
+  <!-- ============================================================ IMPORT DĚTÍ -->
+  <sc-if value="{{imp.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 7">
+      <div role="dialog" aria-label="Import dětí" style="width: 860px; height: 800px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 18px 18px 14px 24px; border-bottom: 1px solid #EEF0ED">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+            <span style="font-size: 13px; font-weight: 600; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{imp.file}}</span>
+            <span style="font-size: 24px; font-weight: 800">Import dětí z Excelu</span>
+          </div>
+          <button type="button" onClick="{{imp.close}}" aria-label="Zavřít" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 14px">
+          <sc-if value="{{imp.hasFail}}" hint-placeholder-val="{{false}}">
+            <div role="alert" style="padding: 12px 14px; border-radius: 14px; background: #FCF4EF; color: #8A4513; font-size: 14px; line-height: 20px; font-weight: 600">{{imp.fail}}</div>
+          </sc-if>
+          <sc-if value="{{imp.ok}}" hint-placeholder-val="{{true}}">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{imp.stats}}" as="t" hint-placeholder-count="3"><span style="{{t.style}}">{{t.label}}</span></sc-for>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 13px; font-weight: 700; color: #5A5C60">Rozpoznané sloupce</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                <sc-for list="{{imp.cols}}" as="c" hint-placeholder-count="5"><span style="padding: 4px 10px; border-radius: 10px; background: #EBF1FA; color: #1F3A5C; font-size: 12px; font-weight: 700">{{c.label}} ← „{{c.from}}“</span></sc-for>
+              </div>
+            </div>
+            <sc-if value="{{imp.needCls}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                <span style="font-size: 14px; font-weight: 700">Třída pro {{imp.noClsCount}} bez třídy:</span>
+                <sc-for list="{{imp.clsChips}}" as="c" hint-placeholder-count="3"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+              </div>
+            </sc-if>
+            <div style="border: 1px solid #EEF0ED; border-radius: 16px; overflow: hidden">
+              <div style="display: grid; grid-template-columns: 44px minmax(0, 1.4fr) 100px 110px minmax(0, 1.2fr) 170px; gap: 10px; padding: 10px 14px; background: #F8F9F7; font-size: 11px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">
+                <span>Ř.</span><span>Dítě</span><span>Narozen/a</span><span>Třída</span><span>Zástupce</span><span>Stav</span>
+              </div>
+              <sc-for list="{{imp.rows}}" as="r" hint-placeholder-count="6">
+                <div style="display: grid; grid-template-columns: 44px minmax(0, 1.4fr) 100px 110px minmax(0, 1.2fr) 170px; gap: 10px; padding: 8px 14px; border-top: 1px solid #F3F4F2; align-items: center; font-size: 14px">
+                  <span style="color: #8A8C90; font-size: 12px">{{r.line}}</span>
+                  <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.rc}}</span></span>
+                  <span style="color: #3A3C40">{{r.birth}}</span>
+                  <span style="color: #3A3C40">{{r.cls}}</span>
+                  <span style="color: #3A3C40; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.zastupce}}</span>
+                  <span style="{{r.stStyle}}">{{r.st}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 14px 24px 18px; border-top: 1px solid #EEF0ED">
+          <button type="button" onClick="{{imp.sample}}" style="height: 48px; padding: 0 16px; border-radius: 24px; border: 0; background: transparent; font-size: 14px; font-weight: 700; color: #1F3A5C; cursor: pointer; text-decoration: underline">Stáhnout vzorovou tabulku</button>
+          <span style="flex-grow: 1"></span>
+          <button type="button" onClick="{{imp.close}}" style="height: 52px; padding: 0 24px; border-radius: 26px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; color: #17181A">Zrušit</button>
+          <button type="button" onClick="{{imp.run}}" style="{{imp.runStyle}}">{{imp.runLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
     <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #DCE6F2; color: #1F3A5C; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
   </sc-if>
@@ -1380,6 +1445,143 @@ class Component extends DCLogic {
       if (num % 11 !== 0 && !(r === 10 && s[9] === '0')) return { ok: false, why: 'nesedí kontrolní číslice' };
     }
     return { ok: true, birth: d, female: female };
+  }
+
+  /* ------------------------------------------------ import z Excelu
+     .xlsx je zip s XML uvnitř; rozbalí ho sám prohlížeč (DecompressionStream),
+     takže to jde i bez internetu a bez další knihovny. Bere se první list,
+     první řádek jsou názvy sloupců. CSV (i ze starého Excelu) jde taky. */
+  async readXlsx(buf) {
+    var u8 = new Uint8Array(buf), dv = new DataView(buf);
+    var eocd = -1;
+    for (var i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error('není to soubor .xlsx');
+    var n = dv.getUint16(eocd + 10, true), p = dv.getUint32(eocd + 16, true), files = {};
+    var dec = new TextDecoder('utf-8');
+    for (var k = 0; k < n; k++) {
+      var method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+      files[dec.decode(u8.subarray(p + 46, p + 46 + nl))] = { method: method, csize: csize, off: off };
+      p += 46 + nl + xl + cl;
+    }
+    var read = async function (name) {
+      var f = files[name]; if (!f) return null;
+      var start = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true);
+      var data = u8.subarray(start, start + f.csize);
+      if (f.method === 0) return dec.decode(data);
+      if (typeof DecompressionStream === 'undefined') throw new Error('prohlížeč neumí rozbalit .xlsx — uložte tabulku jako CSV');
+      var st = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return dec.decode(await new Response(st).arrayBuffer());
+    };
+    var xml = function (t) { return new DOMParser().parseFromString(t, 'application/xml'); };
+    var tags = function (doc, name) { return Array.prototype.slice.call(doc.getElementsByTagNameNS('*', name)); };
+    var sheetPath = 'xl/worksheets/sheet1.xml';
+    var wb = await read('xl/workbook.xml'), rels = await read('xl/_rels/workbook.xml.rels');
+    if (wb && rels) {
+      var first = tags(xml(wb), 'sheet')[0];
+      var rid = first && (first.getAttribute('r:id') || first.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+      tags(xml(rels), 'Relationship').forEach(function (r) { if (r.getAttribute('Id') === rid) { var t = r.getAttribute('Target'); sheetPath = t.charAt(0) === '/' ? t.slice(1) : 'xl/' + t.replace(/^\.\//, ''); } });
+    }
+    var ss = [], sst = await read('xl/sharedStrings.xml');
+    if (sst) tags(xml(sst), 'si').forEach(function (si) { ss.push(tags(si, 't').map(function (t) { return t.textContent; }).join('')); });
+    var sh = await read(sheetPath); if (!sh) throw new Error('v souboru chybí list');
+    var col = function (ref) { var m = /^([A-Z]+)/.exec(ref || ''), c = 0; if (!m) return -1; for (var i = 0; i < m[1].length; i++) c = c * 26 + m[1].charCodeAt(i) - 64; return c - 1; };
+    var rows = [];
+    tags(xml(sh), 'row').forEach(function (r) {
+      var out = [], ci = 0;
+      tags(r, 'c').forEach(function (c) {
+        var idx = col(c.getAttribute('r')); if (idx < 0) idx = ci; ci = idx + 1;
+        var t = c.getAttribute('t'), v = tags(c, 'v')[0], val = '';
+        if (t === 's') val = v ? ss[+v.textContent] || '' : '';
+        else if (t === 'inlineStr') val = tags(c, 't').map(function (x) { return x.textContent; }).join('');
+        else if (t === 'b') val = v && v.textContent === '1' ? 'ano' : 'ne';
+        else val = v ? (t === 'str' ? v.textContent : (isNaN(+v.textContent) ? v.textContent : +v.textContent)) : '';
+        out[idx] = val;
+      });
+      for (var i = 0; i < out.length; i++) if (out[i] === undefined) out[i] = '';
+      rows.push(out);
+    });
+    return rows;
+  }
+  parseCsv(text) {
+    text = text.replace(/^\uFEFF/, '');
+    var first = text.split(/\r?\n/)[0] || '';
+    var sep = (first.match(/;/g) || []).length >= (first.match(/,/g) || []).length ? ';' : ',';
+    if ((first.match(/\t/g) || []).length > (first.match(new RegExp(sep, 'g')) || []).length) sep = '\t';
+    var rows = [], row = [], cur = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === sep) { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
+      else cur += ch;
+    }
+    if (cur || row.length) { row.push(cur); rows.push(row); }
+    return rows;
+  }
+  /* Z tabulky udělá návrh importu: rozpozná sloupce podle názvů, ke každému
+     řádku řekne, jestli je nový, už v kartotéce, nebo co chybí. */
+  importPlan(rows, name) {
+    var self = this;
+    var norm = function (v) { return String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); };
+    var SYN = [
+      ['full', ['jmeno a prijmeni', 'cele jmeno', 'dite', 'jmeno ditete a prijmeni', 'prijmeni a jmeno']],
+      ['first', ['jmeno', 'krestni jmeno', 'jmeno ditete']], ['last', ['prijmeni', 'prijmeni ditete']],
+      ['rc', ['rodne cislo', 'rc', 'r c', 'rodne c']], ['birth', ['datum narozeni', 'narozeni', 'narozen', 'narozena', 'datum nar', 'dat nar']],
+      ['cls', ['trida', 'oddeleni']], ['zastupce', ['zakonny zastupce', 'zastupce', 'matka', 'otec', 'rodic', 'zakonni zastupci']],
+      ['telefon', ['telefon', 'tel', 'mobil', 'telefon zastupce']], ['email', ['e mail', 'email', 'mail']],
+      ['adresa', ['adresa', 'trvaly pobyt', 'bydliste', 'ulice', 'adresa trvaleho pobytu']], ['obec', ['obec', 'mesto', 'misto']],
+      ['pojistovna', ['pojistovna', 'zdravotni pojistovna', 'zp']], ['alergie', ['alergie', 'alergie a diety', 'dieta']],
+      ['start', ['nastup', 'datum nastupu', 'zahajeni', 'zahajeni dochazky']]
+    ];
+    var LAB = { full: 'Jméno a příjmení', first: 'Jméno', last: 'Příjmení', rc: 'Rodné číslo', birth: 'Datum narození', cls: 'Třída', zastupce: 'Zákonný zástupce', telefon: 'Telefon', email: 'E-mail', adresa: 'Adresa', obec: 'Obec', pojistovna: 'Pojišťovna', alergie: 'Alergie', start: 'Nástup' };
+    // řádek s názvy = první řádek, ve kterém se pozná aspoň jméno nebo příjmení
+    var hi = 0, map = {};
+    for (var r = 0; r < Math.min(rows.length, 10); r++) {
+      var m = {};
+      rows[r].forEach(function (h, i) { var n = norm(h); SYN.forEach(function (s) { if (m[s[0]] === undefined && s[1].indexOf(n) !== -1) m[s[0]] = i; }); });
+      if (m.first !== undefined || m.last !== undefined || m.full !== undefined) { hi = r; map = m; break; }
+    }
+    if (map.full !== undefined && map.first !== undefined && map.last !== undefined) delete map.full;
+    var cols = Object.keys(map).map(function (k) { return { key: k, label: LAB[k], from: String(rows[hi][map[k]]).trim() }; });
+    var clsOf = function (v) { var n = norm(v); if (!n) return ''; var c = self.classes.filter(function (c) { return norm(c.name) === n || norm(c.code) === n || norm(c.id) === n || norm(c.name).indexOf(n) === 0 || n.indexOf(norm(c.name)) !== -1; })[0]; return c ? c.id : ''; };
+    var dateOf = function (v) {
+      if (v === '' || v == null) return null;
+      if (typeof v === 'number' && v > 1000 && v < 80000) { var d0 = new Date(1899, 11, 30); d0.setDate(d0.getDate() + Math.floor(v)); return d0; }
+      var s = String(v).trim(), m1 = /^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(s), m2 = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+      var d = m1 ? new Date(+m1[3], +m1[2] - 1, +m1[1]) : m2 ? new Date(+m2[1], +m2[2] - 1, +m2[3]) : null;
+      return d && !isNaN(d) ? d : null;
+    };
+    var seenRc = {}, seenName = {};
+    this.kids.forEach(function (k) { if (k.rc) seenRc[k.rc.replace(/\D/g, '')] = true; seenName[norm(k.first + ' ' + k.last) + '|' + (k.birth ? self.iso(new Date(k.birth)) : '')] = true; });
+    var get = function (row, key) { var i = map[key]; return i === undefined ? '' : (row[i] == null ? '' : row[i]); };
+    var items = [];
+    rows.slice(hi + 1).forEach(function (row, ri) {
+      if (!row.some(function (v) { return String(v).trim(); })) return;
+      var first = String(get(row, 'first')).trim(), last = String(get(row, 'last')).trim();
+      if (!first && !last && get(row, 'full')) { var parts = String(get(row, 'full')).trim().split(/\s+/); if (/^(prijmeni a jmeno)$/.test(norm(rows[hi][map.full]))) { last = parts.shift(); first = parts.join(' '); } else { last = parts.pop() || ''; first = parts.join(' '); } }
+      var rcRaw = String(get(row, 'rc')).replace(/\s/g, ''), rcD = rcRaw.replace(/\D/g, ''), rcI = rcD ? self.rcInfo(rcD) : null;
+      var birth = rcI && rcI.ok ? rcI.birth : dateOf(get(row, 'birth'));
+      var female = rcI && rcI.ok ? rcI.female : /(ová|á)$/.test(last);
+      var err = !first || !last ? 'chybí jméno nebo příjmení' : rcD && !rcI.ok ? 'rodné číslo ' + rcI.why : !birth ? 'chybí rodné číslo i datum narození' : '';
+      var dup = !err && ((rcD && seenRc[rcD]) || seenName[norm(first + ' ' + last) + '|' + self.iso(birth)]);
+      if (!err && !dup) { if (rcD) seenRc[rcD] = true; seenName[norm(first + ' ' + last) + '|' + self.iso(birth)] = true; }
+      var start = dateOf(get(row, 'start'));
+      items.push({
+        line: hi + ri + 2, first: first, last: last, female: female, birth: birth ? self.iso(birth) : '', rc: rcI && rcI.ok ? (rcD.length >= 9 ? rcD.slice(0, 6) + '/' + rcD.slice(6) : rcD) : '',
+        cls: clsOf(get(row, 'cls')), clsRaw: String(get(row, 'cls')).trim(),
+        zastupce: String(get(row, 'zastupce')).trim(), telefon: String(get(row, 'telefon')).trim(), email: String(get(row, 'email')).trim(),
+        adresa: String(get(row, 'adresa')).trim(), obec: String(get(row, 'obec')).trim(), pojistovna: String(get(row, 'pojistovna')).trim(), alergie: String(get(row, 'alergie')).trim(),
+        start: start ? self.iso(start) : '', err: err, dup: !!dup
+      });
+    });
+    return { name: name, cols: cols, items: items, defCls: '', headerOk: cols.length > 0 };
+  }
+  importSampleCsv() {
+    var r = [['Jméno', 'Příjmení', 'Rodné číslo', 'Třída', 'Zákonný zástupce', 'Telefon', 'E-mail', 'Adresa', 'Obec', 'Zdravotní pojišťovna', 'Alergie'],
+      ['Tereza', 'Malá', '215403/1000', 'Sluníčka', 'Jana Malá', '777 123 456', 'mala@email.cz', 'Na Hutích 5', 'Praha 6', '111', ''],
+      ['Jakub', 'Novotný', '200917/1000', 'Berušky', 'Petr Novotný', '603 222 111', 'novotny@email.cz', 'Dejvická 12', 'Praha 6', '207', 'mléko']];
+    return '\uFEFF' + r.map(function (x) { return x.map(function (v) { return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(';'); }).join('\r\n');
   }
 
   age(birth) {
@@ -2905,6 +3107,63 @@ class Component extends DCLogic {
       close: function () { self.setState({ docPreview: null }); },
       print: function () { if (PV) self.printDoc(PV.title, '<div class="doc">' + self.docBody(PV) + '</div>', self.docCss(PV)); } };
 
+    /* -------------------------------------------------- import dětí */
+    var imp = (function () {
+      var I = st.imp, can = canEdit && role === 'reditelka';
+      var base = { can: can, open: !!I,
+        onFile: function (ev) {
+          var file = ev.target.files && ev.target.files[0]; ev.target.value = '';
+          if (!file) return;
+          var fail = function (m) { self.setState({ imp: { name: file.name, fail: m } }); };
+          var go = function (rows) { var P = self.importPlan(rows, file.name); if (!P.headerOk) fail('V prvních řádcích jsem nenašel sloupec Jméno ani Příjmení. Stáhněte si vzorovou tabulku a zkontrolujte názvy sloupců.'); else if (!P.items.length) fail('Tabulka nemá pod názvy sloupců žádné řádky.'); else self.setState({ imp: P }); };
+          if (/\.xls$/i.test(file.name)) { fail('Starý formát .xls neumím přečíst. V Excelu ho uložte jako .xlsx (Soubor → Uložit jako → Sešit Excelu) nebo jako CSV.'); return; }
+          if (/\.xlsx$/i.test(file.name)) file.arrayBuffer().then(function (b) { return self.readXlsx(b); }).then(go).catch(function (e) { fail('Soubor se nepodařilo přečíst: ' + (e && e.message ? e.message : e) + '.'); });
+          else file.text().then(function (t) { go(self.parseCsv(t)); }).catch(function () { fail('Soubor se nepodařilo přečíst.'); });
+        },
+        close: function () { self.setState({ imp: null }); },
+        sample: function () { self.download({ name: 'vzor-import-deti.csv', text: self.importSampleCsv(), type: 'text/csv' }); }
+      };
+      if (!I) return Object.assign(base, { file: '', hasFail: false, fail: '', ok: false, stats: [], cols: [], needCls: false, noClsCount: 0, clsChips: [], rows: [], run: function () {}, runLabel: '', runStyle: '' });
+      if (I.fail) return Object.assign(base, { file: I.name, hasFail: true, fail: I.fail, ok: false, stats: [], cols: [], needCls: false, noClsCount: 0, clsChips: [], rows: [], run: function () {}, runLabel: 'Importovat', runStyle: 'height: 52px; padding: 0 24px; border-radius: 26px; border: 0; background: #F3F4F2; color: #A0A2A6; font-size: 16px; font-weight: 800' });
+      var ok = I.items.filter(function (x) { return !x.err && !x.dup; });
+      var noCls = ok.filter(function (x) { return !x.cls; });
+      var ready = ok.filter(function (x) { return x.cls || I.defCls; });
+      var pill = function (bg, fg) { return 'justify-self: start; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; background: ' + bg + '; color: ' + fg; };
+      var stat = function (label, bg, fg) { return { label: label, style: 'padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 700; background: ' + bg + '; color: ' + fg }; };
+      var dupN = I.items.filter(function (x) { return x.dup; }).length, errN = I.items.filter(function (x) { return x.err; }).length;
+      return Object.assign(base, {
+        file: I.name, hasFail: false, fail: '', ok: true,
+        stats: [stat('Nové: ' + ok.length, '#EDF4E4', '#2F5212')].concat(dupN ? [stat('Už v kartotéce: ' + dupN + ' — přeskočí se', '#F3F4F2', '#5A5C60')] : []).concat(errN ? [stat('S chybou: ' + errN + ' — přeskočí se', '#FCF4EF', '#8A4513')] : []),
+        cols: I.cols, needCls: noCls.length > 0, noClsCount: noCls.length,
+        clsChips: CL.map(function (c) { var on = I.defCls === c.id; return { label: c.name, on: on ? 'true' : 'false', pick: function () { self.setState({ imp: Object.assign({}, I, { defCls: c.id }) }); },
+          style: 'height: 36px; padding: 0 14px; border-radius: 18px; font-size: 14px; font-weight: 700; cursor: pointer; ' + (on ? 'border: 1px solid #B4C6DD; background: #E6EDF6; color: #1F3A5C' : 'border: 1px solid #E5E7E4; background: #FFFFFF; color: #3A3C40') }; }),
+        rows: I.items.slice(0, 200).map(function (x) {
+          var c = x.cls ? clsById[x.cls].name : I.defCls && !x.err && !x.dup ? clsById[I.defCls].name : (x.clsRaw ? '„' + x.clsRaw + '“?' : '—');
+          return { line: x.line, name: (x.first + ' ' + x.last).trim() || '—', rc: x.rc || (x.err ? '' : 'bez RČ'), birth: x.birth ? self.cz(new Date(x.birth + 'T00:00:00')) : '—', cls: c, zastupce: x.zastupce || '—',
+            st: x.err ? x.err : x.dup ? 'už v kartotéce' : (!x.cls && !I.defCls ? 'vyberte třídu' : 'nové'),
+            stStyle: x.err ? pill('#FCF4EF', '#8A4513') : x.dup ? pill('#F3F4F2', '#5A5C60') : (!x.cls && !I.defCls ? pill('#F7F0DA', '#5C4300') : pill('#EDF4E4', '#2F5212')) };
+        }),
+        runLabel: ready.length ? 'Importovat ' + ready.length + (ready.length === 1 ? ' dítě' : ready.length < 5 ? ' děti' : ' dětí') : 'Není co importovat',
+        runStyle: 'height: 52px; padding: 0 24px; border-radius: 26px; border: 0; font-size: 16px; font-weight: 800; ' + (ready.length ? 'background: #DCE6F2; color: #1F3A5C; cursor: pointer' : 'background: #F3F4F2; color: #A0A2A6'),
+        run: function () {
+          if (!ready.length) return;
+          var n = 0;
+          ready.forEach(function (x) {
+            var cls = x.cls || I.defCls, b = new Date(x.birth + 'T00:00:00');
+            var k = { id: 'k' + Date.now().toString(36) + (n++), first: x.first, last: x.last, cls: cls, female: x.female, birth: b, rc: x.rc, foreignCode: '',
+              obcan: 'CZ', obec: x.obec, adresa: x.adresa, spad: true, zahajeni: x.start || self.iso(self.today), duvod: 'Nástup', provoz: clsById[cls].provoz, zpusob: 'Pravidelná docházka', odklad: false,
+              zastupce: x.zastupce, telefon: x.telefon, email: x.email, zastupce2: '', telefon2: '', dorucovaci: '', povereni: [], pojistovna: x.pojistovna, ockovani: false, alergie: x.alergie, svp: '', po: '', zvj: '',
+              souhlasFoto: false, souhlasWeb: false, souhlasJmeno: false, souhlasDatum: '', oml: 0, neoml: 0,
+              poSt: 0, spz: '', spzDo: '', ivp: false, ap: false, plppDo: '', ivOvereni: null, absStep: 0, absDate: null, ended: null, app: !!x.email, vs: String(self.syStart % 100) + self.pad(self.kids.length + 500, 4) };
+            self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
+          });
+          self.log('Import z Excelu (' + I.name + '), dětí: ' + ready.length);
+          self.setState({ imp: null, page: 'deti', onlyMissing: false });
+          self.showToast('Importováno dětí: ' + ready.length + ' — chybějící údaje doplníte v kartě');
+        }
+      });
+    })();
+
     /* -------------------------------------------------- přístupy */
     var pr = (function () {
       var R = SU ? SU.role : {}, TR = SU ? SU.tridy : {}, ND = SU ? SU.nazevDesky : {};
@@ -3225,7 +3484,7 @@ class Component extends DCLogic {
         return [{ title: 'Učitelé', sub: cnt(ped.length, 'pedagog', 'pedagogové', 'pedagogů') + ' · ředitelka, zástupkyně a učitelky', items: ped },
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
-      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr,
+      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, imp: imp,
       dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }
