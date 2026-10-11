@@ -116,6 +116,14 @@ Počítač v kuchyni. Přihlášená kuchařka je vlevo dole (⇄ přepne na jin
 
 Zveřejněný jídelníček se propíše do tabletu učitelky (karta Oběd). Ředitelna má jídelnu v menu (Školka → Školní jídelna).
 
+### Editor dokumentů
+
+Dokumenty v ředitelně se upravují jako v textovém editoru: styl (text, nadpis,
+podnadpis), velikost písma, tučně, kurzíva, podtržení, zarovnání, odrážky
+a číslování, zpět/znovu. Pro celý dokument se volí písmo (patkové/bezpatkové),
+základní velikost a řádkování. **Náhled** ukáže dokument rozdělený na listy A4
+i s hlavičkou školky — přesně tak, jak se vytiskne nebo uloží do PDF.
+
 ## Soulad s MŠMT
 
 - **Školní matrika** (vyhl. 364/2005 Sb. ve znění 388/2022 Sb.) — všechny
