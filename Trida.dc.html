@@ -1312,7 +1312,13 @@ class Component extends DCLogic {
       return 'position: absolute; top: 8px; right: 8px; width: 12px; height: 12px; border-radius: 6px; border: 2px solid #FFFFFF; background: ' + clsById[k.cls].color;
     };
 
-    var menu = this.menu;
+    /* Oběd bere z jídelny (zveřejněný jídelníček); bez něj zůstane ukázkový. */
+    var menu = this.menu, JD = (this.store().jidelna || {}).dny || {};
+    for (var di0 = 0; di0 < 3; di0++) {
+      var dd0 = new Date(); dd0.setDate(dd0.getDate() + di0);
+      var m0 = JD[this.iso(dd0)];
+      if (m0) { menu = { name: m0.name.split(',')[0], allergens: m0.allergens || [] }; break; }
+    }
     var here = function (k) { return k.att === 'present'; };
     var lunchHit = function (k) {
       return k.allergies.filter(function (a) { return menu.allergens.indexOf(a) !== -1; });
@@ -1343,7 +1349,7 @@ class Component extends DCLogic {
     };
 
     var lItems = kids.filter(function (k) { return k.att !== 'excused' && k.att !== 'left' && lunchHit(k).length; }).map(function (k) {
-      return { name: k.name, symRef: '#z-' + k.sym, pick: pick(k.id), what: 'bez ' + lunchHit(k).map(function (a) { return a === 'mléko' ? 'mléka' : (a === 'lepek' ? 'lepku' : a); }).join(', ') };
+      return { name: k.name, symRef: '#z-' + k.sym, pick: pick(k.id), what: 'bez ' + lunchHit(k).map(function (a) { return ({ 'mléko': 'mléka', 'lepek': 'lepku', 'vejce': 'vajec', 'ryby': 'ryb', 'arašídy': 'arašídů', 'ořechy': 'ořechů', 'celer': 'celeru', 'sója': 'sóji', 'sezam': 'sezamu' })[a] || a; }).join(', ') };
     });
     var lunch = {
       has: lItems.length > 0, none: lItems.length === 0, items: lItems, menu: menu.name,

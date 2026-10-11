@@ -1869,7 +1869,7 @@ class Component extends DCLogic {
       self.log('Z tabletu: úraz č. ' + e.no + ' — ' + (kk ? kk.first + ' ' + kk.last : e.child));
     });
     var role = st.role, ME = this.users[role];
-    var ALLOW = role === 'hospodarka' ? ['prehled', 'deti', 'dochazka', 'platby', 'zpravy', 'archiv'] : null;
+    var ALLOW = role === 'hospodarka' ? ['prehled', 'deti', 'dochazka', 'platby', 'zpravy', 'jidelna', 'archiv'] : null;
     var allowed = function (p) { return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -1905,7 +1905,7 @@ class Component extends DCLogic {
     var NAV0 = [
       ['prehled', 'Přehled', ''],
       ['#', 'Děti'], ['deti', 'Kartotéka dětí', kids.length], ['zapis', 'Zápis', ''], ['dochazka', 'Docházka', neoml.length || ''],
-      ['#', 'Školka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''],
+      ['#', 'Školka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''], ['jidelna', 'Školní jídelna', ''],
       ['#', 'Rodiče a veřejnost'], ['zpravy', 'Zprávy rodičům', ''], ['web', 'Webové stránky', webMissing || ''],
       ['#', 'Peníze'], ['platby', 'Platby', unpaidPrev.length || ''],
       ['#', 'Povinná evidence'], ['matrika', 'Matrika MŠMT', matErr.length ? matErr.length : ''], ['urazy', 'Kniha úrazů', urazPending.length ? urazPending.length : ''], ['dokumenty', 'Dokumenty', docTodo || ''], ['archiv', 'Archiv', ''],
@@ -1924,7 +1924,7 @@ class Component extends DCLogic {
         isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
           + (warn ? 'background: #F7DCC6; color: #8A4513' : 'background: ' + (on ? '#F3F4F2' : '#E5E7E4') + '; color: #3A3C40'),
-        pick: go(n[0], { kidId: null, editAll: false }),
+        pick: n[0] === 'jidelna' ? function () { location.hash = '#jidelna'; } : go(n[0], { kidId: null, editAll: false }),
         style: 'min-height: 32px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
       };
     });
