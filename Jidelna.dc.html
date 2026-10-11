@@ -684,6 +684,26 @@ class Component extends DCLogic {
   }
 
   /* Co z jídelníčku uvidí tablet a aplikace rodičů. */
+  /* Alergie zapisuje ředitelka v kartotéce; jídelna si je odtud bere.
+     Co si kuchyně u dítěte vede sama (doporučení lékaře, poznámka), zůstává. */
+  syncDiets() {
+    var deti = this.store().deti;
+    if (!deti) return;
+    var self = this, prev = {};
+    this.diets.forEach(function (k) { prev[k.name] = k; });
+    var WORDS = [[1, /lep|pšeni|mouk|obilov/], [2, /korýš|kreve/], [3, /vej|vaj/], [4, /ryb/], [5, /araš/], [6, /sój|soj/], [7, /mlé|mle|lakt|kasein/],
+      [8, /ořech|orech|mandl|lískov/], [9, /celer/], [10, /hořč|horc/], [11, /sezam/], [12, /siřič|siric|sulfit/], [13, /vlčí|vlci|lupin/], [14, /měkký|mekky/]];
+    var next = [];
+    deti.forEach(function (d) {
+      var t = (d.alergie || '').toLowerCase(), a = [];
+      WORDS.forEach(function (w) { if (w[1].test(t)) a.push(w[0]); });
+      if (!a.length) return;
+      var p = prev[d.name];
+      next.push({ id: p ? p.id : d.id, name: d.name, cls: d.cls, a: a, ok: p ? p.ok : false, pozn: p ? p.pozn : '' });
+    });
+    if (JSON.stringify(next) !== JSON.stringify(this.diets)) this.diets = next;
+  }
+
   publish() {
     var self = this, S = this.store(), out = {};
     Object.keys(this.weeks).forEach(function (mon) {
@@ -703,6 +723,7 @@ class Component extends DCLogic {
 
   renderVals() {
     var self = this, st = this.state, df = st.df || {};
+    this.syncDiets();
     var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'], DN = ['Po', 'Út', 'St', 'Čt', 'Pá'];
     var MES = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
     var cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };

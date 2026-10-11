@@ -1270,6 +1270,13 @@ class Component extends DCLogic {
 
   renderVals() {
     var self = this, st = this.state, f = st.f || {};
+    /* Alergie bere tablet z kartotéky v ředitelně (když ji už někdo otevřel). */
+    var DETI = this.store().deti;
+    if (DETI) {
+      var alg = {};
+      DETI.forEach(function (d) { alg[d.name + '|' + d.cls] = d.alergie ? d.alergie.split(/\s*,\s*/).filter(Boolean) : []; });
+      this.kids.forEach(function (k) { var a = alg[k.name + '|' + (k.homeCls || k.cls)]; if (a) k.allergies = a; });
+    }
     /* Docházka tříd pro ředitelnu: kdo je teď ve které třídě. */
     var ST0 = this.store(), nowT = this.now();
     this.classes.forEach(function (c) {

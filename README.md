@@ -92,7 +92,7 @@ Počítač v kuchyni. Přihlášená kuchařka je vlevo dole (⇄ přepne na jin
 - **Dnes v kuchyni** — co se vaří, počty porcí po třídách podle omluv, náhrady pro děti s dietou, výdejní list k tisku.
 - **Jídelníček** — týden po dnech (přesnídávka, polévka, oběd, svačina, pitný režim). Jídlo se vybírá z databáze a alergeny se načtou samy ze surovin. Kontrola pestrosti týdne, „Doplnit z minulého týdne“, tisk na nástěnku, zveřejnění rodičům.
 - **Jídla a suroviny** — každé jídlo má suroviny, alergeny (1–14 podle EU) se z nich počítají; u jídla je rovnou náhrada pro děti s dietou.
-- **Diety a náhrady** — děti s alergií (z kartotéky) a náhrady na celý týden; upozorní, když chybí doporučení lékaře.
+- **Diety a náhrady** — děti s alergií (bere je z kartotéky v ředitelně, kde se alergie zapisuje) a náhrady na celý týden; upozorní, když chybí doporučení lékaře.
 - **Kuchařky** — personál jídelny jako u učitelů: pozice, úvazek, zdravotní průkaz, školení hygieny.
 
 Zveřejněný jídelníček se propíše do tabletu učitelky (karta Oběd). Ředitelna má jídelnu v menu (Školka → Školní jídelna).

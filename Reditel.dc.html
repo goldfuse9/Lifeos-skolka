@@ -1025,6 +1025,12 @@ class Component extends DCLogic {
     // Ukázkové stavy, aby kontrola měla co ukázat
     by['Oliver Novák'].alergie = 'arašídy';
     by['Ema Králová'].alergie = 'mléko';
+    by['Jonáš Procházka'].alergie = 'mléko';
+    by['Anna Benešová'].alergie = 'lepek';
+    by['Sofie Růžičková'].alergie = 'vejce';
+    by['Lukáš Jelínek'].alergie = 'pyl';
+    by['Adéla Gregorová'].alergie = 'mléko';
+    by['Dominika Dolejší'].alergie = 'mléko';
     by['Filip Oliva'].souhlasFoto = false;
     by['Laura Wagnerová'].souhlasFoto = false;
     by['Hugo Říha'].souhlasFoto = false;
@@ -1343,6 +1349,8 @@ class Component extends DCLogic {
     this.persistKeys().forEach(function (k) { if (data[k] !== undefined) self[k] = data[k]; });
     this.by = {};
     this.kids.forEach(function (k) { self.by[k.first + ' ' + k.last] = k; });
+    /* Starší uložená data: doplnit ukázkové alergie, ať sedí s jídelnou. */
+    if (!data.alergSeed) [['Jonáš Procházka', 'mléko'], ['Anna Benešová', 'lepek'], ['Sofie Růžičková', 'vejce'], ['Lukáš Jelínek', 'pyl'], ['Adéla Gregorová', 'mléko'], ['Dominika Dolejší', 'mléko']].forEach(function (x) { var k = self.by[x[0]]; if (k && !k.alergie) k.alergie = x[1]; });
     if (this._seedPorady) { var have = {}; this.porady.forEach(function (p) { have[p.date + p.title] = true; }); this._seedPorady.forEach(function (p) { if (!have[p.date + p.title]) self.porady.push(p); }); }
   }
 
@@ -1350,7 +1358,7 @@ class Component extends DCLogic {
     var self = this;
     clearTimeout(this._s);
     this._s = setTimeout(function () {
-      var data = {};
+      var data = { alergSeed: true };
       self.persistKeys().forEach(function (k) { data[k] = self[k]; });
       try { localStorage.setItem('skolka-reditel-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
       self.saveStore();
@@ -1860,6 +1868,9 @@ class Component extends DCLogic {
     CL.forEach(function (c) { clsById[c.id] = c; });
     var S = this.store();
     var todayIso = this.iso(this.today);
+    /* Alergie z kartotéky pro jídelnu a tablet (jen děti, které školku navštěvují). */
+    var deti = this.kids.filter(function (k) { return !k.ended; }).map(function (k) { return { id: k.id, name: k.first + ' ' + k.last.charAt(0) + '.', cls: k.cls, alergie: k.alergie || '' }; });
+    if (JSON.stringify(deti) !== JSON.stringify(S.deti)) { S.deti = deti; this.saveStore(); }
     /* Úrazy zapsané na tabletu se propíšou do knihy úrazů. */
     (S.urazy || []).forEach(function (e) {
       if (self._imp[e.id]) return;
@@ -2155,7 +2166,7 @@ class Component extends DCLogic {
         { title: 'Zdraví (jen pro školku)', rows: [
           info0('Zdravotní pojišťovna', K.pojistovna || '—'),
           info0('Doklad o očkování', K.ockovani ? 'doložen' : (isPpv ? 'nevyžaduje se (PPV)' : 'chybí'), !K.ockovani && !isPpv ? '#9A3412' : '#17181A'),
-          info0('Alergie', K.alergie || 'žádné')
+          withNote(txt('Alergie', 'alergie', K.alergie, 'Např. mléko, lepek'), 'Jídelna podle toho hned připraví náhradu a učitelka to uvidí na tabletu.')
         ] },
         { title: 'Souhlasy (GDPR)', rows: [
           consent('Fotky pro rodiče třídy', 'souhlasFoto'),

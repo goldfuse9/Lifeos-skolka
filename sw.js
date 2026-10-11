@@ -4,7 +4,7 @@
    Po každé změně souboru zvedněte VERZE, jinak si tablet nechá starou.
    ============================================================================= */
 
-const VERZE = 'skolka-v16';
+const VERZE = 'skolka-v17';
 const SOUBORY = [
   './',
   './index.html',
