@@ -37,7 +37,7 @@ použije i mobilní aplikace LifeOS pro rodiče (role `rodic`).
 | Karta **Oběd** | dnešní menu s alergeny proti alergiím **přítomných** dětí; kdo nemá alergen, je v pořádku a v kartě není |
 | Karta **Vyzvedává jinak** | děti, za které dnes přijde někdo jiný než obvykle (ohlášeno rodiči) |
 | Karta dítěte | alergie, oběd (náhrada / v pořádku), kdo vyzvedává, dnešní záznamy, rychlé zápisy |
-| **Docházka** | celá třída; klepnutí zapíše příchod, další odchod (s tím, kdo vyzvedává), omluvenky od rodičů, tlačítko Vrátit |
+| **Docházka** | celá třída; klepnutí zapíše příchod, další odchod — vždy až po potvrzení v okénku (s tím, kdo vyzvedává), omluvenky od rodičů, tlačítko Vrátit |
 | **Teplota** | zapisovatelná hodnota (pole + −/+ 0,1 + rychlé volby), kde měřeno, od 38 °C se samo předvybere „Musí přijet“ |
 | **Není mu dobře** | stejné tváře a odrážky jako zápis příznaků v LifeOS (+ zvracení, průjem, bolest ucha, vyrážka); u „Teplota“ se objeví pole na hodnotu; u dušnosti upozornění na 155 |
 | **Úraz** | místo na těle (+ strana), co se stalo, ošetření, kde, svědek, komentář; dostane číslo v knize úrazů, zapíše se, kdo zapisuje a kdy |
