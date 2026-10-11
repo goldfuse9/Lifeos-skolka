@@ -1011,6 +1011,25 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     </div>
   </sc-if>
 
+  <!-- ============================================================ POTVRZENÍ DOCHÁZKY -->
+  <sc-if value="{{attAsk.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 9">
+      <div role="alertdialog" aria-label="{{attAsk.title}}" style="width: 440px; background: #FFFFFF; border-radius: 28px; padding: 26px 24px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <span style="width: 76px; height: 76px; border-radius: 38px; background: #F3F4F2; display: flex; align-items: center; justify-content: center"><svg width="52" height="52" viewBox="0 0 48 48" aria-hidden="true"><use href="{{attAsk.symRef}}"></use></svg></span>
+        <span style="font-size: 15px; font-weight: 700; color: #5A5C60">{{attAsk.title}}</span>
+        <span style="font-size: 28px; font-weight: 800; letter-spacing: -0.01em">{{attAsk.name}}</span>
+        <span style="font-size: 15px; color: #3A3C40">{{attAsk.when}}</span>
+        <sc-if value="{{attAsk.hasNote}}" hint-placeholder-val="{{false}}">
+          <span style="font-size: 14px; color: #3A3C40; background: #F3F4F2; border-radius: 14px; padding: 8px 14px; text-align: center">{{attAsk.note}}</span>
+        </sc-if>
+        <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px">
+          <button type="button" onClick="{{attAsk.no}}" style="flex: 1 1 0; height: 60px; border: 1px solid #E5E7E4; border-radius: 30px; background: #FFFFFF; font-size: 17px; font-weight: 700; color: #17181A; cursor: pointer">Zrušit</button>
+          <button type="button" onClick="{{attAsk.yes}}" style="{{attAsk.okStyle}}">{{attAsk.ok}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
     <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #DCE6F2; color: #1F3A5C; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
   </sc-if>
@@ -1192,6 +1211,12 @@ class Component extends DCLogic {
       this.me = this.ucet.jmeno;
       if (this.ucet.trida) { this.state.viewCls = this.ucet.trida; this.state.picked = this.ucet.trida === 'slunicka' ? 'oliver' : this.ucet.trida + '-0'; }
     }
+  }
+
+  /* Příchod a odchod se zapisují až po potvrzení — klepnutí omylem nic nezmění. */
+  askAtt(k, kind, note, run) {
+    this._attRun = run;
+    this.setState({ attAsk: { id: k.id, kind: kind, note: note || '', t: this.now() } });
   }
 
   /* Sdílený stav s ředitelnou (v jednom okně aplikace). Naostro server. */
@@ -1456,9 +1481,11 @@ class Component extends DCLogic {
       : s.att === 'left' ? 'Odešel v ' + s.left
       : 'Dnes doma — ' + s.excuse.split(' · ')[0];
     var arrive = function () {
-      s.att = 'present'; s.arrived = self.now(); s.left = null;
-      self.addLog(s, { t: s.arrived, type: 'dochazka', title: 'Příchod', sub: '' });
-      self.showToast(s.name + ' — příchod zapsán');
+      self.askAtt(s, s.att === 'left' ? 'zpet' : 'prichod', s.att === 'excused' ? 'Má omluvenku — přesto přišel' : '', function () {
+        s.att = 'present'; s.arrived = self.now(); s.left = null;
+        self.addLog(s, { t: s.arrived, type: 'dochazka', title: 'Příchod', sub: '' });
+        self.showToast(s.name + ' — příchod zapsán');
+      });
     };
     var sel = {
       name: s.name, symRef: '#z-' + s.sym, symName: s.symName, stateLine: stateLine, facts: facts, log: log,
@@ -1494,7 +1521,7 @@ class Component extends DCLogic {
         else { status = 'omluven'; detail = k.excuse.split(' · ')[0]; sBg = '#F3F4F2'; sFg = '#5A5C60'; next = 'present'; }
         var away = k.att !== 'present';
         var dot = clsDot(k);
-        return {
+        var tile = {
           name: k.name, symRef: '#z-' + k.sym, status: status, detail: detail, ppv: k.ppv,
           aria: k.name + (k.ppv ? ' (povinné předškolní)' : '') + ', ' + status,
           hasClsDot: !!dot, clsDotStyle: dot || '',
@@ -1503,6 +1530,12 @@ class Component extends DCLogic {
             + 'background: ' + (k.att === 'excused' ? 'transparent' : '#FFFFFF') + '; border: ' + (k.att === 'present' ? '2px solid #A9CC86' : k.att === 'expected' ? '2px dashed #B9B7AE' : (k.att === 'excused' ? '2px dashed #D8DBD7' : '2px solid transparent')),
           avatarStyle: 'width: 50px; height: 50px; border-radius: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #F3F4F2; ' + (away ? 'filter: grayscale(1); opacity: 0.55' : ''),
           tap: function () {
+            var who = k.pickupToday ? k.pickupToday.who : k.usualPickup;
+            self.askAtt(k, next === 'present' ? (k.att === 'left' ? 'zpet' : 'prichod') : 'odchod',
+              next === 'left' ? 'Vyzvedává ' + who : k.att === 'excused' ? 'Má omluvenku (' + k.excuse.split(' · ')[0] + ') — přesto přišel' : '', doIt);
+          }
+        };
+        function doIt() {
             var before = { att: k.att, arrived: k.arrived, left: k.left };
             var t = self.now(), label;
             if (next === 'present') {
@@ -1515,8 +1548,8 @@ class Component extends DCLogic {
               label = k.name + ' odchod';
             }
             self.setState({ undo: { id: k.id, before: before, label: label } });
-          }
-        };
+        }
+        return tile;
       })
     };
 
@@ -2188,6 +2221,15 @@ class Component extends DCLogic {
       dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
       kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
       view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(44), meName: this.me, meRole: this.ucet ? this.ucet.role.charAt(0).toUpperCase() + this.ucet.role.slice(1) : 'Učitelka · ' + ((CL.filter(function (c) { return self.me.indexOf(c.teacher.replace('.', '')) === 0; })[0] || clsById[home]).name),
+      attAsk: (function () {
+        var A = st.attAsk, K = A ? self.byId[A.id] : null;
+        var T = { prichod: ['Zapsat příchod?', 'Zapsat příchod'], odchod: ['Zapsat odchod?', 'Zapsat odchod'], zpet: ['Zpět ve třídě?', 'Ano, je zpět'] };
+        var tt = A ? T[A.kind] : T.prichod;
+        return { open: !!(A && K), name: K ? K.name : '', symRef: K ? '#z-' + K.sym : '', title: tt[0], ok: tt[1], when: A ? 'Čas ' + A.t : '', note: A ? A.note : '', hasNote: !!(A && A.note),
+          okStyle: 'flex: 1.4 1 0; height: 60px; border: 0; border-radius: 30px; font-size: 17px; font-weight: 800; cursor: pointer; ' + (A && A.kind === 'odchod' ? 'background: #F3E3D6; color: #7A3E12' : 'background: #DDEBCF; color: #2F5212'),
+          yes: function () { var run = self._attRun; self._attRun = null; self.setState({ attAsk: null }); if (run) run(); },
+          no: function () { self._attRun = null; self.setState({ attAsk: null }); } };
+      })(),
       meMenu: { open: !!st.meMenu, reditelna: !!this.ucet && this.ucet.desky.indexOf('reditel') !== -1,
         toggle: function () { self.setState({ meMenu: !self.state.meMenu }); },
         logout: function () { self.setState({ meMenu: false }); if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); } },
