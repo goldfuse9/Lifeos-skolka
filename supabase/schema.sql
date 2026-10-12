@@ -76,9 +76,11 @@ create table deti (
   spz text, spz_plati_do date, ivp boolean default false, asistent boolean default false, plpp_do date,
   iv_overeni text,                     -- 'ok' / 'ne' u individuálního vzdělávání
   pojistovna text, ockovani boolean, alergie text,
-  variabilni_symbol text unique,
+  variabilni_symbol text check (variabilni_symbol ~ '^[0-9]{1,10}$'),
+  osvobozen_od_skolkovneho boolean not null default false,   -- PPV, odklad: školkovné 0 Kč
   ukonceno date, duvod_ukonceni text,
-  vytvoreno timestamptz default now()
+  vytvoreno timestamptz default now(),
+  unique (skola_id, variabilni_symbol)
 );
 
 create table zastupci (
@@ -107,6 +109,8 @@ create table dochazka (
   stav text not null,                  -- 'pritomen', 'omluven', 'neomluven'
   prichod time, odchod time, vyzvedl text, omluvenka text,
   trida_dnes uuid references tridy,    -- přesun / sloučení tříd na den
+  strava_prihlasena boolean not null default true,
+  omluva_zadana timestamptz,           -- kdy rodič omluvil; včas = do uzávěrky školky
   primary key (dite_id, den)
 );
 
@@ -141,13 +145,120 @@ create table zadosti (                 -- zápis / přijímací řízení
   unique (skola_id, rok, reg_cislo)
 );
 
-create table predpisy (
-  dite_id uuid references deti on delete cascade,
-  mesic date not null,                 -- první den měsíce
-  skolne int not null, stravne int not null, obedu int not null,
-  zaplaceno numeric(10,2) default 0, upominka date,
-  primary key (dite_id, mesic)
+-- ----------------------------------------------------------------- finance
+-- Všechny částky NUMERIC(10, 2) — nikdy float. Konto dítěte drží zůstatek
+-- (kladný = přeplatek, záporný = dluh); každý pohyb jde podvojně do knihy
+-- ucetni_pohyby, která se jen doplňuje (oprava = protizápis, ne úprava).
+create table financni_nastaveni (
+  skola_id uuid primary key references skoly on delete cascade,
+  ucet text not null,                          -- číslo účtu školky (předčíslí-číslo/banka) nebo IBAN
+  skolkovne numeric(10,2) not null check (skolkovne >= 0),
+  omluva_dni_predem int not null default 1 check (omluva_dni_predem between 0 and 7),
+  omluva_do time not null default '08:00',
+  splatnost_den int not null default 15 check (splatnost_den between 1 and 28),
+  vs_schema text not null default 'rok_poradi' check (vs_schema in ('rok_poradi', 'prefix_poradi', 'rucne')),
+  vs_prefix text not null default '' check (vs_prefix ~ '^[0-9]{0,6}$'),
+  vs_delka int not null default 6 check (vs_delka between 4 and 10)
 );
+
+create table sazby_stravneho (
+  skola_id uuid references skoly on delete cascade,
+  kategorie text not null check (kategorie in ('3-6', '7+')),
+  cena numeric(10,2) not null check (cena >= 0),
+  primary key (skola_id, kategorie)
+);
+
+create table konta (
+  dite_id uuid primary key references deti on delete cascade,
+  saldo numeric(10,2) not null default 0
+);
+
+create table ucetni_pohyby (
+  id uuid primary key default gen_random_uuid(),
+  skola_id uuid not null references skoly,
+  datum date not null,
+  md text not null,                            -- má dáti: 'dite:<uuid>', 'banka', 'vynosy:skolkovne' …
+  dal text not null,
+  castka numeric(10,2) not null check (castka > 0),
+  popis text not null,
+  doklad text not null default '',             -- id předpisu nebo platby
+  vytvoreno timestamptz not null default now(),
+  check (md <> dal)
+);
+create index on ucetni_pohyby (skola_id, md);
+create index on ucetni_pohyby (skola_id, dal);
+
+create table predpisy (
+  id uuid primary key default gen_random_uuid(),
+  dite_id uuid not null references deti on delete cascade,
+  obdobi char(7) not null check (obdobi ~ '^[0-9]{4}-[0-9]{2}$'),   -- '2026-10'
+  castka numeric(10,2) not null check (castka >= 0),
+  uhrazeno numeric(10,2) not null default 0 check (uhrazeno >= 0),
+  stav text not null default 'otevreno' check (stav in ('otevreno', 'castecne_zaplaceno', 'zaplaceno')),
+  splatnost date not null,
+  vystaveno date not null default current_date,
+  unique (dite_id, obdobi)
+);
+
+create table predpis_polozky (
+  predpis_id uuid references predpisy on delete cascade,
+  poradi int not null,
+  druh text not null check (druh in ('skolkovne', 'stravne')),
+  popis text not null,
+  mnozstvi int not null,
+  cena numeric(10,2) not null,
+  castka numeric(10,2) not null,
+  primary key (predpis_id, poradi)
+);
+
+create table platby (
+  id uuid primary key default gen_random_uuid(),
+  skola_id uuid not null references skoly,
+  datum date not null,
+  castka numeric(10,2) not null check (castka > 0),
+  vs text not null default '',
+  protiucet text not null default '', nazev text not null default '',
+  zdroj text not null default 'gpc',           -- 'gpc' | 'api' | 'rucne'
+  doklad text not null default '',             -- číslo dokladu banky
+  dite_id uuid references deti,
+  nacteno timestamptz not null default now()
+);
+create unique index platby_doklad on platby (skola_id, doklad) where doklad <> '';
+
+create table nesparovane_platby (
+  platba_id uuid primary key references platby on delete cascade,
+  duvod text not null,
+  vyreseno boolean not null default false,
+  vyresil uuid references uzivatele,
+  vyreseno_kdy timestamptz
+);
+
+create table upominky (
+  id uuid primary key default gen_random_uuid(),
+  dite_id uuid not null references deti on delete cascade,
+  obdobi char(7) not null,
+  kanal text not null check (kanal in ('push', 'email')),
+  odeslano timestamptz not null default now()
+);
+
+-- Zůstatek konta se upraví s každým pohybem; pohyby se nemažou ani nemění.
+create or replace function pohyb_do_konta() returns trigger language plpgsql as $$
+begin
+  if new.md like 'dite:%' then
+    insert into konta (dite_id, saldo) values (substr(new.md, 6)::uuid, -new.castka)
+      on conflict (dite_id) do update set saldo = konta.saldo - new.castka;
+  end if;
+  if new.dal like 'dite:%' then
+    insert into konta (dite_id, saldo) values (substr(new.dal, 6)::uuid, new.castka)
+      on conflict (dite_id) do update set saldo = konta.saldo + new.castka;
+  end if;
+  return new;
+end $$;
+create trigger t_pohyb_do_konta after insert on ucetni_pohyby for each row execute function pohyb_do_konta();
+
+create or replace function pohyby_jen_pridavat() returns trigger language plpgsql as $$
+begin raise exception 'Účetní pohyby se nemění ani nemažou — opravte je protizápisem.'; end $$;
+create trigger t_pohyby_jen_pridavat before update or delete on ucetni_pohyby for each row execute function pohyby_jen_pridavat();
 
 create table zpravy (
   id uuid primary key default gen_random_uuid(),
@@ -259,6 +370,28 @@ create policy kniha on tridni_kniha for all using (
 alter table predpisy enable row level security;
 create policy plat_cist on predpisy for select using (moje_role() in ('reditelka', 'zastupce', 'hospodarka', 'rodic') and moje_dite(dite_id));
 create policy plat_menit on predpisy for all using (moje_role() in ('reditelka', 'zastupce', 'hospodarka') and moje_dite(dite_id));
+alter table predpis_polozky enable row level security;
+create policy polozky_cist on predpis_polozky for select using (exists (select 1 from predpisy p where p.id = predpis_id and moje_dite(p.dite_id)));
+alter table konta enable row level security;
+create policy konta_cist on konta for select using (moje_role() in ('reditelka', 'zastupce', 'hospodarka', 'rodic') and moje_dite(dite_id));
+create or replace function je_finance() returns boolean language sql stable as
+  $$ select moje_role() in ('reditelka', 'zastupce', 'hospodarka') $$;
+alter table financni_nastaveni enable row level security;
+create policy fn_cist on financni_nastaveni for select using (skola_id = moje_skola());
+create policy fn_menit on financni_nastaveni for all using (je_finance() and skola_id = moje_skola());
+alter table sazby_stravneho enable row level security;
+create policy ss_cist on sazby_stravneho for select using (skola_id = moje_skola());
+create policy ss_menit on sazby_stravneho for all using (je_finance() and skola_id = moje_skola());
+alter table ucetni_pohyby enable row level security;
+create policy up_cist on ucetni_pohyby for select using (je_finance() and skola_id = moje_skola());
+create policy up_vlozit on ucetni_pohyby for insert with check (je_finance() and skola_id = moje_skola());
+alter table platby enable row level security;
+create policy pl_fin on platby for all using (je_finance() and skola_id = moje_skola());
+alter table nesparovane_platby enable row level security;
+create policy np_fin on nesparovane_platby for all using (je_finance() and exists (select 1 from platby p where p.id = platba_id and p.skola_id = moje_skola()));
+alter table upominky enable row level security;
+create policy upo_cist on upominky for select using (moje_role() in ('reditelka', 'zastupce', 'hospodarka', 'rodic') and moje_dite(dite_id));
+create policy upo_psat on upominky for insert with check (je_finance() and moje_dite(dite_id));
 
 alter table zadosti enable row level security;
 create policy zapis on zadosti for all using (je_vedeni() and skola_id = moje_skola());
@@ -320,3 +453,6 @@ create view deti_jidelna as
   select d.id, d.trida_id, d.jmeno, left(d.prijmeni, 1) as prijmeni, d.alergie
   from deti d
   where d.ukonceno is null and d.skola_id = moje_skola() and moje_role() in ('kucharka', 'reditelka', 'zastupce');
+create trigger a_platby after update on platby for each row execute function zapis_audit();
+create trigger a_nesparovane after update on nesparovane_platby for each row execute function zapis_audit();
+create trigger a_fin_nastaveni after insert or update on financni_nastaveni for each row execute function zapis_audit();

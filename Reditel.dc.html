@@ -559,12 +559,13 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <button type="button" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="{{m.style}}">{{m.label}}</button>
         </sc-for>
         <span style="flex-grow: 1"></span>
-        <label style="height: 44px; padding: 0 18px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Načíst výpis z banky<input type="file" accept=".csv,.txt,text/csv,text/plain" aria-label="Výpis z banky (CSV)" onChange="{{pay.onFile}}" style="display: none"></label>
-        <button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Ukázkový výpis</button>
-        <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">Export pro účetnictví</button>
+        <label for="vypis-gpc" style="height: 44px; padding: 0 18px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Načíst výpis z banky (.gpc)</label>
+        <input id="vypis-gpc" type="file" accept=".gpc,.abo,.txt" onChange="{{pay.onFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none">
+        <button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Ukázkový výpis</button>
+        <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Export pro účetnictví</button>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
-        <sc-for list="{{pay.stats}}" as="s" hint-placeholder-count="3">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+        <sc-for list="{{pay.stats}}" as="s" hint-placeholder-count="4">
           <div style="{{s.style}}">
             <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{s.label}}</span>
             <span style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em">{{s.value}}</span>
@@ -573,47 +574,66 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </sc-for>
       </div>
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
-        <section aria-label="Předpisy plateb" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
-          <div style="display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-bottom: 1px solid #EEF0ED">
-            <sc-for list="{{pay.filters}}" as="f" hint-placeholder-count="3">
+        <section aria-label="Předpisy a konta" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-bottom: 1px solid #EEF0ED; flex-wrap: wrap">
+            <sc-for list="{{pay.filters}}" as="f" hint-placeholder-count="4">
               <button type="button" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}">{{f.label}}</button>
             </sc-for>
           </div>
-          <div style="display: grid; grid-template-columns: minmax(0, 2fr) 70px 76px 92px 84px 104px 104px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
-            <span>Dítě</span><span>VS</span><span>Školné</span><span>Stravné</span><span>Celkem</span><span>Stav</span><span></span>
-          </div>
-          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
-            <sc-for list="{{pay.rows}}" as="r" hint-placeholder-count="10">
-              <div style="display: grid; grid-template-columns: minmax(0, 2fr) 70px 76px 92px 84px 104px 104px; gap: 10px; padding: 9px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
-                <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.cls}}</span></span>
-                <span style="font-variant-numeric: tabular-nums">{{r.vs}}</span>
-                <span>{{r.skolne}}</span>
-                <span style="display: flex; flex-direction: column"><span>{{r.strava}}</span><span style="font-size: 12px; color: #5A5C60">{{r.stravaSub}}</span></span>
-                <span style="font-weight: 800">{{r.total}}</span>
-                <span style="{{r.stateStyle}}">{{r.state}}</span>
-                <span>
-                  <sc-if value="{{r.canRemind}}" hint-placeholder-val="{{false}}">
-                    <button type="button" onClick="{{r.remind}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">{{r.remindLabel}}</button>
-                  </sc-if>
-                </span>
-              </div>
-            </sc-for>
-          </div>
+          <sc-if value="{{pay.noPredpisy}}" hint-placeholder-val="{{false}}">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; text-align: center">
+              <span style="font-size: 18px; font-weight: 800">Za {{pay.monthLabel}} zatím nejsou předpisy</span>
+              <span style="font-size: 14px; color: #5A5C60; max-width: 420px; line-height: 20px">Stravné se počítá z docházky, proto se předpisy vystavují po skončení měsíce. Opakované vystavení nic nezdvojí.</span>
+              <button type="button" onClick="{{pay.issue}}" style="height: 48px; padding: 0 22px; border-radius: 24px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">{{pay.issueLabel}}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{pay.hasPredpisy}}" hint-placeholder-val="{{true}}">
+            <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) 70px minmax(0, 1.6fr) 96px 118px 150px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+              <span>Dítě</span><span>VS</span><span>Předpis</span><span>Konto</span><span>Stav</span><span></span>
+            </div>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+              <sc-for list="{{pay.rows}}" as="r" hint-placeholder-count="10">
+                <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) 70px minmax(0, 1.6fr) 96px 118px 150px; gap: 10px; padding: 9px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                  <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.cls}}</span></span>
+                  <span style="{{r.vsStyle}}">{{r.vs}}</span>
+                  <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 800">{{r.total}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.sub}}</span></span>
+                  <span style="{{r.saldoStyle}}">{{r.saldo}}</span>
+                  <span style="{{r.stateStyle}}">{{r.state}}</span>
+                  <span style="display: flex; gap: 6px; justify-content: flex-end">
+                    <button type="button" onClick="{{r.openQr}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">{{r.qrLabel}}</button>
+                    <sc-if value="{{r.canRemind}}" hint-placeholder-val="{{false}}">
+                      <button type="button" onClick="{{r.remind}}" style="{{r.remindStyle}}">{{r.remindLabel}}</button>
+                    </sc-if>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
         </section>
         <aside style="width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
-          <section aria-label="Sazby" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
-            <h2 style="margin: 0; font-size: 16px; font-weight: 800">Sazby</h2>
-            <sc-for list="{{pay.rates}}" as="f" hint-placeholder-count="3">
-              <label style="display: flex; align-items: center; gap: 10px; font-size: 14px"><span style="flex-grow: 1">{{f.label}}</span><input type="text" inputmode="numeric" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="width: 72px; height: 38px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 10px; font-size: 15px; text-align: right; color: #17181A"><span style="width: 52px; color: #5A5C60">{{f.unit}}</span></label>
-            </sc-for>
-            <span style="font-size: 13px; color: #5A5C60; line-height: 18px">Děti s povinným předškolním vzděláváním školné neplatí.</span>
+          <section aria-label="Po splatnosti" style="{{pay.dluhStyle}}">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 800">Po splatnosti</h2>
+            <span style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em">{{pay.dluhSum}}</span>
+            <span style="font-size: 13px; color: #3A3C40; line-height: 18px">{{pay.dluhSub}}</span>
+            <sc-if value="{{pay.hasDluh}}" hint-placeholder-val="{{true}}">
+              <button type="button" onClick="{{pay.remindAll}}" style="height: 44px; border-radius: 22px; border: 0; background: #FFFFFF; color: #8A4513; font-size: 14px; font-weight: 800; cursor: pointer">{{pay.remindAllLabel}}</button>
+            </sc-if>
           </section>
           <section aria-label="Nespárované platby" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
             <h2 style="margin: 0; font-size: 16px; font-weight: 800">Nespárované platby</h2>
             <sc-for list="{{pay.unmatched}}" as="u" hint-placeholder-count="1">
-              <div style="padding: 10px 12px; border-radius: 14px; background: #F7F0DA; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 800">{{u.amount}}</span><span style="font-size: 12px; color: #5C4300">{{u.sub}}</span></div>
+              <div style="padding: 10px 12px; border-radius: 14px; background: #F7F0DA; display: flex; align-items: center; gap: 10px">
+                <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0"><span style="font-size: 15px; font-weight: 800">{{u.amount}}</span><span style="font-size: 12px; color: #5C4300">{{u.sub}}</span></span>
+                <button type="button" onClick="{{u.pair}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #FFFFFF; font-size: 13px; font-weight: 800; color: #5C4300; cursor: pointer">Přiřadit</button>
+              </div>
             </sc-for>
-            <sc-if value="{{pay.noUnmatched}}" hint-placeholder-val="{{true}}"><span style="font-size: 14px; color: #5A5C60">Žádné.</span></sc-if>
+            <sc-if value="{{pay.noUnmatched}}" hint-placeholder-val="{{true}}"><span style="font-size: 14px; color: #5A5C60">Žádné — všechny platby našly své dítě.</span></sc-if>
+          </section>
+          <section aria-label="Nastavení plateb" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Sazby a účet</h2><sc-if value="{{pay.canSettings}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{pay.goSettings}}" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Upravit</button></sc-if></div>
+            <sc-for list="{{pay.setup}}" as="x" hint-placeholder-count="4">
+              <span style="display: flex; gap: 8px; font-size: 13px"><span style="color: #5A5C60; flex-grow: 1">{{x.k}}</span><span style="font-weight: 700; text-align: right">{{x.v}}</span></span>
+            </sc-for>
           </section>
         </aside>
       </div>
@@ -805,6 +825,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                   <span style="font-size: 12px; font-weight: 700; color: #5A5C60">{{f.label}}</span>
                   <sc-if value="{{f.isInput}}" hint-placeholder-val="{{true}}">
                     <input type="text" aria-label="{{f.label}}" value="{{f.value}}" placeholder="{{f.ph}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="{{f.style}}">
+                  </sc-if>
+                  <sc-if value="{{f.hasNote}}" hint-placeholder-val="{{false}}">
+                    <span style="{{f.noteStyle}}">{{f.note}}</span>
                   </sc-if>
                   <sc-if value="{{f.isChips}}" hint-placeholder-val="{{false}}">
                     <span style="display: flex; flex-wrap: wrap; gap: 6px">
@@ -1158,6 +1181,74 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     </div>
   </sc-if>
 
+  <!-- ============================================================ PLATBY: OKNA -->
+  <sc-if value="{{payDlg.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 7">
+      <div role="dialog" aria-label="{{payDlg.title}}" style="width: 640px; max-height: 820px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 18px 18px 14px 24px; border-bottom: 1px solid #EEF0ED">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+            <span style="font-size: 13px; font-weight: 600; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{payDlg.kicker}}</span>
+            <span style="font-size: 24px; font-weight: 800">{{payDlg.title}}</span>
+          </div>
+          <button type="button" onClick="{{payDlg.close}}" aria-label="Zavřít" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 18px 24px 22px; display: flex; flex-direction: column; gap: 14px">
+
+          <sc-if value="{{payDlg.isQr}}" hint-placeholder-val="{{true}}">
+            <div style="display: flex; gap: 20px; align-items: flex-start">
+              <div style="width: 220px; height: 220px; flex-shrink: 0; border-radius: 18px; border: 1px solid #EEF0ED; display: flex; align-items: center; justify-content: center; background: #FFFFFF">
+                <sc-if value="{{payDlg.hasQr}}" hint-placeholder-val="{{true}}"><svg role="img" aria-label="QR platba" width="200" height="200" viewBox="{{payDlg.qrBox}}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#FFFFFF"></rect><path d="{{payDlg.qrPath}}" fill="#17181A"></path></svg></sc-if>
+                <sc-if value="{{payDlg.noQr}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; color: #5A5C60; text-align: center; padding: 16px; line-height: 18px">{{payDlg.noQrText}}</span></sc-if>
+              </div>
+              <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+                <span style="font-size: 13px; font-weight: 700; color: #5A5C60">K úhradě</span>
+                <span style="font-size: 32px; font-weight: 800; letter-spacing: -0.02em">{{payDlg.due}}</span>
+                <span style="font-size: 13px; color: #5A5C60">Konto {{payDlg.saldo}} · {{payDlg.saldoNote}}</span>
+                <sc-for list="{{payDlg.rows}}" as="r" hint-placeholder-count="4">
+                  <span style="display: flex; gap: 8px; font-size: 14px"><span style="width: 120px; flex-shrink: 0; color: #5A5C60">{{r.k}}</span><span style="font-weight: 700; min-width: 0">{{r.v}}</span></span>
+                </sc-for>
+                <button type="button" onClick="{{payDlg.copy}}" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A; margin-top: 4px">Zkopírovat platební údaje</button>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Pohyby na kontě</span>
+              <sc-for list="{{payDlg.history}}" as="h" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 110px; gap: 10px; padding: 8px 0; border-top: 1px solid #F3F4F2; font-size: 14px">
+                  <span style="color: #5A5C60">{{h.d}}</span><span style="min-width: 0">{{h.t}}</span><span style="{{h.style}}; text-align: right">{{h.a}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{payDlg.isPair}}" hint-placeholder-val="{{false}}">
+            <input type="search" aria-label="Hledat dítě" placeholder="Jméno nebo VS…" value="{{payDlg.q}}" onInput="{{payDlg.onQ}}" style="height: 48px; border-radius: 24px; border: 1px solid #E5E7E4; padding: 0 18px; font-size: 15px; color: #17181A">
+            <sc-for list="{{payDlg.kids}}" as="k" hint-placeholder-count="5">
+              <button type="button" onClick="{{k.pick}}" style="min-height: 52px; padding: 6px 14px; border-radius: 16px; border: 1px solid #EEF0ED; background: #FFFFFF; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; cursor: pointer; color: #17181A; text-align: left">
+                <span style="font-size: 15px; font-weight: 700">{{k.name}}</span><span style="font-size: 12px; color: #5A5C60">{{k.sub}}</span>
+              </button>
+            </sc-for>
+          </sc-if>
+
+          <sc-if value="{{payDlg.isImport}}" hint-placeholder-val="{{false}}">
+            <sc-if value="{{payDlg.isEmpty}}" hint-placeholder-val="{{false}}"><span style="font-size: 15px; line-height: 22px; color: #3A3C40">{{payDlg.emptyText}}</span></sc-if>
+            <sc-for list="{{payDlg.lines}}" as="l" hint-placeholder-count="4">
+              <div style="{{l.style}}"><span style="flex-grow: 1; font-weight: 600">{{l.label}}</span><span style="font-size: 20px; font-weight: 800">{{l.n}}</span></div>
+            </sc-for>
+            <span style="font-size: 15px; font-weight: 800">{{payDlg.total}}</span>
+            <sc-if value="{{payDlg.hasErr}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-radius: 14px; background: #FCF4EF; color: #8A4513; font-size: 13px">
+                <sc-for list="{{payDlg.errs}}" as="e" hint-placeholder-count="1"><span>{{e.t}}</span></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{payDlg.hasDemo}}" hint-placeholder-val="{{false}}">
+              <button type="button" onClick="{{payDlg.downloadDemo}}" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Stáhnout ukázkový výpis (.gpc)</button>
+            </sc-if>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
     <div role="status" style="position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); background: #DCE6F2; color: #1F3A5C; border-radius: 26px; padding: 14px 22px; font-size: 15px; font-weight: 700; z-index: 8; box-shadow: 0 10px 30px rgba(23,24,26,0.3); white-space: nowrap">{{toast.text}}</div>
   </sc-if>
@@ -1320,20 +1411,23 @@ class Component extends DCLogic {
        dnešek přijde z tabletů tříd. */
     this.monthKeys = [];
     for (var mi = new Date(this.syStart, 8, 1); mi <= t; mi = new Date(mi.getFullYear(), mi.getMonth() + 1, 1)) this.monthKeys.push(this.iso(mi).slice(0, 7));
-    this.rates = { skolne: '900', s1: '48', s2: '52' };
-    this.paid = {};
-    this.reminded = {};
-    this.unmatched = [];
+    /* Finance — nastavení školky (částky v haléřích) a ukázkové předpisy s platbami. */
+    this.fin = { ucet: '19-2000145399/0800', skolkovne: 90000, stravne: { '3-6': 4800, '7+': 5200 }, omlDni: 1, omlDo: '08:00', splatnost: 10, vsSchema: 'rok_poradi', vsPrefix: '', vsDelka: 6 };
+    this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
+    this.kids = kids;
     var self2 = this;
-    this.monthKeys.forEach(function (mk2, idx) {
-      var last = idx === self2.monthKeys.length - 1;
-      self2.paid[mk2] = {};
+    this.monthKeys.slice(0, -1).forEach(function (mk2) {
+      kids.forEach(function (k) { self2.vystav(k, mk2); });
+      var y = +mk2.slice(0, 4), m = +mk2.slice(5, 7), den = self2.iso(new Date(y, m, Math.min(8, self2.fin.splatnost - 1)));
       kids.forEach(function (k) {
-        var n = +k.id.slice(1), due = self2.due(k, mk2).total;
-        if (!due) return;
-        if (last ? n % 4 !== 1 : !(n === 101 || n === 108)) self2.paid[mk2][k.id] = due;
+        var n = +k.id.slice(1), dluh = self2.kUhrade(k.id);
+        if (!dluh || n === 101 || n === 108) return;              // dva dlužníci
+        var am = n === 7 ? dluh + 20000 : n === 12 ? dluh - 30000 : dluh;   // přeplatek a nedoplatek
+        self2.zpracujPlatbu({ id: 'seed-' + mk2 + '-' + k.id, datum: den, castka: am, vs: k.vs, protiucet: '', nazev: k.last.toUpperCase(), doklad: 'seed:' + mk2 + ':' + k.id });
       });
+      self2.zpracujPlatbu({ id: 'seed-' + mk2 + '-x', datum: den, castka: 65000, vs: '77001', protiucet: '2400111222/2010', nazev: 'NEZNAMY PLATCE', doklad: 'seed:' + mk2 + ':x' });
     });
+    this.syncRates();
 
     /* ---------------------------------------------- zprávy rodičům */
     this.messages = [
@@ -1404,7 +1498,7 @@ class Component extends DCLogic {
     this._seedPorady = this.porady.slice();
     this.restore();
     this.state = { page: 'prehled', role: 'reditelka', q: '', clsFilter: 'all', onlyMissing: false, kidId: null, editKeys: [], editAll: false, povName: '', dlg: null, df: {}, zapQ: '', zapF: [], zapFilterOpen: false, poradyYear: null, matDate: 'podzim', files: null, previewIdx: null, toast: null,
-      docSel: 'skolni-rad', dochMonth: this.monthKeys[this.monthKeys.length - 1], dochCls: 'slunicka', payMonth: this.monthKeys[this.monthKeys.length - 1], payFilter: 'all', msgTo: 'all', msgTitle: '', msgText: '' };
+      docSel: 'skolni-rad', dochMonth: this.monthKeys[this.monthKeys.length - 1], dochCls: 'slunicka', payMonth: this.monthKeys[Math.max(0, this.monthKeys.length - 2)], payFilter: 'all', msgTo: 'all', msgTitle: '', msgText: '' };
     /* Kdo je přihlášený, určuje shell.js (účty a přístupy). */
     this.ucet = typeof window !== 'undefined' && window.SkolkaUcet ? window.SkolkaUcet.aktualni() : null;
     if (this.ucet && this.ucet.pravo) this.state.role = this.ucet.pravo;
@@ -1698,7 +1792,7 @@ class Component extends DCLogic {
 
   /* Zkušební provoz: všechno, co se v ředitelně změní, zůstane v tomto
      prohlížeči i po zavření. „Vrátit ukázková data“ to smaže. */
-  persistKeys() { return ['school', 'classes', 'teachers', 'users', 'kids', 'urazy', 'webCfg', 'zapis', 'messages', 'porady', 'plan', 'audit', 'paid', 'reminded', 'unmatched', 'rates', 'docs', '_imp']; }
+  persistKeys() { return ['school', 'classes', 'teachers', 'users', 'kids', 'urazy', 'webCfg', 'zapis', 'messages', 'porady', 'plan', 'audit', 'fin', 'predpisy', 'pohyby', 'platby', 'nespar', 'upominky', 'docs', '_imp']; }
 
   restore() {
     var raw = null;
@@ -1708,6 +1802,8 @@ class Component extends DCLogic {
     try { data = JSON.parse(raw, function (k, v) { return k === 'birth' && typeof v === 'string' ? new Date(v) : v; }); } catch (e) { return; }
     var self = this;
     this.persistKeys().forEach(function (k) { if (data[k] !== undefined) self[k] = data[k]; });
+    if (!data.fin && data.rates) { this.fin.skolkovne = this.h(data.rates.skolne) || this.fin.skolkovne; this.fin.stravne = { '3-6': this.h(data.rates.s1) || 4800, '7+': this.h(data.rates.s2) || 5200 }; }
+    this.syncRates();
     this.by = {};
     this.kids.forEach(function (k) { self.by[k.first + ' ' + k.last] = k; });
     /* Starší uložená data: doplnit ukázkové alergie, ať sedí s jídelnou. */
@@ -1761,16 +1857,214 @@ class Component extends DCLogic {
     return { d: d, p: Math.max(0, d - o - n), o: o, n: n };
   }
 
-  /* Předpis za měsíc: školné (u PPV 0) a stravné za odebrané obědy. */
-  due(k, key) {
-    var a = this.att(k, key);
-    if (!a.d) return { skolne: 0, strava: 0, meals: 0, rate: 0, total: 0 };
-    var older = (this.syStart + 1) - k.birth.getFullYear() - (k.birth.getMonth() > 7 ? 1 : 0) >= 7;
-    var rate = +(older ? this.rates.s2 : this.rates.s1) || 0;
-    var skolne = this.ppv(k) ? 0 : (+this.rates.skolne || 0);
-    var strava = a.p * rate;
-    return { skolne: skolne, strava: strava, meals: a.p, rate: rate, total: skolne + strava };
+  /* ================================================================ FINANCE
+     Stejná logika jako server/finance (Python): částky jsou CELÉ HALÉŘE (int),
+     nikdy desetinná čísla s plovoucí čárkou. Konto dítěte = účet 'dite:<id>'
+     v podvojné knize (this.pohyby): předpis MD dítě / Dal výnosy, platba
+     MD banka / Dal dítě. Zůstatek ze strany Dal: + přeplatek, − dluh.
+     Úhrady předpisů se rozpouštějí od nejstaršího (FIFO). */
+  h(v) {
+    if (typeof v === 'number') { if (!Number.isInteger(v)) throw new Error('Částka musí být v haléřích (celé číslo).'); return v; }
+    var t = String(v == null ? '' : v).replace(/\s|Kč/g, '').replace(',', '.');
+    if (!/^-?\d+(\.\d{1,2})?$/.test(t)) return NaN;
+    var neg = t.charAt(0) === '-', p = t.replace('-', '').split('.');
+    var r = (+p[0]) * 100 + (p[1] ? +(p[1] + '0').slice(0, 2) : 0);
+    return neg ? -r : r;
   }
+  fmtH(hal, bez) {
+    var neg = hal < 0, a = Math.abs(hal), kc = Math.floor(a / 100), hh = a % 100;
+    var s = String(kc).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + (hh ? ',' + (hh < 10 ? '0' : '') + hh : '');
+    return (neg ? '−' : '') + s + (bez ? '' : ' Kč');
+  }
+  hKc(hal) { return Math.floor(hal / 100) + (hal % 100 ? ',' + String(100 + hal % 100).slice(1) : ''); }
+  vsNorm(v) { var t = String(v == null ? '' : v).replace(/\s/g, ''); return /^\d+$/.test(t) ? (t.replace(/^0+/, '') || '0') : ''; }
+  vsCheck(v, kidId) {
+    var t = String(v || '').trim();
+    if (!t) return 'Variabilní symbol chybí.';
+    if (!/^\d+$/.test(t)) return 'Variabilní symbol smí obsahovat jen číslice.';
+    if (t.length > 10) return 'Variabilní symbol může mít nejvýš 10 číslic.';
+    var n = this.vsNorm(t), self = this;
+    if (n === '0') return 'Variabilní symbol nesmí být nula.';
+    var jiny = this.kids.filter(function (k) { return k.id !== kidId && !k.ended && self.vsNorm(k.vs) === n; })[0];
+    return jiny ? 'VS ' + t + ' už má ' + jiny.first + ' ' + jiny.last + '.' : '';
+  }
+  nextVs(nastup) {
+    var F = this.fin, self = this;
+    if (F.vsSchema === 'rucne') return '';
+    var pre = F.vsSchema === 'rok_poradi' ? String((nastup ? new Date(nastup).getFullYear() : this.today.getFullYear()) % 100).padStart(2, '0') : String(F.vsPrefix || '').replace(/\D/g, '');
+    var zbyva = F.vsDelka - pre.length;
+    if (!pre || zbyva < 2) return '';
+    var used = {}; this.kids.forEach(function (k) { if (k.vs) used[self.vsNorm(k.vs)] = true; });
+    for (var i = 1; i < Math.pow(10, zbyva); i++) { var c = pre + String(i).padStart(zbyva, '0'); if (!used[this.vsNorm(c)]) return c; }
+    return '';
+  }
+  osvobozen(k) { return k.osvobozen != null ? !!k.osvobozen : (this.ppv(k) || !!k.odklad); }
+  kategorie(k, key) {
+    var y = +key.slice(0, 4), m = +key.slice(5, 7), konec = new Date(y + (m >= 9 ? 1 : 0), 7, 31), b = new Date(k.birth);
+    var vek = konec.getFullYear() - b.getFullYear() - ((konec.getMonth() < b.getMonth() || (konec.getMonth() === b.getMonth() && konec.getDate() < b.getDate())) ? 1 : 0);
+    return vek >= 7 ? '7+' : '3-6';
+  }
+  /* Obědy za měsíc: přítomné dny + dny omluvené po uzávěrce (jídlo už bylo
+     objednané). Včas omluvené dny se nepočítají. Ukázková data: každé třetí
+     dítě mělo jednu omluvenku pozdě. */
+  obedy(k, key) {
+    var a = this.att(k, key), num = +String(k.id).replace(/\D/g, '').slice(-4) || 0;
+    var pozde = a.o > 0 && num % 3 === 0 ? 1 : 0;
+    return { dny: a.p + pozde, vcas: a.o - pozde, pozde: pozde, neoml: a.n };
+  }
+  splatnost(key) { var y = +key.slice(0, 4), m = +key.slice(5, 7); return this.iso(new Date(y, m, this.fin.splatnost)); }
+  spoctiPredpis(k, key) {
+    var F = this.fin, pol = [];
+    if (this.osvobozen(k)) pol.push({ druh: 'skolkovne', popis: 'Školkovné — osvobozeno', mn: 1, cena: 0, castka: 0 });
+    else pol.push({ druh: 'skolkovne', popis: 'Školkovné ' + this.monthName(key), mn: 1, cena: F.skolkovne, castka: F.skolkovne });
+    var o = this.obedy(k, key), kat = this.kategorie(k, key);
+    if (o.dny) pol.push({ druh: 'stravne', popis: 'Stravné ' + kat + ' let', mn: o.dny, cena: F.stravne[kat], castka: F.stravne[kat] * o.dny, pozde: o.pozde });
+    return { polozky: pol, castka: pol.reduce(function (a, p) { return a + p.castka; }, 0), splatnost: this.splatnost(key), uhrazeno: 0, stav: 'otevreno', vystaveno: this.iso(this.today) };
+  }
+  aktivniV(k, key) { var a = this.att(k, key); return a.d > 0; }
+  predpis(kidId, key) { return (this.predpisy[kidId] || {})[key] || null; }
+  zauctuj(datum, md, dal, castka, popis, doklad) {
+    if (!(castka > 0) || !Number.isInteger(castka)) return;
+    this.pohyby.push({ id: 'u' + (this.pohyby.length + 1) + '-' + Date.now().toString(36), datum: datum, md: md, dal: dal, castka: castka, popis: popis, doklad: doklad || '' });
+  }
+  saldo(kidId) {
+    var a = 'dite:' + kidId, s = 0;
+    for (var i = 0; i < this.pohyby.length; i++) { var p = this.pohyby[i]; if (p.dal === a) s += p.castka; if (p.md === a) s -= p.castka; }
+    return s;
+  }
+  kUhrade(kidId) { return Math.max(0, -this.saldo(kidId)); }
+  vyrovnej(kidId) {
+    var a = 'dite:' + kidId, kredit = 0;
+    this.pohyby.forEach(function (p) { if (p.dal === a) kredit += p.castka; });
+    var P = this.predpisy[kidId] || {};
+    Object.keys(P).sort(function (x, y) { return P[x].splatnost < P[y].splatnost ? -1 : P[x].splatnost > P[y].splatnost ? 1 : (x < y ? -1 : 1); }).forEach(function (key) {
+      var p = P[key], u = Math.min(p.castka, Math.max(0, kredit));
+      kredit -= u; p.uhrazeno = u;
+      p.stav = u >= p.castka ? 'zaplaceno' : u > 0 ? 'castecne' : 'otevreno';
+    });
+  }
+  vystav(k, key) {
+    if (this.predpis(k.id, key) || !this.aktivniV(k, key)) return null;
+    var p = this.spoctiPredpis(k, key), self = this, den = this.iso(new Date(+key.slice(0, 4), +key.slice(5, 7), 0));
+    (this.predpisy[k.id] || (this.predpisy[k.id] = {}))[key] = p;
+    p.polozky.forEach(function (x) { self.zauctuj(den, 'dite:' + k.id, 'vynosy:' + x.druh, x.castka, x.popis + ' — ' + k.first + ' ' + k.last, k.id + ':' + key); });
+    this.vyrovnej(k.id);
+    return p;
+  }
+  vystavMesic(key) { var self = this, n = 0; this.kids.forEach(function (k) { if (!k.ended && self.vystav(k, key)) n++; }); return n; }
+  /* Párovací engine: dítě podle VS → přesně / přeplatek / nedoplatek; jinak nespárovaná. */
+  zpracujPlatbu(p) {
+    if (p.doklad && this.platby.some(function (x) { return x.doklad === p.doklad; })) return { vysledek: 'duplicita', castka: p.castka };
+    var self = this, n = this.vsNorm(p.vs);
+    var k = n ? this.kids.filter(function (x) { return self.vsNorm(x.vs) === n; })[0] : null;
+    if (!k) {
+      p.kidId = null; this.platby.push(p);
+      this.nespar.push({ platbaId: p.id, duvod: p.vs ? 'VS ' + p.vs + ' nepatří žádnému dítěti' : 'Platba nemá VS', vyreseno: false });
+      return { vysledek: 'nesparovano', castka: p.castka };
+    }
+    return this.pripis(p, k);
+  }
+  pripis(p, k) {
+    var dluh = this.kUhrade(k.id);
+    p.kidId = k.id; if (this.platby.indexOf(p) === -1) this.platby.push(p);
+    this.zauctuj(p.datum, 'banka', 'dite:' + k.id, p.castka, 'Platba VS ' + (p.vs || '—') + ' — ' + k.first + ' ' + k.last, p.id);
+    this.vyrovnej(k.id);
+    return { vysledek: p.castka === dluh ? 'presne' : p.castka > dluh ? 'preplatek' : 'nedoplatek', castka: p.castka, kidId: k.id,
+      preplatek: Math.max(0, p.castka - dluh), zbyva: Math.max(0, dluh - p.castka) };
+  }
+  sparujRucne(platbaId, kidId) {
+    var n = this.nespar.filter(function (x) { return x.platbaId === platbaId && !x.vyreseno; })[0];
+    var p = this.platby.filter(function (x) { return x.id === platbaId; })[0], k = this.kids.filter(function (x) { return x.id === kidId; })[0];
+    if (!n || !p || !k) return null;
+    var r = this.pripis(p, k); n.vyreseno = true; n.kidId = kidId;
+    return r;
+  }
+  dluznici(kDatu) {
+    var self = this, d = kDatu || this.iso(this.today);
+    return this.kids.filter(function (k) {
+      if (self.kUhrade(k.id) <= 0) return false;
+      var P = self.predpisy[k.id] || {};
+      return Object.keys(P).some(function (key) { return P[key].stav !== 'zaplaceno' && P[key].splatnost < d; });
+    });
+  }
+  /* QR platba (SPAYD). Číslo účtu se převede na IBAN, VS jde do X-VS. */
+  iban(ucet) {
+    var t = String(ucet || '').replace(/\s/g, '').toUpperCase();
+    var mod97 = function (num) { var r = 0; for (var i = 0; i < num.length; i++) r = (r * 10 + (+num[i])) % 97; return r; };
+    if (/^CZ\d{22}$/.test(t)) { var re = t.slice(4) + '1235' + t.slice(2, 4); return mod97(re) === 1 ? t : ''; }
+    var m = /^(?:(\d{1,6})-)?(\d{2,10})\/(\d{4})$/.exec(t); if (!m) return '';
+    var w = function (s, v) { s = s.padStart(v.length, '0'); var x = 0; for (var i = 0; i < v.length; i++) x += (+s[i]) * v[i]; return x % 11 === 0; };
+    var pre = m[1] || '0', num = m[2];
+    if (!w(pre, [10, 5, 8, 4, 2, 1]) || !w(num, [6, 3, 7, 9, 10, 5, 8, 4, 2, 1])) return '';
+    var bban = m[3] + pre.padStart(6, '0') + num.padStart(10, '0');
+    var ck = 98 - mod97(bban + '123500');
+    return 'CZ' + (ck < 10 ? '0' : '') + ck + bban;
+  }
+  spayd(k, key) {
+    var am = this.kUhrade(k.id), msg = ('Skolkovne/Stravne ' + this.monthName(key) + ' ' + key.slice(0, 4) + ' - ' + k.first + ' ' + k.last)
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[*\r\n]+/g, ' ').toUpperCase().slice(0, 60);
+    var vs = this.vsNorm(k.vs);
+    return 'SPD*1.0*ACC:' + this.iban(this.fin.ucet) + '*AM:' + Math.floor(am / 100) + '.' + String(100 + am % 100).slice(1) + '*CC:CZK*MSG:' + msg + (vs ? '*X-VS:' + vs : '');
+  }
+  qr(text) {
+    if (typeof window === 'undefined' || !window.qrcode) return null;
+    var q = window.qrcode(0, 'M'); q.addData(text); q.make();
+    var n = q.getModuleCount(), d = [];
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d.push('M' + (c + 4) + ' ' + (r + 4) + 'h1v1h-1z');
+    return { size: n + 8, path: d.join('') };
+  }
+  /* Výpis z banky ve formátu ABO/GPC: řádky 075 = transakce (pozice jako v server/finance/gpc.py). */
+  gpc(text) {
+    var BANKY = ' 0100 0300 0600 0710 0800 2010 2060 2070 2100 2200 2220 2250 2260 2275 2600 2700 3030 3050 3060 3500 4000 4300 5500 5800 6000 6100 6200 6210 6300 6363 6700 6800 7910 7950 7960 7970 7990 8030 8040 8060 8090 8150 8190 8198 8199 8200 8220 8250 8255 8265 8500 ';
+    var dat = function (s) { if (!/^\d{6}$/.test(s) || s === '000000') return ''; var d = new Date(2000 + +s.slice(4, 6), +s.slice(2, 4) - 1, +s.slice(0, 2)); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    var sym = function (s) { s = s.trim(); return /^\d+$/.test(s) ? s.replace(/^0+/, '') : ''; };
+    var ucet = function (s, b) { var c = s.trim().replace(/^0+/, ''); if (!c) return ''; var num = c.slice(-10).replace(/^0+/, '') || '0', pre = c.slice(0, -10).replace(/^0+/, ''); return (pre ? pre + '-' : '') + num + (b ? '/' + b : ''); };
+    var out = { ucet: '', datum: '', tx: [], chyby: [] };
+    String(text).split(/\r?\n/).forEach(function (r, i) {
+      if (r.slice(0, 3) === '074') { out.ucet = ucet(r.slice(3, 19)); out.datum = dat(r.slice(108, 114)); return; }
+      if (r.slice(0, 3) !== '075') return;
+      if (r.length < 117) { out.chyby.push('Řádek ' + (i + 1) + ': krátký záznam — přeskočen.'); return; }
+      var hal = r.slice(48, 60); if (!/^\d{12}$/.test(hal)) { out.chyby.push('Řádek ' + (i + 1) + ': částka není číslo — přeskočen.'); return; }
+      var kod = r.charAt(60); if ('1245'.indexOf(kod) < 0) { out.chyby.push('Řádek ' + (i + 1) + ': neznámý kód účtování — přeskočen.'); return; }
+      var ks = r.slice(71, 81), banka = BANKY.indexOf(' ' + ks.slice(0, 4) + ' ') >= 0 ? ks.slice(0, 4) : (ks.slice(0, 2) === '00' && BANKY.indexOf(' ' + ks.slice(2, 6) + ' ') >= 0 ? ks.slice(2, 6) : '');
+      out.tx.push({ nas: ucet(r.slice(3, 19)), protiucet: ucet(r.slice(19, 35), banka), doklad: r.slice(35, 48).trim(), castka: parseInt(hal, 10) * (kod === '2' || kod === '4' ? 1 : -1),
+        kod: kod, vs: sym(r.slice(61, 71)), nazev: r.slice(97, 117).trim(), datum: (r.length >= 128 ? dat(r.slice(122, 128)) : '') || dat(r.slice(91, 97)) || out.datum, radek: i + 1 });
+    });
+    return out;
+  }
+  importGpc(text) {
+    var v = this.gpc(text), self = this, poc = { presne: 0, preplatek: 0, nedoplatek: 0, nesparovano: 0, duplicita: 0 }, odchozi = 0, celkem = 0;
+    v.tx.forEach(function (t) {
+      if (t.kod !== '2' || t.castka <= 0) { odchozi++; return; }
+      var r = self.zpracujPlatbu({ id: 'p' + Date.now().toString(36) + t.radek, datum: t.datum || self.iso(self.today), castka: t.castka, vs: t.vs, protiucet: t.protiucet, nazev: t.nazev,
+        doklad: t.nas + ':' + (t.doklad || 'r' + t.radek) + ':' + t.datum });
+      poc[r.vysledek]++; if (r.vysledek !== 'duplicita') celkem += t.castka;
+    });
+    return { pocty: poc, odchozi: odchozi, chyby: v.chyby, celkem: celkem, ucet: v.ucet, transakci: v.tx.length };
+  }
+  ukazkovyGpc(key) {
+    /* Výpis jako z banky: většina rodičů zaplatí přesně, někdo víc, někdo méně, jeden splete VS. */
+    var self = this, rows = [], n = 0, ac = this.iban(this.fin.ucet).slice(8) || '0000002000145399';
+    var line = function (protiucet, halere, vs, banka, nazev, datum) {
+      n++;
+      return '075' + ac.padStart(16, '0').slice(-16) + protiucet.padStart(16, '0').slice(-16) + String(900000 + n).padStart(13, '0') + String(halere).padStart(12, '0') + '2'
+        + String(vs).padStart(10, '0') + (banka + '000000') + '0000000000' + '000000' + (nazev + '                    ').slice(0, 20) + '0' + '0203' + datum;
+    };
+    var d = this.today, dd = String(d.getDate()).padStart(2, '0') + String(d.getMonth() + 1).padStart(2, '0') + String(d.getFullYear() % 100).padStart(2, '0');
+    var dluh = this.kids.filter(function (k) { return self.kUhrade(k.id) > 0 && k.vs; });
+    dluh.forEach(function (k, i) {
+      if (i % 7 === 6) return;                                     // někdo ještě nezaplatil
+      var am = self.kUhrade(k.id); if (i % 11 === 3) am += 5000; if (i % 13 === 5) am = Math.max(100, am - 20000);
+      rows.push(line(String(1000000000 + i * 7919), am, k.vs, '0800', (k.last + ' ' + k.first).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase(), dd));
+    });
+    var platby = this.platby, ceka = this.nespar.some(function (x) {
+      return !x.vyreseno && platby.some(function (p) { return p.id === x.platbaId && p.vs === '77001'; });
+    });
+    if (!ceka) rows.push(line('2400111222', 65000, '77001', '2010', 'NEZNAMY PLATCE', dd));   // ukázka nespárované platby jen jednou
+    rows.push('075' + ac.padStart(16, '0').slice(-16) + '0000009876543210' + '0000000999999' + '000000150000' + '1' + '0000000000' + '0300000000' + '0000000000' + '000000' + 'NAKUP PAPIRNICTVI   ' + '0' + '0203' + dd);
+    return rows.join('\r\n');
+  }
+
 
   /* Kreslená postava místo fotky: pleť, vlasy a tričko podle jména
      (dají se změnit v profilu). Fotka má přednost. */
@@ -2092,27 +2386,15 @@ class Component extends DCLogic {
       + '<div class="sig"><div>Zapsal/a</div><div>Ověřil/a</div><div>' + e(dir) + ', ředitelka školy</div></div>';
   }
 
+  /* Sazby v Kč pro texty dokumentů a web (zdroj je this.fin v haléřích). */
+  syncRates() { this.rates = { skolne: this.hKc(this.fin.skolkovne), s1: this.hKc(this.fin.stravne['3-6']), s2: this.hKc(this.fin.stravne['7+']) }; }
+
   monthName(key) { return ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'][+key.slice(5, 7) - 1]; }
 
   kc(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Kč'; }
 
   /* Načtení výpisu: v každém řádku hledáme VS dítěte a částku. */
-  importStatement(text, key) {
-    var self = this, byVs = {}, ok = 0, partial = 0;
-    this.kids.forEach(function (k) { byVs[k.vs] = k; });
-    var paid = this.paid[key] || (this.paid[key] = {});
-    String(text || '').split(/\r?\n/).forEach(function (line) {
-      var toks = line.split(/[;,\t]/).map(function (x) { return x.trim().replace(/^"|"$/g, ''); });
-      var vs = toks.filter(function (x) { return /^\d{6}$/.test(x) && byVs[x]; })[0];
-      var am = toks.filter(function (x) { return /^\d+([.,]\d{1,2})?$/.test(x) && x !== vs && !/^\d{6,}$/.test(x); }).map(function (x) { return parseFloat(x.replace(',', '.')); }).pop();
-      if (!am) return;
-      if (!vs) { var anyVs = toks.filter(function (x) { return /^\d{4,10}$/.test(x); })[0] || '—'; self.unmatched.push({ amount: am, vs: anyVs, date: self.cz(self.today) }); return; }
-      var k = byVs[vs];
-      paid[k.id] = (paid[k.id] || 0) + am;
-      if (paid[k.id] >= self.due(k, key).total) ok++; else partial++;
-    });
-    return { ok: ok, partial: partial };
-  }
+
 
   /* Ověření při individuálním vzdělávání: 2. pondělí v listopadu (náhradní v prosinci). */
   ivTerm() {
@@ -2351,8 +2633,7 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- menu */
     var curMonth = this.monthKeys[this.monthKeys.length - 1], prevMonth = this.monthKeys[this.monthKeys.length - 2];
-    var unpaid = function (key) { return key ? kids.filter(function (k) { var d = self.due(k, key).total; return d && (self.paid[key][k.id] || 0) < d; }) : []; };
-    var unpaidPrev = unpaid(prevMonth);
+    var unpaidPrev = this.dluznici();
     var webMissing = this.webChecks().filter(function (c) { return !c.ok; }).length;
     var docTodo = this.docs ? this.docs.filter(function (d) { return d.required && !d.approved; }).length : 0;
     /* Menu po skupinách: děti → školka → rodiče a veřejnost → peníze → povinná evidence → nastavení. */
@@ -2436,7 +2717,7 @@ class Component extends DCLogic {
       if (k.poSt === 1 && k.plppDo) { var d2 = Math.round((new Date(k.plppDo) - self.today) / 86400000); if (d2 <= 30) todo.push(todoItem('#F3F4F2', '#8B5CF6', k.first + ' ' + k.last + ': vyhodnotit plán pedagogické podpory', 'Do ' + self.cz(new Date(k.plppDo)) + ' — s třídní učitelkou', 'Karta', openKid(k))); }
       if (self.ppv(k) && /34b/.test(k.zpusob) && !k.ivOvereni) todo.push(todoItem('#F3F4F2', '#2F6FDB', k.first + ' ' + k.last + ': ověření individuálního vzdělávání', 'Termín ' + self.cz(self.ivTerm()) + ', náhradní v prosinci — pozvěte rodiče', 'Karta', openKid(k)));
     });
-    if (unpaidPrev.length) todo.push(todoItem('#F7F0DA', '#C99A00', 'Nezaplaceno za ' + self.monthName(prevMonth) + ': ' + nDeti(unpaidPrev.length), unpaidPrev.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — pošlete upomínku', 'Platby', go('platby', { payMonth: prevMonth, payFilter: 'unpaid' }), 'platby'));
+    if (unpaidPrev.length) todo.push(todoItem('#F7F0DA', '#C99A00', 'Po splatnosti: ' + nDeti(unpaidPrev.length), unpaidPrev.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '. ' + self.fmtH(self.kUhrade(k.id)); }).join(', ') + ' — pošlete upomínku', 'Platby', go('platby', { payFilter: 'dluh' }), 'platby'));
     var noPhoto = kids.filter(function (k) { return !k.souhlasFoto; });
     if (noPhoto.length) todo.push(todoItem('#F3F4F2', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — učitelky to vidí v galerii', 'Seznam', go('deti'), 'deti'));
     var noVax = kids.filter(function (k) { return !k.ockovani && !self.ppv(k); });
@@ -2612,6 +2893,16 @@ class Component extends DCLogic {
           info0('Doklad o očkování', K.ockovani ? 'doložen' : (isPpv ? 'nevyžaduje se (PPV)' : 'chybí'), !K.ockovani && !isPpv ? '#9A3412' : '#17181A'),
           withNote(txt('Alergie', 'alergie', K.alergie, 'Např. mléko, lepek'), 'Jídelna podle toho hned připraví náhradu a učitelka to uvidí na tabletu.')
         ] },
+        { title: 'Platby', rows: (function () {
+          if (K.osvobozen == null) K.osvobozen = self.osvobozen(K);
+          var vsErr = self.vsCheck(K.vs, K.id), sl = self.saldo(K.id);
+          return [
+            withNote(txt('Variabilní symbol', 'vs', K.vs, 'Jen číslice, max. 10'), vsErr ? vsErr : 'Podle něj se párují platby z banky.', !!vsErr),
+            withNote(opt('Školkovné', 'osvobozen', [['platí', false], ['osvobozeno', true]], function (b, v) { if (b !== v) self.log('Školkovné ' + (v ? 'osvobozeno' : 'platí') + ': ' + K.first + ' ' + K.last); }),
+              self.ppv(K) || K.odklad ? 'Povinné předškolní vzdělávání' + (K.odklad ? ' / odklad' : '') + ' je ze zákona bezúplatné.' : ''),
+            info0('Konto', self.fmtH(sl) + (sl > 0 ? ' · přeplatek' : sl < 0 ? ' · dluh' : ' · vyrovnáno'), sl < 0 ? '#9A3412' : sl > 0 ? '#27407A' : '#17181A')
+          ];
+        })() },
         { title: 'Souhlasy (GDPR)', rows: [
           consent('Fotky pro rodiče třídy', 'souhlasFoto'),
           consent('Fotky na webu školky', 'souhlasWeb'),
@@ -2801,8 +3092,8 @@ class Component extends DCLogic {
               obcan: 'CZ', obec: a.spad ? 'Praha 6' : '', adresa: '', spad: a.spad, zahajeni: refY + '-09-01', duvod: 'Nástup', provoz: 'C', zpusob: 'Pravidelná docházka', odklad: false,
               zastupce: '', telefon: '', email: a.email || '', zastupce2: '', telefon2: '', dorucovaci: '', povereni: [], pojistovna: '', ockovani: true, alergie: '', svp: '', po: '', zvj: '',
               souhlasFoto: false, souhlasWeb: false, souhlasJmeno: false, souhlasDatum: '', oml: 0, neoml: 0, poSt: 0, spz: '', spzDo: '', ivp: false, ap: false, plppDo: '', ivOvereni: null, absStep: 0, absDate: null, ended: null, app: true,
-              vs: String((refY) % 100) + self.pad(900 + i, 4) };
-            self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
+              vs: '' };
+            k.vs = self.nextVs(k.zahajeni); self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
           });
           Z.moved = true; self.log('Zápis: ' + nPri + ' přijatých dětí převedeno do kartotéky (nástup 1. 9. ' + refY + ')'); self.forceUpdate(); self.showToast(nDeti(nPri) + ' v kartotéce s nástupem 1. 9. — rodiče doplní údaje v aplikaci');
         }]
@@ -2867,54 +3158,166 @@ class Component extends DCLogic {
     };
 
     /* -------------------------------------------------- platby */
-    var pM = st.payMonth, PD = this.paid[pM] || (this.paid[pM] = {});
-    var payAll = kids.map(function (k) { var d = self.due(k, pM); var p = PD[k.id] || 0; return { k: k, d: d, p: p, st: !d.total ? 'none' : p >= d.total ? (p > d.total ? 'over' : 'ok') : p > 0 ? 'part' : 'open' }; }).filter(function (x) { return x.st !== 'none'; });
-    var payList = payAll.filter(function (x) { return st.payFilter === 'all' || (st.payFilter === 'unpaid' ? (x.st === 'open' || x.st === 'part') : x.st === 'ok' || x.st === 'over'); });
-    var tDue = payAll.reduce(function (a, x) { return a + x.d.total; }, 0), tPaid = payAll.reduce(function (a, x) { return a + Math.min(x.p, x.d.total); }, 0);
-    var nOpen = payAll.filter(function (x) { return x.st === 'open' || x.st === 'part'; }).length;
-    var STP = { ok: ['Zaplaceno', '#EDF4E4', '#2F5212'], over: ['Přeplatek', '#EBF1FA', '#27407A'], part: ['Část', '#F7F0DA', '#5C4300'], open: ['Čeká', '#FAEBE4', '#9A3412'] };
-    var rateF = function (label, key, unit) { return { label: label, unit: unit, value: self.rates[key], onInput: function (e) { self.rates[key] = e.target.value.replace(/[^\d]/g, ''); self.forceUpdate(); } }; };
+    var pM = st.payMonth, F = this.fin, canPay = role === 'reditelka' || role === 'hospodarka';
+    var STP = { zaplaceno: ['Zaplaceno', '#EDF4E4', '#2F5212'], castecne: ['Částečně', '#F7F0DA', '#5C4300'], otevreno: ['Čeká', '#FAEBE4', '#9A3412'] };
+    var dnes = this.iso(this.today);
+    var dluzniciNow = this.dluznici();
+    var dluhIds = {}; dluzniciNow.forEach(function (k) { dluhIds[k.id] = true; });
+    var payAll = kids.map(function (k) { var p = self.predpis(k.id, pM); return p ? { k: k, p: p, saldo: self.saldo(k.id) } : null; }).filter(Boolean);
+    var monthEnded = pM < curMonth;
+    var payList = payAll.filter(function (x) {
+      return st.payFilter === 'all' || (st.payFilter === 'unpaid' ? x.p.stav !== 'zaplaceno' : st.payFilter === 'paid' ? x.p.stav === 'zaplaceno' : dluhIds[x.k.id]);
+    });
+    var tDue = 0, tPaid = 0, nOpen = 0, kredit = 0;
+    payAll.forEach(function (x) { tDue += x.p.castka; tPaid += x.p.uhrazeno; if (x.p.stav !== 'zaplaceno') nOpen++; });
+    kids.forEach(function (k) { var sl = self.saldo(k.id); if (sl > 0) kredit += sl; });
+    var dluhSum = dluzniciNow.reduce(function (a, k) { return a + self.kUhrade(k.id); }, 0);
+    var kanal = function (k) { return k.app ? 'push' : 'email'; };
+    var upomenut = function (k) {
+      var P = self.predpisy[k.id] || {};
+      Object.keys(P).forEach(function (key) { if (P[key].stav !== 'zaplaceno' && P[key].splatnost < dnes) self.upominky.push({ kidId: k.id, obdobi: key, kanal: kanal(k), kdy: dnes }); });
+    };
+    var upomenutoDnes = function (k) { return self.upominky.some(function (u) { return u.kidId === k.id && u.kdy === dnes; }); };
     var pay = {
       months: this.monthKeys.map(function (m) { var on = pM === m; return { label: self.monthName(m), on: on, style: chip(on, true), pick: function () { self.setState({ payMonth: m }); } }; }),
-      filters: [['all', 'Všechny ' + payAll.length], ['unpaid', 'Nezaplacené ' + nOpen], ['paid', 'Zaplacené ' + (payAll.length - nOpen)]].map(function (f) { var on = st.payFilter === f[0]; return { label: f[1], on: on, style: chip(on, true), pick: function () { self.setState({ payFilter: f[0] }); } }; }),
+      monthLabel: self.monthName(pM),
+      filters: [['all', 'Všechny ' + payAll.length], ['unpaid', 'Nezaplacené ' + nOpen], ['paid', 'Zaplacené ' + (payAll.length - nOpen)], ['dluh', 'Po splatnosti ' + dluzniciNow.length]].map(function (f) {
+        var on = st.payFilter === f[0]; return { label: f[1], on: on, style: chip(on, true), pick: function () { self.setState({ payFilter: f[0] }); } }; }),
       stats: [
-        { label: 'Předepsáno · ' + self.monthName(pM), value: self.kc(tDue), sub: 'školné a stravné', style: zStat('#FFFFFF') },
-        { label: 'Zaplaceno', value: self.kc(tPaid), sub: (payAll.length - nOpen) + ' z ' + payAll.length + ' dětí', style: zStat('#EDF4E4') },
-        { label: 'Chybí', value: self.kc(tDue - tPaid), sub: nOpen ? nDeti(nOpen) + ' nezaplaceno' : 'vše uhrazeno', style: zStat(nOpen ? '#FAEBE4' : '#FFFFFF') }
+        { label: 'Předepsáno · ' + self.monthName(pM), value: self.fmtH(tDue), sub: payAll.length ? nDeti(payAll.length) + ' · splatnost ' + self.cz(new Date(self.splatnost(pM))) : 'zatím nevystaveno', style: zStat('#FFFFFF') },
+        { label: 'Uhrazeno', value: self.fmtH(tPaid), sub: (payAll.length - nOpen) + ' z ' + payAll.length + ' zaplaceno celé', style: zStat('#EDF4E4') },
+        { label: 'Zbývá uhradit', value: self.fmtH(tDue - tPaid), sub: nOpen ? nDeti(nOpen) + (nOpen === 1 ? ' ještě nemá' : ' ještě nemají') + ' zaplaceno' : 'vše uhrazeno', style: zStat(tDue - tPaid ? '#FAEBE4' : '#FFFFFF') },
+        { label: 'Přeplatky na kontech', value: self.fmtH(kredit), sub: 'odečtou se z dalších předpisů', style: zStat('#EBF1FA') }
       ],
+      noPredpisy: !payAll.length, hasPredpisy: payAll.length > 0,
+      issueLabel: 'Vystavit předpisy za ' + self.monthName(pM) + (monthEnded ? '' : ' (měsíc ještě běží)'),
+      issue: function () {
+        if (!canPay) return;
+        var n = self.vystavMesic(pM);
+        self.log('Vystaveny předpisy za ' + self.monthName(pM) + ': ' + n);
+        self.forceUpdate(); self.showToast(n ? 'Vystaveno předpisů: ' + n : 'Předpisy už jsou vystavené');
+      },
       rows: payList.map(function (x) {
-        var key = pM + ':' + x.k.id, rem = self.reminded[key];
-        return { name: x.k.first + ' ' + x.k.last, cls: clsById[x.k.cls].name + (self.ppv(x.k) ? ' · PPV' : ''), vs: x.k.vs,
-          skolne: x.d.skolne ? self.kc(x.d.skolne) : '0 (PPV)', strava: self.kc(x.d.strava), stravaSub: x.d.meals + ' × ' + x.d.rate + ' Kč', total: self.kc(x.d.total),
-          state: STP[x.st][0] + (x.st === 'part' ? ' ' + self.kc(x.p) : ''), stateStyle: 'justify-self: start; height: 26px; padding: 0 10px; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; white-space: nowrap; background: ' + STP[x.st][1] + '; color: ' + STP[x.st][2],
-          canRemind: x.st === 'open' || x.st === 'part', remindLabel: rem ? 'Připomenuto' : 'Upomínka',
-          remind: function () { if (rem) return; self.reminded[key] = self.iso(self.today); self.log('Upomínka platby za ' + self.monthName(pM) + ': ' + x.k.first + ' ' + x.k.last); self.forceUpdate(); self.showToast('Upomínka odeslána rodičům ' + x.k.first); } };
+        var k = x.k, p = x.p, zb = p.castka - p.uhrazeno;
+        var strav = p.polozky.filter(function (q) { return q.druh === 'stravne'; })[0];
+        var skol = p.polozky.filter(function (q) { return q.druh === 'skolkovne'; })[0];
+        var vsErr = self.vsCheck(k.vs, k.id);
+        return { name: k.first + ' ' + k.last, cls: clsById[k.cls].name + (self.osvobozen(k) ? ' · osvobozen' : ''),
+          vs: k.vs || 'chybí', vsStyle: 'font-variant-numeric: tabular-nums; ' + (vsErr ? 'color: #9A3412; font-weight: 700' : ''),
+          total: self.fmtH(p.castka),
+          sub: (skol && skol.castka ? 'školkovné' : 'bez školkovného') + (strav ? ' + ' + strav.mn + ' ' + (strav.mn === 1 ? 'oběd' : strav.mn < 5 ? 'obědy' : 'obědů') + (strav.pozde ? ' (' + strav.pozde + '× pozdě omluveno)' : '') : ''),
+          saldo: self.fmtH(x.saldo), saldoStyle: 'font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (x.saldo < 0 ? '#9A3412' : x.saldo > 0 ? '#27407A' : '#5A5C60'),
+          state: STP[p.stav][0] + (p.stav === 'castecne' ? ' · zbývá ' + self.fmtH(zb) : ''),
+          stateStyle: 'justify-self: start; min-height: 26px; padding: 3px 10px; box-sizing: border-box; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; background: ' + STP[p.stav][1] + '; color: ' + STP[p.stav][2],
+          qrLabel: self.kUhrade(k.id) ? 'QR platba' : 'Konto',
+          openQr: function () { self.setState({ payDlg: { kind: 'qr', kidId: k.id } }); },
+          canRemind: !!dluhIds[k.id], remindLabel: upomenutoDnes(k) ? 'Upomenuto' : 'Upomínka',
+          remindStyle: 'height: 34px; padding: 0 12px; border-radius: 17px; font-size: 13px; font-weight: 700; cursor: pointer; ' + (upomenutoDnes(k) ? 'border: 0; background: #F3F4F2; color: #8A8C90' : 'border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513'),
+          remind: function () {
+            if (!canPay || upomenutoDnes(k)) return;
+            upomenut(k); self.log('Upomínka (' + (kanal(k) === 'push' ? 'aplikace' : 'e-mail') + '): ' + k.first + ' ' + k.last + ', dluh ' + self.fmtH(self.kUhrade(k.id)));
+            self.forceUpdate(); self.showToast('Upomínka odeslána ' + (kanal(k) === 'push' ? 'do aplikace' : 'e-mailem') + ' — ' + k.first);
+          } };
       }),
-      rates: [rateF('Školné', 'skolne', 'Kč/měs.'), rateF('Oběd 3–6 let', 's1', 'Kč/den'), rateF('Oběd 7 let', 's2', 'Kč/den')],
-      unmatched: this.unmatched.map(function (u) { return { amount: self.kc(u.amount), sub: 'VS ' + u.vs + ' · ' + u.date + ' · dohledat ručně' }; }),
-      noUnmatched: this.unmatched.length === 0,
+      hasDluh: dluzniciNow.length > 0,
+      dluhSum: self.fmtH(dluhSum),
+      dluhSub: dluzniciNow.length ? nDeti(dluzniciNow.length) + (dluzniciNow.length === 1 ? ' má' : ' mají') + ' dluh po splatnosti (' + F.splatnost + '. den dalšího měsíce).' : 'Nikdo nedluží po splatnosti.',
+      dluhStyle: 'border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; background: ' + (dluzniciNow.length ? '#FAEBE4' : '#FFFFFF'),
+      remindAllLabel: (function (n) { return n ? 'Poslat upomínky všem (' + n + ')' : 'Upomínky dnes odeslány ✓'; })(dluzniciNow.filter(function (k) { return !upomenutoDnes(k); }).length),
+      remindAll: function () {
+        if (!canPay) return;
+        var todo = dluzniciNow.filter(function (k) { return !upomenutoDnes(k); });
+        if (!todo.length) { self.showToast('Dnes už jsou všichni upomenuti'); return; }
+        var push = 0; todo.forEach(function (k) { upomenut(k); if (kanal(k) === 'push') push++; });
+        self.log('Hromadné upomínky: ' + todo.length + ' (aplikace ' + push + ', e-mail ' + (todo.length - push) + ')');
+        self.forceUpdate(); self.showToast('Upomínky odeslány: ' + push + '× do aplikace, ' + (todo.length - push) + '× e-mailem');
+      },
+      unmatched: this.nespar.filter(function (n) { return !n.vyreseno; }).map(function (n) {
+        var p = self.platby.filter(function (x) { return x.id === n.platbaId; })[0] || {};
+        return { amount: self.fmtH(p.castka || 0), sub: (p.vs ? 'VS ' + p.vs : 'bez VS') + ' · ' + (p.datum ? self.cz(new Date(p.datum)) : '') + (p.nazev ? ' · ' + p.nazev : ''),
+          pair: function () { self.setState({ payDlg: { kind: 'pair', platbaId: n.platbaId, q: '' } }); } };
+      }),
+      noUnmatched: !this.nespar.some(function (n) { return !n.vyreseno; }),
+      canSettings: role === 'reditelka', goSettings: go('nastaveni'),
+      setup: [
+        { k: 'Účet školky', v: F.ucet || 'chybí' },
+        { k: 'Školkovné', v: self.fmtH(F.skolkovne) + ' / měsíc' },
+        { k: 'Stravné 3–6 / 7+ let', v: self.fmtH(F.stravne['3-6'], true) + ' / ' + self.fmtH(F.stravne['7+']) },
+        { k: 'Omluvenka včas', v: 'do ' + F.omlDo + (F.omlDni ? (F.omlDni === 1 ? ' předchozího dne' : ', ' + F.omlDni + ' dny předem') : ' téhož dne') },
+        { k: 'Splatnost', v: F.splatnost + '. den dalšího měsíce' }
+      ],
       onFile: function (e) {
-        var f = e.target.files && e.target.files[0]; if (!f) return;
-        var r = new FileReader();
-        r.onload = function () { var res = self.importStatement(r.result, pM); self.log('Načten výpis ' + f.name + ' — ' + res.ok + ' spárováno'); self.forceUpdate(); self.showToast('Spárováno ' + res.ok + ' plateb' + (res.partial ? ', ' + res.partial + ' jen částečně' : '')); };
-        r.readAsText(f, 'utf-8');
-        e.target.value = '';
+        var f = e.target.files && e.target.files[0]; e.target.value = '';
+        if (!f) return;
+        f.arrayBuffer().then(function (buf) {
+          var text; try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (er) { text = new TextDecoder('windows-1250').decode(buf); }
+          var r = self.importGpc(text);
+          if (!r.transakci) { self.setState({ payDlg: { kind: 'import', name: f.name, r: r, empty: true } }); return; }
+          self.log('Načten výpis ' + f.name + ': ' + (r.pocty.presne + r.pocty.preplatek + r.pocty.nedoplatek) + ' spárováno, ' + r.pocty.nesparovano + ' nespárováno');
+          self.setState({ payDlg: { kind: 'import', name: f.name, r: r } });
+        });
       },
       demo: function () {
-        var lines = ['Datum;Protiúčet;VS;Částka;Zpráva'];
-        var open = payAll.filter(function (x) { return x.st === 'open'; });
-        open.slice(0, Math.max(0, open.length - 2)).forEach(function (x, i) { lines.push(self.iso(self.today) + ';1234567890/0800;' + x.k.vs + ';' + x.d.total + ';stravné ' + x.k.first); });
-        lines.push(self.iso(self.today) + ';2000145399/0800;77001;650;školkovné');
-        var res = self.importStatement(lines.join('\n'), pM);
-        self.log('Načten ukázkový výpis — ' + res.ok + ' spárováno'); self.forceUpdate(); self.showToast('Spárováno ' + res.ok + ' plateb, 1 platbu je potřeba dohledat');
+        var text = self.ukazkovyGpc(pM), r = self.importGpc(text);
+        self.log('Načten ukázkový výpis: ' + (r.pocty.presne + r.pocty.preplatek + r.pocty.nedoplatek) + ' spárováno');
+        self.setState({ payDlg: { kind: 'import', name: 'ukazkovy-vypis.gpc', r: r, demoText: text } });
       },
       export: function () {
-        var rows = ['Dítě;Třída;VS;Školné;Stravné;Celkem;Zaplaceno;Stav'];
-        payAll.forEach(function (x) { rows.push([x.k.first + ' ' + x.k.last, clsById[x.k.cls].name, x.k.vs, x.d.skolne, x.d.strava, x.d.total, x.p, STP[x.st][0]].join(';')); });
+        var rows = ['Dítě;Třída;VS;Období;Předpis;Uhrazeno;Stav;Konto'];
+        payAll.forEach(function (x) { rows.push([x.k.first + ' ' + x.k.last, clsById[x.k.cls].name, x.k.vs, pM, self.hKc(x.p.castka), self.hKc(x.p.uhrazeno), STP[x.p.stav][0], self.hKc(x.saldo)].join(';')); });
+        rows.push(''); rows.push('Datum;Má dáti;Dal;Částka;Popis;Doklad');
+        self.pohyby.filter(function (p) { return p.datum.slice(0, 7) === pM || p.doklad.slice(-7) === pM; }).forEach(function (p) { rows.push([p.datum, p.md, p.dal, self.hKc(p.castka), p.popis.replace(/;/g, ','), p.doklad].join(';')); });
         self.download({ name: 'platby-' + pM + '.csv', text: '﻿' + rows.join('\r\n'), type: 'text/csv' });
         self.log('Export plateb za ' + self.monthName(pM) + ' pro účetnictví');
       }
     };
+
+    /* Okna plateb: konto + QR, ruční spárování, výsledek importu */
+    var PDg = st.payDlg, payDlg = { open: !!PDg, isQr: false, isPair: false, isImport: false, close: function () { self.setState({ payDlg: null }); } };
+    if (PDg && PDg.kind === 'qr') {
+      var K = self.kids.filter(function (k) { return k.id === PDg.kidId; })[0];
+      if (K) {
+        var due = self.kUhrade(K.id), sp = self.spayd(K, pM), Q = due && self.iban(F.ucet) && K.vs ? self.qr(sp) : null;
+        Object.assign(payDlg, { isQr: true, title: K.first + ' ' + K.last, kicker: 'Konto a QR platba', saldo: self.fmtH(self.saldo(K.id)),
+          saldoNote: self.saldo(K.id) > 0 ? 'přeplatek — odečte se z dalšího předpisu' : self.saldo(K.id) < 0 ? 'dluh' : 'vyrovnáno',
+          due: self.fmtH(due), hasQr: !!Q, noQr: !Q, qrBox: Q ? '0 0 ' + Q.size + ' ' + Q.size : '0 0 10 10', qrPath: Q ? Q.path : '',
+          noQrText: !due ? 'Nic k úhradě — konto je vyrovnané nebo v přeplatku.' : !K.vs ? 'Dítě nemá variabilní symbol — doplňte ho v kartě dítěte.' : !self.iban(F.ucet) ? 'Číslo účtu školky v nastavení nesedí.' : 'QR kód se nepodařilo vytvořit.',
+          rows: [['Účet', F.ucet], ['Částka', self.fmtH(due)], ['Variabilní symbol', K.vs || '—'], ['Zpráva', 'Školkovné/stravné ' + self.monthName(pM) + ' — ' + K.first + ' ' + K.last]].map(function (r) { return { k: r[0], v: r[1] }; }),
+          spayd: sp,
+          history: self.pohyby.filter(function (p) { return p.md === 'dite:' + K.id || p.dal === 'dite:' + K.id; }).slice().reverse().slice(0, 12).map(function (p) {
+            var plus = p.dal === 'dite:' + K.id;
+            return { d: self.cz(new Date(p.datum)), t: p.popis.replace(' — ' + K.first + ' ' + K.last, ''), a: (plus ? '+' : '−') + self.fmtH(p.castka), style: 'font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (plus ? '#2F5212' : '#3A3C40') };
+          }),
+          copy: function () { try { navigator.clipboard.writeText(sp); self.showToast('Platební údaje zkopírovány'); } catch (er) { self.showToast('Kopírování nejde'); } } });
+      }
+    }
+    if (PDg && PDg.kind === 'pair') {
+      var pl = self.platby.filter(function (x) { return x.id === PDg.platbaId; })[0] || {};
+      var qq = (PDg.q || '').toLowerCase();
+      Object.assign(payDlg, { isPair: true, title: 'Přiřadit platbu ' + self.fmtH(pl.castka || 0), kicker: (pl.vs ? 'VS ' + pl.vs : 'bez VS') + ' · ' + (pl.nazev || '') + ' · ' + (pl.protiucet || ''),
+        q: PDg.q || '', onQ: function (e) { self.setState({ payDlg: Object.assign({}, PDg, { q: e.target.value }) }); },
+        kids: kids.filter(function (k) { return !qq || (k.first + ' ' + k.last + ' ' + k.vs).toLowerCase().indexOf(qq) >= 0; }).slice(0, 30).map(function (k) {
+          return { name: k.first + ' ' + k.last, sub: clsById[k.cls].name + ' · VS ' + (k.vs || '—') + ' · k úhradě ' + self.fmtH(self.kUhrade(k.id)),
+            pick: function () {
+              var r = self.sparujRucne(PDg.platbaId, k.id); if (!r) return;
+              self.log('Ručně spárováno: ' + self.fmtH(pl.castka) + ' → ' + k.first + ' ' + k.last);
+              self.setState({ payDlg: null });
+              self.showToast(k.first + ': ' + (r.vysledek === 'presne' ? 'zaplaceno přesně' : r.vysledek === 'preplatek' ? 'přeplatek ' + self.fmtH(r.preplatek) + ' na kontě' : 'zbývá doplatit ' + self.fmtH(r.zbyva)));
+            } };
+        }) });
+    }
+    if (PDg && PDg.kind === 'import') {
+      var R = PDg.r, P0 = R.pocty;
+      Object.assign(payDlg, { isImport: true, title: PDg.empty ? 'Ve výpisu nejsou žádné transakce' : 'Výpis načten', kicker: PDg.name + (R.ucet ? ' · účet ' + R.ucet : ''),
+        lines: [
+          ['Zaplaceno přesně', P0.presne, '#EDF4E4', '#2F5212'], ['Přeplatek — připsán na konto', P0.preplatek, '#EBF1FA', '#27407A'],
+          ['Nedoplatek — zbytek zůstává k úhradě', P0.nedoplatek, '#F7F0DA', '#5C4300'], ['Nespárováno — přiřaďte ručně', P0.nesparovano, '#FAEBE4', '#9A3412'],
+          ['Už načteno dříve — přeskočeno', P0.duplicita, '#F3F4F2', '#5A5C60'], ['Odchozí platby — nepárují se', R.odchozi, '#F3F4F2', '#5A5C60']
+        ].filter(function (x) { return x[1]; }).map(function (x) { return { label: x[0], n: String(x[1]), style: 'display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; font-size: 15px; background: ' + x[2] + '; color: ' + x[3] }; }),
+        total: 'Připsáno celkem ' + self.fmtH(R.celkem), hasErr: R.chyby.length > 0, errs: R.chyby.slice(0, 5).map(function (t) { return { t: t }; }),
+        emptyText: PDg.empty ? 'Soubor neobsahuje řádky 075. Stáhněte z bankovnictví výpis ve formátu GPC (ABO).' : '', isEmpty: !!PDg.empty,
+        hasDemo: !!PDg.demoText, downloadDemo: function () { self.download({ name: 'ukazkovy-vypis.gpc', text: PDg.demoText, type: 'text/plain' }); } });
+    }
 
     /* -------------------------------------------------- zprávy */
     /* Komu: rodiny podle výběru. Kdo má aplikaci, dostane zprávu do ní;
@@ -2925,7 +3328,7 @@ class Component extends DCLogic {
       if (/^kid:/.test(key)) return self.kids.filter(function (k) { return 'kid:' + k.id === key; });
       if (key === 'all') return kids;
       if (key === 'ppv') return ppvKids;
-      if (key === 'dluh') return unpaid(curMonth);
+      if (key === 'dluh') return self.dluznici();
       return kids.filter(function (k) { return k.cls === key; });
     };
     var kidTo = /^kid:/.test(st.msgTo) ? recip(st.msgTo)[0] : null;
@@ -3154,8 +3557,8 @@ class Component extends DCLogic {
               obcan: 'CZ', obec: x.obec, adresa: x.adresa, spad: true, zahajeni: x.start || self.iso(self.today), duvod: 'Nástup', provoz: clsById[cls].provoz, zpusob: 'Pravidelná docházka', odklad: false,
               zastupce: x.zastupce, telefon: x.telefon, email: x.email, zastupce2: '', telefon2: '', dorucovaci: '', povereni: [], pojistovna: x.pojistovna, ockovani: false, alergie: x.alergie, svp: '', po: '', zvj: '',
               souhlasFoto: false, souhlasWeb: false, souhlasJmeno: false, souhlasDatum: '', oml: 0, neoml: 0,
-              poSt: 0, spz: '', spzDo: '', ivp: false, ap: false, plppDo: '', ivOvereni: null, absStep: 0, absDate: null, ended: null, app: !!x.email, vs: String(self.syStart % 100) + self.pad(self.kids.length + 500, 4) };
-            self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
+              poSt: 0, spz: '', spzDo: '', ivp: false, ap: false, plppDo: '', ivOvereni: null, absStep: 0, absDate: null, ended: null, app: !!x.email, vs: '' };
+            k.vs = self.nextVs(k.zahajeni); self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
           });
           self.log('Import z Excelu (' + I.name + '), dětí: ' + ready.length);
           self.setState({ imp: null, page: 'deti', onlyMissing: false });
@@ -3241,13 +3644,64 @@ class Component extends DCLogic {
       style: 'align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 800; cursor: pointer; ' + (danger ? 'border: 2px solid #F2C3AE; background: #FFFFFF; color: #9A3412' : 'border: 0; background: #DCE6F2; color: #1F3A5C'),
       wrap: 'display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1' }; };
     var dirName = (this.teachers.filter(function (x) { return x.role === 'Ředitelka'; })[0] || {}).name || '';
+    /* Nastavení plateb: částky se píšou v Kč ("48,50"), ukládají v haléřích. */
+    var FE = this._finEdit || (this._finEdit = {});
+    var noteS = function (bad) { return 'font-size: 12px; font-weight: 600; color: ' + (bad ? '#9A3412' : '#2F5212'); };
+    var fMoney = function (label, path, ph) {
+      var get = function () { return path === 'skolkovne' ? F.skolkovne : F.stravne[path]; };
+      var raw = FE[path] != null ? FE[path] : self.hKc(get()), val = self.h(raw), bad = !(val >= 0);
+      return { label: label, isInput: true, isChips: false, isText: false, isButton: false, value: raw, ph: ph, chips: [], hasNote: bad, note: bad ? 'Zadejte částku, např. 48 nebo 48,50' : '', noteStyle: noteS(true),
+        wrap: 'display: flex; flex-direction: column; gap: 4px; min-width: 0',
+        style: 'height: 40px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; min-width: 0; ' + (bad ? 'border: 2px solid #F2C3AE; background: #FFF8F4' : 'border: 1px solid #E5E7E4; background: #FFFFFF'),
+        onInput: function (ev) { FE[path] = ev.target.value; var v = self.h(ev.target.value); if (v >= 0) { if (path === 'skolkovne') F.skolkovne = v; else F.stravne[path] = v; self.syncRates(); self.save(); } self.forceUpdate(); } };
+    };
+    var ibanNow = self.iban(F.ucet);
+    var finFields = [
+      { label: 'Číslo účtu školky', isInput: true, isChips: false, isText: false, isButton: false, value: F.ucet, ph: '19-2000145399/0800', chips: [],
+        hasNote: true, note: ibanNow ? 'IBAN ' + ibanNow.replace(/(.{4})/g, '$1 ').trim() + ' — půjde do QR plateb' : 'Číslo nesedí — zadejte předčíslí-číslo/kód banky nebo IBAN', noteStyle: noteS(!ibanNow),
+        wrap: 'display: flex; flex-direction: column; gap: 4px; min-width: 0; grid-column: 1 / -1',
+        style: 'height: 40px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; min-width: 0; ' + (ibanNow ? 'border: 1px solid #E5E7E4; background: #FFFFFF' : 'border: 2px solid #F2C3AE; background: #FFF8F4'),
+        onInput: function (ev) { F.ucet = ev.target.value.trim(); self.save(); self.forceUpdate(); } },
+      fMoney('Školkovné (Kč / měsíc)', 'skolkovne', '900'),
+      { label: 'Splatnost (den dalšího měsíce)', isInput: true, isChips: false, isText: false, isButton: false, value: String(F.splatnost), ph: '10', chips: [], hasNote: false,
+        wrap: 'display: flex; flex-direction: column; gap: 4px; min-width: 0',
+        style: 'height: 40px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; min-width: 0; border: 1px solid #E5E7E4; background: #FFFFFF',
+        onInput: function (ev) { var v = parseInt(ev.target.value, 10); if (v >= 1 && v <= 28) { F.splatnost = v; self.save(); } self.forceUpdate(); } },
+      fMoney('Stravné 3–6 let (Kč / den)', '3-6', '48'),
+      fMoney('Stravné 7 a více let (Kč / den)', '7+', '52'),
+      { label: 'Omluvenka ruší oběd, když přijde', isInput: false, isChips: true, isText: false, isButton: false, value: '', ph: '', style: '', onInput: function () {}, hasNote: true,
+        note: 'Pozdější omluvenka se počítá jako odebraný oběd — jídlo už je objednané.', noteStyle: 'font-size: 12px; color: #5A5C60',
+        wrap: 'display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1',
+        chips: [[0, 'do ' + F.omlDo + ' téhož dne'], [1, 'do ' + F.omlDo + ' předchozího dne'], [2, 'do ' + F.omlDo + ' dva dny předem']].map(function (o) { var on = F.omlDni === o[0]; return { label: o[1], on: on, style: chip(on, true), pick: function () { F.omlDni = o[0]; self.log('Nastavení: uzávěrka omluvenek — ' + o[1]); self.save(); self.forceUpdate(); } }; }) },
+      { label: 'Uzávěrka (hodina)', isInput: false, isChips: true, isText: false, isButton: false, value: '', ph: '', style: '', onInput: function () {}, hasNote: false,
+        wrap: 'display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1',
+        chips: ['07:00', '08:00', '10:00', '12:00', '14:00'].map(function (t) { var on = F.omlDo === t; return { label: t, on: on, style: chip(on, true), pick: function () { F.omlDo = t; self.save(); self.forceUpdate(); } }; }) }
+    ];
+    var bezVs = kids.filter(function (k) { return !k.vs; }), dupVs = kids.filter(function (k) { return k.vs && self.vsCheck(k.vs, k.id); });
+    var vsFields = [
+      { label: 'Jak přidělovat', isInput: false, isChips: true, isText: false, isButton: false, value: '', ph: '', style: '', onInput: function () {}, hasNote: false,
+        wrap: 'display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1',
+        chips: [['rok_poradi', 'Rok nástupu + pořadí'], ['prefix_poradi', 'Předčíslí + pořadí'], ['rucne', 'Zadávám ručně']].map(function (o) { var on = F.vsSchema === o[0]; return { label: o[1], on: on, style: chip(on, true), pick: function () { F.vsSchema = o[0]; self.log('Nastavení: VS — ' + o[1]); self.save(); self.forceUpdate(); } }; }) }
+    ];
+    if (F.vsSchema === 'prefix_poradi') vsFields.push({ label: 'Předčíslí', isInput: true, isChips: false, isText: false, isButton: false, value: F.vsPrefix, ph: 'např. 77', chips: [], hasNote: !F.vsPrefix, note: 'Vyplňte 1–6 číslic', noteStyle: noteS(true),
+      wrap: 'display: flex; flex-direction: column; gap: 4px; min-width: 0', style: 'height: 40px; border-radius: 12px; padding: 0 12px; font-size: 14px; color: #17181A; min-width: 0; border: 1px solid #E5E7E4; background: #FFFFFF',
+      onInput: function (ev) { F.vsPrefix = ev.target.value.replace(/\D/g, '').slice(0, 6); self.save(); self.forceUpdate(); } });
+    if (F.vsSchema !== 'rucne') vsFields.push({ label: 'Počet číslic', isInput: false, isChips: true, isText: false, isButton: false, value: '', ph: '', style: '', onInput: function () {}, hasNote: true,
+      note: self.nextVs() ? 'Příští nové dítě dostane VS ' + self.nextVs() : 'S tímto nastavením nejde VS vytvořit', noteStyle: noteS(!self.nextVs()),
+      wrap: 'display: flex; flex-direction: column; gap: 6px; min-width: 0',
+      chips: [6, 8, 10].map(function (n) { var on = F.vsDelka === n; return { label: String(n), on: on, style: chip(on, true), pick: function () { F.vsDelka = n; self.save(); self.forceUpdate(); } }; }) });
+    vsFields.push(fTx('Stav', kids.length + ' dětí · ' + (bezVs.length ? bezVs.length + ' bez VS' : 'všechny mají VS') + (dupVs.length ? ' · ' + dupVs.length + ' s duplicitním VS — opravte v kartě dítěte' : '') + '. VS se dá změnit v kartě dítěte (Upravit).'));
+    if (bezVs.length && F.vsSchema !== 'rucne') vsFields.push(fBt('', 'Přidělit VS dětem bez VS (' + bezVs.length + ')', function () {
+      bezVs.forEach(function (k) { k.vs = self.nextVs(k.zahajeni); }); self.log('Přiděleny VS: ' + bezVs.length + ' dětem'); self.save(); self.forceUpdate(); self.showToast('Přiděleno VS: ' + bezVs.length);
+    }));
     var set = { cards: [
       { title: 'Škola', sub: 'Podle rejstříku škol a školských zařízení', fields: [fIn('Úplný název', 'nazev', '', true), fIn('Krátký název', 'name'), fIn('IČO', 'ico'), fIn('IZO pracoviště', 'izo'), fIn('RED_IZO', 'redizo'), fIn('Číslo části školy', 'cast'), fIn('Zřizovatel', 'zrizovatel'),
         fCh('Rozlišení', 'rozliseni', [['bez', 'Bez rozlišení'], ['lesni', 'Lesní MŠ'], ['firemni', 'Firemní MŠ']], true), fTx('Ředitelka', dirName + ' — mění se v jejím profilu (vlevo dole nebo v Učitelích)')] },
       { title: 'Kontakty', sub: 'Ukazují se na webu, v dokumentech a ve zprávách rodičům', fields: [fIn('Adresa', 'adresa', 'Ulice, PSČ, obec', true), fIn('Telefon', 'telefon'), fIn('E-mail', 'email'), fIn('Datová schránka', 'datovka'), fIn('Adresa webu', 'web'), fIn('Číslo účtu', 'ucet'), fIn('Pověřenec pro ochranu údajů', 'poverenec', 'Jméno a e-mail')] },
       { title: 'Provoz', sub: 'Matrika MŠMT, web a školní řád', fields: [fIn('Provozní doba', 'provozni', '6:30–17:00'), fIn('Průměrná doba provozu (h/den)', 'doba', '10,5'), fIn('Úřední hodiny', 'uredni', '', true),
         fCh('Druh provozu školy', 'provoz', [['C', 'Celodenní'], ['P', 'Polodenní'], ['I', 'Internátní']], true), fIn('Kontaktní osoba pro matriku', 'kontakt', 'Jméno a telefon', true)] },
-      { title: 'Platby', sub: 'Úplata (u PPV se neplatí) a stravné na den', fields: [fIn('Školné (Kč/měsíc)', 'skolne', '900', false, this.rates), fIn('Oběd 3–6 let (Kč/den)', 's1', '48', false, this.rates), fIn('Oběd 7 let (Kč/den)', 's2', '52', false, this.rates)] },
+      { title: 'Platby', sub: 'Účet, sazby a pravidla — částky v Kč, s haléři i bez', fields: finFields },
+      { title: 'Variabilní symboly', sub: 'Každé dítě má jeden VS na celou docházku — podle něj se párují platby', fields: vsFields },
       { title: 'Zkušební provoz', sub: 'Změny se ukládají jen v tomto prohlížeči', fields: [fTx('Co to znamená', 'Všechno funguje, ale nic neodchází ven — rodičům, na MŠMT, ČŠI ani do banky. Změny zůstanou uložené v tomto prohlížeči i po zavření.'),
         fBt('Ukázková data', 'Vrátit ukázková data', function () { self.resetDemo(); }, true)] }
     ] };
@@ -3287,8 +3741,8 @@ class Component extends DCLogic {
           var k = { id: 'k' + Date.now(), first: df.first.trim(), last: df.last.trim(), cls: df.cls, female: rcI.female, birth: rcI.birth, rc: (function (d) { return d.length === 10 ? d.slice(0, 6) + '/' + d.slice(6) : d.length === 9 ? d.slice(0, 6) + '/' + d.slice(6) : df.rc.trim(); })(df.rc.replace(/\D/g, '')), foreignCode: '',
             obcan: 'CZ', obec: '', adresa: '', spad: true, zahajeni: df.start || self.iso(self.today), duvod: 'Nástup', provoz: clsById[df.cls].provoz, zpusob: 'Pravidelná docházka', odklad: false,
             zastupce: '', telefon: '', email: '', zastupce2: '', telefon2: '', dorucovaci: '', povereni: [], pojistovna: '', ockovani: false, alergie: '', svp: '', po: '', zvj: '', souhlasFoto: false, souhlasWeb: false, souhlasJmeno: false, souhlasDatum: '', oml: 0, neoml: 0,
-            poSt: 0, spz: '', spzDo: '', ivp: false, ap: false, plppDo: '', ivOvereni: null, absStep: 0, absDate: null, ended: null, app: true, vs: String(self.syStart % 100) + self.pad(self.kids.length + 500, 4) };
-          self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
+            poSt: 0, spz: '', spzDo: '', ivp: false, ap: false, plppDo: '', ivOvereni: null, absStep: 0, absDate: null, ended: null, app: true, vs: '' };
+          k.vs = self.nextVs(k.zahajeni); self.kids.push(k); self.by[k.first + ' ' + k.last] = k;
           self.setState({ dlg: null, df: {}, page: 'deti', kidId: k.id, editKeys: self.missing(k).map(function (m) { return m[0]; }) });
           self.showToast(k.first + ' přidán' + (k.female ? 'a' : '') + ' — doplňte zbytek v kartě');
           self.log('Přidáno dítě ' + k.first + ' ' + k.last + ', třída ' + clsById[k.cls].name);
@@ -3484,7 +3938,7 @@ class Component extends DCLogic {
         return [{ title: 'Učitelé', sub: cnt(ped.length, 'pedagog', 'pedagogové', 'pedagogů') + ' · ředitelka, zástupkyně a učitelky', items: ped },
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
-      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, imp: imp,
+      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, imp: imp, payDlg: payDlg,
       dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }
