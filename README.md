@@ -75,7 +75,7 @@ docházku, platby, zprávy a archiv.
 | **Děti** | kartotéka podle školní matriky; karta dítěte: osobní údaje, vzdělávání, **dva zákonní zástupci, doručovací adresa, pověřené osoby k vyzvedávání** (se zmocněním), **podpůrná opatření** (stupeň, doporučení ŠPZ s platností, IVP, asistent, PLPP), **ověření při individuálním vzdělávání**, **neomluvená absence** (výzva rodičům → oznámení OSPOD), **souhlasy GDPR** s datem, **ukončení docházky** (ZŠ, přestup, na žádost, § 35 — u PPV zablokováno); chybějící údaje jsou rovnou pole, „Upravit“ odemkne všechna |
 | **Zápis** | žádosti pod registračními čísly, pořadí podle kritérií (PPV ze spádu → spád od nejstaršího → sourozenec → ostatní), volná místa po odchodu předškoláků, rozhodnutí (klepnutím jde změnit), zveřejnění seznamu, odeslání rozhodnutí, převod přijatých do kartotéky s nástupem 1. 9. |
 | **Docházka** | měsíční přehled po třídách: přítomno, omluveno, neomluveno, obědy; dnešek z tabletů; neomluvená absence u PPV |
-| **Platby** | předpis školného (u PPV 0) a stravného za odebrané obědy, variabilní symboly, **načtení výpisu z banky (CSV)** a párování podle VS, nespárované platby, upomínky, export pro účetnictví (CSV); sazby jdou změnit |
+| **Platby** | měsíční předpisy (školkovné, u PPV a odkladu 0; stravné podle docházky a věku 3–6 / 7+, včas omluvený oběd se nepočítá), **konto dítěte** s přeplatky, **QR platba** (SPAYD), **načtení výpisu z banky `.gpc`** a párování podle VS (přesně / přeplatek na konto / nedoplatek / nespárováno → ruční přiřazení), dlužníci po splatnosti, hromadné upomínky, export pro účetnictví; sazby, účet, uzávěrka omluvenek a **pravidla variabilních symbolů** v Nastavení. Částky se počítají v haléřích, nikdy v desetinných číslech |
 | **Zprávy rodičům** | komu (celá školka, třída, předškoláci, nezaplacené platby), předmět, text; odeslané s počtem přečtení |
 | **Učitelé** | pozvání, třídy, **úvazek** (s přímou pedagogickou prací), **dnes chybí → kdo zastoupí** |
 | **Třídy** | kapacita, PPV, věk, provoz, učitelky; upozornění |
@@ -108,6 +108,13 @@ Návrh databáze pro ostrý provoz: tabulky pro všechno výše, přístupová
 práva podle role (ředitelka / učitelka / hospodářka / rodič) přes RLS,
 učitelky a hospodářka nevidí rodná čísla, každá změna osobních údajů jde
 do `audit_log`. Ověřeno na PostgreSQL 16.
+
+### Finanční modul (`server/`)
+
+Školkovné a stravné pro ostrý provoz: Python (`Decimal`) + PostgreSQL
+(`NUMERIC(10,2)`), podvojná kniha jen pro doplňování, parser výpisů `.gpc`,
+párovací engine, QR platby, API pro hospodářku (FastAPI) a měsíční úloha
+(Celery). Podrobnosti v [`server/README.md`](server/README.md).
 
 ## Školní jídelna (`#jidelna`)
 
