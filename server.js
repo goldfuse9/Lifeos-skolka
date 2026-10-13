@@ -31,6 +31,9 @@
   function chyba(e) {
     var m = (e && (e.message || e.error_description)) || String(e || '');
     if (/Invalid login credentials/i.test(m)) return 'E-mail nebo heslo nesedí.';
+    if (/Email not confirmed/i.test(m)) return 'E-mail ještě není potvrzený — klikněte na odkaz, který vám přišel, a přihlaste se znovu.';
+    if (/Password should be/i.test(m)) return 'Heslo je moc slabé — použijte aspoň 8 znaků.';
+    if (/rate limit/i.test(m)) return 'Moc pokusů za sebou — zkuste to za chvíli.';
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Server není dostupný — zkontrolujte připojení k internetu.';
     return m;
   }
@@ -57,13 +60,19 @@
   }
 
   async function profil(uid) {
+    /* Kdo jsem a smím dál? (blokace školky / účtu, superadmin) */
+    var st = ok(await klient().rpc('muj_stav'));
+    st = Array.isArray(st) ? st[0] : st;
+    if (st && st.superadmin) return { id: uid, jmeno: 'Správce LifeOS', role: 'superadmin', skolaId: null, skola: 'LifeOS', tridy: [] };
+    if (!st || !st.role) { var e0 = new Error('Účet zatím nepatří žádné školce. Máte-li kód pozvánky, zvolte „Mám pozvánku“.'); e0.bezSkoly = true; throw e0; }
+    if (st.role === 'rodic') throw new Error('Tohle je účet rodiče — rodiče používají aplikaci LifeOS.');
+    if (!st.aktivni) throw new Error('Váš přístup je zablokovaný. Obraťte se na ředitelku školky.');
+    if (st.stav_skoly === 'ceka') throw new Error('Školka ' + st.skola + ' ještě není aktivní — aktivuje ji správce LifeOS.');
+    if (st.stav_skoly !== 'aktivni') throw new Error('Školka ' + st.skola + ' má přístup pozastavený. Obraťte se na správce LifeOS.');
     var u = ok(await klient().from('uzivatele').select('id, jmeno, role, skola_id').eq('id', uid).maybeSingle());
-    if (!u) throw new Error('Účet zatím nepatří žádné školce — ředitelka ho musí přidat.');
-    if (u.role === 'rodic') throw new Error('Tohle je účet rodiče — rodiče používají aplikaci LifeOS.');
-    var s = ok(await klient().from('skoly').select('nazev').eq('id', u.skola_id).maybeSingle());
     var t = ok(await klient().from('ucitel_trida').select('trida_id, tridy(nazev, barva)').eq('ucitel_id', uid));
     return {
-      id: uid, jmeno: u.jmeno, role: u.role, skolaId: u.skola_id, skola: s ? s.nazev : '',
+      id: uid, jmeno: u.jmeno, role: u.role, skolaId: u.skola_id, skola: st.skola || '',
       tridy: t.map(function (x) { return { id: x.trida_id, nazev: x.tridy ? x.tridy.nazev : 'Třída', barva: x.tridy ? x.tridy.barva : '' }; })
     };
   }
@@ -128,7 +137,7 @@
     chyba: chyba,
     ucet: nactiUcet,
 
-    async prihlas(email, heslo) {
+    async prihlas(email, heslo, kod) {
       try {
         var uid = mojeId();
         if (!uid) {
@@ -136,14 +145,46 @@
           if (r.error) throw r.error;
           uid = r.data.user.id;
         }
+        /* Účet bez školky + kód pozvánky (např. po potvrzení e-mailu) */
+        if (kod) {
+          var st0 = ok(await klient().rpc('muj_stav'));
+          st0 = Array.isArray(st0) ? st0[0] : st0;
+          if (!st0 || (!st0.role && !st0.superadmin)) ok(await klient().rpc('prijmi_pozvanku', { p_kod: kod }));
+        }
         var u = await profil(uid);
         u.email = String(email || '').trim().toLowerCase();
         ulozUcet(u);
         return { ok: true, ucet: u };
       } catch (e) {
         try { if (!C.testToken) await klient().auth.signOut(); } catch (x) { /* nic */ }
+        return { ok: false, chyba: chyba(e), bezSkoly: !!(e && e.bezSkoly) };
+      }
+    },
+    /* Nový účet z pozvánky: e-mail (stejný jako v pozvánce), heslo, kód. */
+    async registruj(email, heslo, kod) {
+      try {
+        var mail = String(email || '').trim().toLowerCase();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw new Error('E-mail nevypadá správně.');
+        if (!heslo || heslo.length < 8) throw new Error('Heslo musí mít aspoň 8 znaků.');
+        if (!kod) throw new Error('Opište kód z pozvánky.');
+        var r = await klient().auth.signUp({ email: mail, password: heslo });
+        if (r.error) {
+          if (/already registered|already exists/i.test(r.error.message || '')) return this.prihlas(mail, heslo, kod);
+          throw r.error;
+        }
+        if (!r.data.session) return { ok: false, potvrdit: true, chyba: 'Poslali jsme vám e-mail. Potvrďte adresu odkazem v něm a pak se přihlaste — kód zadáte znovu.' };
+        ok(await klient().rpc('prijmi_pozvanku', { p_kod: kod }));
+        var u = await profil(r.data.user.id);
+        u.email = mail;
+        ulozUcet(u);
+        return { ok: true, ucet: u };
+      } catch (e) {
         return { ok: false, chyba: chyba(e) };
       }
+    },
+    async zapomenuteHeslo(email) {
+      var r = await klient().auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: location.origin + location.pathname + '#prihlaseni' });
+      if (r.error) throw r.error;
     },
     async odhlas() {
       ulozUcet(null);
@@ -222,6 +263,20 @@
     async nastavNahrady(zap) {
       return ok(await klient().rpc('nastav_nahrady', { p: !!zap }));
     },
+
+    /* ------------------------------------------------ superadmin (správa LifeOS) */
+    async adminSkoly() { return ok(await klient().rpc('admin_skoly')); },
+    async adminZalozSkolu(x) { return ok(await klient().rpc('admin_zaloz_skolu', { p_nazev: x.nazev, p_izo: x.izo || '', p_red_izo: x.redIzo || '', p_kontakt: x.kontakt || null, p_tarif: x.tarif || 'pilot', p_predplatne_do: x.predplatneDo || null })); },
+    async adminUpravSkolu(id, x) { return ok(await klient().rpc('admin_uprav_skolu', { p_id: id, p_nazev: x.nazev || null, p_kontakt: x.kontakt == null ? null : x.kontakt, p_stav: x.stav || null, p_tarif: x.tarif || null, p_predplatne_do: x.predplatneDo || null, p_poznamka: x.poznamka == null ? null : x.poznamka })); },
+    async adminPozviReditelku(skolaId, jmeno, email) { return ok(await klient().rpc('admin_pozvi_reditelku', { p_skola: skolaId, p_jmeno: jmeno, p_email: email })); },
+    async adminNastavUcet(uid, aktivni) { return ok(await klient().rpc('admin_nastav_ucet', { p_uzivatel: uid, p_aktivni: !!aktivni })); },
+    async zrusPozvanku(kod) { return ok(await klient().rpc('admin_zrus_pozvanku', { p_kod: kod })); },
+
+    /* ------------------------------------------- ředitelka: přístupy zaměstnanců */
+    async zamestnanci() { return ok(await klient().rpc('zamestnanci_skoly')); },
+    async tridySkoly() { return ok(await klient().from('tridy').select('id, nazev').order('nazev')); },
+    async pozviZamestnance(x) { return ok(await klient().rpc('pozvi_zamestnance', { p_jmeno: x.jmeno, p_email: x.email, p_role: x.role, p_trida: x.trida || null })); },
+    async nastavUcetZamestnance(uid, aktivni) { return ok(await klient().rpc('nastav_ucet_zamestnance', { p_uzivatel: uid, p_aktivni: !!aktivni })); },
 
     /* --------------------------------------------- ředitelna: rodiče v LifeOS */
     async detiSkoly() {

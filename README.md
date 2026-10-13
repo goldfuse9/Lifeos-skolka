@@ -33,6 +33,29 @@ přístupy heslo `skolka`; hesla se ukládají jen jako otisk SHA-256. V ostrém
 provozu je nahradí Supabase Auth s rolemi ze `supabase/schema.sql`; stejnou
 databázi použije i mobilní aplikace LifeOS pro rodiče (role `rodic`).
 
+### Ostrý provoz: správa LifeOS a pozvánky (`#admin`)
+
+Školky a ředitelky zakládá **jen provozovatel LifeOS (superadmin)** na
+adrese `…/index.html#admin`:
+
+- **Přidat školku** (název, IZO, kontakt, tarif) → školka „čeká na aktivaci“.
+- **Pozvat ředitelku** (jméno, e-mail) → kód `ABCD-EFGH`, platí 30 dní, jednou.
+  Ředitelka v aplikaci zvolí **Mám pozvánku**, zadá ten e-mail, své heslo
+  a kód. Tím se školka aktivuje.
+- **Stav školky** Aktivní / Čeká / Blokovaná, **předplatné** (tarif, placeno
+  do, poznámka), **blokování ředitelky**, rušení pozvánek.
+- Superadmin vidí jen počty (děti, třídy, zaměstnanci) — údaje dětí ne.
+
+Ředitelka pak v Ředitelna → **Přístupy** zve zaměstnance (učitelka se třídou,
+zástupkyně, hospodářka, kuchařka) stejným kódem a blokuje jejich účty.
+Heslo zná jen sám pracovník. Všechno hlídá databáze
+(`supabase/migrace-2026-10-13c-superadmin.sql`): blokovaná školka nebo účet
+nedostane z žádné tabulky ani řádek, ředitelka vidí jen svou školku.
+
+Nastavení: spusťte migraci v Supabase → SQL Editor, v Authentication → Users
+založte svůj účet (Add user, e-mail + heslo, Auto Confirm) a na konci
+migrace odkomentujte řádek `insert into superadmini …` se svým e-mailem.
+
 ## Co umí
 
 | Část | Co v ní je |
