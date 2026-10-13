@@ -309,7 +309,7 @@ async function otevri(chtene, zHashe, vychozi) {
       const u = nactiUcet();
       const deti = await SRV().nactiTridu(u.trida);
       if (!deti.length) throw new Error('Ve třídě ' + u.tridaNazev + ' zatím nejsou žádné děti. Ředitelka je přidá do třídy v databázi.');
-      window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti };
+      window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti, omluvy: await SRV().omluvy(deti).catch(() => []) };
     }
     aktualni = klic;
     prizpusob();

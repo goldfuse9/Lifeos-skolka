@@ -161,6 +161,11 @@
       var den = await denTridy(kids.map(function (k) { return k.id; }));
       kids.forEach(function (k) { aplikuj(k, den.doch[k.id], den.vyz[k.id], den.ud[k.id]); });
     },
+    /* Omluvenky od dneška dál (i na víc dní dopředu) — pro přehled na tabletu. */
+    async omluvy(kids) {
+      if (!kids.length) return [];
+      return ok(await klient().from('dochazka').select('dite_id, den, omluvenka, strava_prihlasena').eq('stav', 'omluven').gte('den', dnes()).in('dite_id', kids.map(function (k) { return k.id; })).order('den').limit(500));
+    },
     /* Docházka dítěte podle stavu na desce. */
     async dochazka(k) {
       if (k.att === 'expected') return ok(await klient().from('dochazka').delete().eq('dite_id', k.id).eq('den', dnes()));
