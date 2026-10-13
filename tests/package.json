@@ -1,0 +1,15 @@
+{
+  "name": "skolka-testy",
+  "private": true,
+  "description": "Testovací režim školky: lokální Supabase, bezpečnost databáze, E2E v prohlížeči",
+  "scripts": {
+    "reset": "./reset.sh",
+    "stack": "./stack.sh",
+    "db": "./db/bezpecnost.sh",
+    "e2e": "node e2e/spust.js",
+    "vse": "./spust-vse.sh"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
