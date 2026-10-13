@@ -33,7 +33,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     <div style="padding: 0 10px 6px; display: flex; flex-direction: column; gap: 2px">
       <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{{school.name}}</span>
       <span style="font-size: 13px; color: #5A5C60">Ředitelna · {{year}}</span>
-      <span style="align-self: flex-start; margin-top: 6px; padding: 3px 10px; border-radius: 10px; background: #F7F0DA; color: #5C4300; font-size: 11px; font-weight: 800" title="Všechno funguje, ale nic neodchází ven">Zkušební provoz</span>
+      <span style="align-self: flex-start; margin-top: 6px; padding: 3px 10px; border-radius: 10px; background: #F7F0DA; color: #5C4300; font-size: 11px; font-weight: 800" title="{{provoz.title}}">{{provoz.label}}</span>
     </div>
     <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
       <sc-if value="{{n.isHead}}" hint-placeholder-val="{{false}}">
@@ -836,7 +836,9 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 </span>
                 <span style="{{r.lastStyle}}">{{r.last}}</span>
                 <span style="display: flex; gap: 6px; justify-content: flex-end">
-                  <button type="button" onClick="{{r.reset}}" style="height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #17181A; cursor: pointer">Nové heslo</button>
+                  <sc-if value="{{r.canReset}}" hint-placeholder-val="{{true}}">
+                    <button type="button" onClick="{{r.reset}}" style="height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #17181A; cursor: pointer">Nové heslo</button>
+                  </sc-if>
                   <sc-if value="{{r.canBlock}}" hint-placeholder-val="{{true}}">
                     <button type="button" onClick="{{r.block}}" style="{{r.blockStyle}}">{{r.blockLabel}}</button>
                   </sc-if>
@@ -847,7 +849,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </section>
         <aside aria-label="Bez přístupu" style="width: 300px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
           <h2 style="margin: 0; font-size: 18px; font-weight: 800">Zatím bez přístupu</h2>
-          <span style="font-size: 13px; color: #5A5C60; line-height: 18px">Pracovníci z Učitelů, kteří se ještě nemohou přihlásit.</span>
+          <span style="font-size: 13px; color: #5A5C60; line-height: 18px">{{pr.asideSub}}</span>
           <sc-for list="{{pr.missing}}" as="m" hint-placeholder-count="3">
             <button type="button" onClick="{{m.pick}}" style="min-height: 52px; padding: 6px 12px; border-radius: 16px; border: 1px solid #EEF0ED; background: #FFFFFF; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; color: #17181A">
               <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{m.name}}</span><span style="font-size: 12px; color: #5A5C60">{{m.role}}</span></span>
@@ -855,10 +857,11 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </button>
           </sc-for>
           <sc-if value="{{pr.noMissing}}" hint-placeholder-val="{{false}}">
-            <span style="font-size: 14px; color: #2F5212; background: #EDF4E4; border-radius: 14px; padding: 10px 12px">Všichni pracovníci přístup mají.</span>
+            <span style="font-size: 14px; color: #2F5212; background: #EDF4E4; border-radius: 14px; padding: 10px 12px">{{pr.noMissingText}}</span>
           </sc-if>
           <div style="flex-grow: 1"></div>
-          <span style="font-size: 12px; color: #5A5C60; line-height: 17px">Heslo se ukáže jen jednou — předejte ho osobně. Zablokovaný přístup se nepřihlásí, údaje zůstanou.</span>
+          <sc-if value="{{pr.hasErr2}}" hint-placeholder-val="{{false}}"><span role="alert" style="font-size: 13px; font-weight: 600; color: #8A4513; background: #FCF4EF; border-radius: 12px; padding: 8px 12px">{{pr.err2}}</span></sc-if>
+          <span style="font-size: 12px; color: #5A5C60; line-height: 17px">{{pr.pata}}</span>
         </aside>
       </div>
     </sc-if>
@@ -1163,7 +1166,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <span style="font-size: 24px; font-weight: 800">{{pr.pw.jmeno}}</span>
         <span style="font-size: 14px; color: #3A3C40">{{pr.pw.email}} · {{pr.pw.kam}}</span>
         <span style="margin-top: 8px; padding: 14px 22px; border-radius: 16px; background: #F3F4F2; font: 800 28px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.06em; user-select: all">{{pr.pw.heslo}}</span>
-        <span style="font-size: 13px; color: #8A4513; background: #FCF4EF; border-radius: 12px; padding: 8px 12px; margin-top: 4px">Heslo se ukáže jen teď. Předejte ho osobně.</span>
+        <span style="font-size: 13px; color: #8A4513; background: #FCF4EF; border-radius: 12px; padding: 8px 12px; margin-top: 4px; line-height: 19px">{{pr.pw.note}}</span>
         <div style="display: flex; gap: 10px; width: 100%; margin-top: 8px">
           <button type="button" onClick="{{pr.pw.copy}}" style="flex: 1 1 0; height: 52px; border-radius: 26px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; color: #17181A">Zkopírovat</button>
           <button type="button" onClick="{{pr.pw.done}}" style="flex: 1 1 0; height: 52px; border-radius: 26px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 16px; font-weight: 800; cursor: pointer">Hotovo</button>
@@ -3481,7 +3484,7 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- uživatel */
     var mePerson = role === 'reditelka' ? (this.teachers.filter(function (x) { return UC ? x.name === UC.jmeno : x.role === 'Ředitelka'; })[0] || this.teachers.filter(function (x) { return x.role === 'Ředitelka'; })[0] || ME) : ME;
-    var me = { name: mePerson.name, role: UC ? UC.role : ME.role, tablet: board('trida') && !!UC,
+    var me = { name: UC && UC.server ? UC.jmeno : mePerson.name, role: UC ? UC.role : ME.role, tablet: board('trida') && !!UC,
       logout: function () { if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); }, initials: ME.initials, av: this.avatar(mePerson, 40),
       profile: function () { self.setState({ dlg: 'profil', df: { pid: mePerson.id || 'hosp', self: true, name: mePerson.name, email: mePerson.email || '', phone: mePerson.phone || '', role: mePerson.role, photo: mePerson.photo || '', look: self.look(mePerson) } }); },
       avatarStyle: 'width: 40px; height: 40px; border-radius: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; background: ' + ME.bg,
@@ -3651,47 +3654,84 @@ class Component extends DCLogic {
     /* -------------------------------------------------- přístupy */
     var pr = (function () {
       var R = SU ? SU.role : {}, TR = SU ? SU.tridy : {}, ND = SU ? SU.nazevDesky : {};
-      var list = SU ? SU.pristupy() : [];
+      var SV = typeof window !== 'undefined' ? window.SkolkaServer : null;
+      var SRVP = !!(SV && SV.zapnuto && SRVON);
       var ja = SU ? SU.aktualni() : null;
+      var nactiPr = function () {
+        self._prLoading = true; self._prErr = '';
+        Promise.all([SV.zamestnanci(), SV.tridySkoly()]).then(function (r) { self._pr = r[0] || []; self._prTridy = r[1] || []; self._prLoading = false; self.forceUpdate(); })
+          .catch(function (e) { self._prLoading = false; self._prErr = 'Přístupy se nepodařilo načíst: ' + SV.chyba(e); self.forceUpdate(); });
+      };
+      if (st.page !== 'pristupy') { self._pr = null; self._prErr = ''; }
+      if (SRVP && st.page === 'pristupy' && !self._pr && !self._prLoading && !self._prErr) setTimeout(nactiPr, 0);
+      var RN = { reditelka: 'Ředitelka', zastupce: 'Zástupkyně', ucitelka: 'Učitelka', hospodarka: 'Hospodářka', kucharka: 'Kuchařka' };
+      var list = !SRVP ? (SU ? SU.pristupy() : []) : (self._pr || []).map(function (z) {
+        var pozv = !!z.pozvanka;
+        return { id: z.id, jmeno: z.jmeno, email: z.email || '', role: (RN[z.role] || z.role) + (z.trida ? ' · ' + z.trida : '') + (pozv ? ' · pozvánka ' + z.pozvanka : ''),
+          desky: ((R[z.role] || {}).desky || []), aktivni: pozv ? true : !!z.aktivni, posledni: null, pozvanka: z.pozvanka, plati: z.plati_do, srvRole: z.role };
+      });
       var dd = function (iso) { if (!iso) return ''; var d = new Date(iso); return isNaN(d) ? '' : d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + (iso.length > 10 ? d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') : ''); };
       var rows = list.map(function (u) {
         var p = u.jmeno.split(' ');
         return {
           jmeno: u.jmeno, email: u.email, role: u.role.charAt(0).toUpperCase() + u.role.slice(1), initials: p[0].charAt(0) + (p[1] || '').charAt(0),
           desky: u.desky.map(function (d) { return { label: ND[d] || d }; }),
-          last: !u.aktivni ? 'Zablokováno' : u.posledni ? dd(u.posledni) : 'zatím ne',
+          last: u.pozvanka ? 'čeká na přijetí' : !u.aktivni ? 'Zablokováno' : SRVP ? 'aktivní' : u.posledni ? dd(u.posledni) : 'zatím ne',
           lastStyle: 'font-size: 13px; ' + (!u.aktivni ? 'color: #8A4513; font-weight: 700' : 'color: #5A5C60'),
           avStyle: 'width: 38px; height: 38px; border-radius: 19px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #3A3C40; background: ' + (u.aktivni ? '#E4ECCB' : '#E5E7E4'),
           rowStyle: 'display: grid; grid-template-columns: minmax(0, 1fr) 170px 110px 214px; gap: 12px; align-items: center; padding: 10px 20px; border-bottom: 1px solid #F3F4F2; ' + (u.aktivni ? '' : 'opacity: 0.6'),
-          canBlock: !ja || ja.id !== u.id,
-          blockLabel: u.aktivni ? 'Zablokovat' : 'Povolit',
+          canBlock: (!ja || ja.id !== u.id) && !(SRVP && u.srvRole === 'reditelka'),
+          canReset: !SRVP,
+          blockLabel: u.pozvanka ? 'Zrušit pozvánku' : u.aktivni ? 'Zablokovat' : 'Povolit',
           blockStyle: 'height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 700; cursor: pointer; ' + (u.aktivni ? 'border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513' : 'border: 0; background: #EDF4E4; color: #2F5212'),
           reset: function () { SU.noveHeslo(u.id).then(function (r) { if (r.ok) { self.log('Nové heslo: ' + u.jmeno); self.setState({ prPw: { title: 'Nové heslo', jmeno: u.jmeno, email: u.email, kam: u.desky.map(function (d) { return ND[d]; }).join(', '), heslo: r.heslo } }); } }); },
-          block: function () { if (SU.prepniAktivni(u.id)) { self.log((u.aktivni ? 'Zablokován přístup: ' : 'Povolen přístup: ') + u.jmeno); self.forceUpdate(); self.showToast(u.jmeno + (u.aktivni ? ' — přístup zablokován' : ' — přístup povolen')); } }
+          block: function () {
+            if (SRVP) {
+              var pr0 = u.pozvanka ? SV.zrusPozvanku(u.pozvanka.replace('-', '')) : SV.nastavUcetZamestnance(u.id, !u.aktivni);
+              pr0.then(function () { self.log((u.pozvanka ? 'Zrušena pozvánka: ' : u.aktivni ? 'Zablokován přístup: ' : 'Povolen přístup: ') + u.jmeno); self._pr = null; self.showToast(u.jmeno + (u.pozvanka ? ' — pozvánka zrušena' : u.aktivni ? ' — přístup zablokován' : ' — přístup povolen')); nactiPr(); })
+                .catch(function (e) { self._prErr = SV.chyba(e); self.forceUpdate(); });
+              return;
+            }
+            if (SU.prepniAktivni(u.id)) { self.log((u.aktivni ? 'Zablokován přístup: ' : 'Povolen přístup: ') + u.jmeno); self.forceUpdate(); self.showToast(u.jmeno + (u.aktivni ? ' — přístup zablokován' : ' — přístup povolen')); } }
         };
       });
       var have = {}; list.forEach(function (u) { have[u.jmeno.toLowerCase()] = true; });
       var kodZ = function (role) { return /Ředitel/.test(role) ? 'reditelka' : /Asistent|Chůva/.test(role) ? 'asistent' : 'ucitelka'; };
-      var missing = self.teachers.filter(function (t) { return !have[t.name.toLowerCase()]; }).map(function (t) {
+      var missing = SRVP ? [] : self.teachers.filter(function (t) { return !have[t.name.toLowerCase()]; }).map(function (t) {
         return { name: t.name, role: t.role, pick: function () { self.setState({ prNew: { jmeno: t.name, email: t.email || '', kod: kodZ(t.role), trida: (t.classes || [])[0] || '', err: '' } }); } };
       });
       var F = st.prNew || {};
       var chipS = function (on) { return 'height: 40px; padding: 0 14px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; ' + (on ? 'border: 1px solid #B4C6DD; background: #E6EDF6; color: #1F3A5C' : 'border: 1px solid #E5E7E4; background: #FFFFFF; color: #3A3C40'); };
       var setF = function (o) { self.setState({ prNew: Object.assign({}, self.state.prNew, o, { err: '' }) }); };
-      var RL = [['ucitelka', 'Učitelka'], ['asistent', 'Asistent/ka'], ['zastupce', 'Zástupkyně'], ['hospodarka', 'Hospodářka'], ['vedouci_sj', 'Vedoucí jídelny'], ['kucharka', 'Kuchařka']];
+      var RL = SRVP ? [['ucitelka', 'Učitelka'], ['zastupce', 'Zástupkyně'], ['hospodarka', 'Hospodářka'], ['kucharka', 'Kuchařka']]
+        : [['ucitelka', 'Učitelka'], ['asistent', 'Asistent/ka'], ['zastupce', 'Zástupkyně'], ['hospodarka', 'Hospodářka'], ['vedouci_sj', 'Vedoucí jídelny'], ['kucharka', 'Kuchařka']];
       var r0 = R[F.kod] || {};
       var PW = st.prPw;
       return {
-        rows: rows, missing: missing, noMissing: missing.length === 0,
+        rows: rows, missing: missing, noMissing: missing.length === 0 && (!SRVP || !self._prLoading),
+        asideSub: SRVP ? 'Nový pracovník dostane pozvánku s kódem. Účet si založí sám svým e-mailem a heslem — vy heslo neznáte.' : 'Pracovníci z Učitelů, kteří se ještě nemohou přihlásit.',
+        noMissingText: SRVP ? (self._prLoading ? 'Načítám…' : 'Pozvat dalšího: tlačítko „+ Nový přístup“ nahoře.') : 'Všichni pracovníci přístup mají.',
+        pata: SRVP ? 'Kód pozvánky platí 30 dní a jde použít jednou. Zablokovaný účet se nepřihlásí, údaje zůstanou.' : 'Heslo se ukáže jen jednou — předejte ho osobně. Zablokovaný přístup se nepřihlásí, údaje zůstanou.',
+        hasErr2: !!self._prErr, err2: self._prErr || '',
         dlgOpen: !!st.prNew, f: F, hasErr: !!F.err, needTrida: !!r0.trida,
         roles: RL.map(function (x) { return { label: x[1], on: F.kod === x[0] ? 'true' : 'false', style: chipS(F.kod === x[0]), pick: function () { setF({ kod: x[0] }); } }; }),
-        tridy: Object.keys(TR).map(function (k) { return { label: TR[k], on: F.trida === k ? 'true' : 'false', style: chipS(F.trida === k), pick: function () { setF({ trida: k }); } }; }),
+        tridy: SRVP ? (self._prTridy || []).map(function (t) { return { label: t.nazev, on: F.trida === t.id ? 'true' : 'false', style: chipS(F.trida === t.id), pick: function () { setF({ trida: t.id }); } }; }) : Object.keys(TR).map(function (k) { return { label: TR[k], on: F.trida === k ? 'true' : 'false', style: chipS(F.trida === k), pick: function () { setF({ trida: k }); } }; }),
         kam: (r0.desky || []).map(function (d) { return ND[d]; }).join(' a ') || '—',
         onJmeno: function (e) { self.state.prNew.jmeno = e.target.value; },
         onEmail: function (e) { self.state.prNew.email = e.target.value; },
         close: function () { self.setState({ prNew: null }); },
         create: function () {
           var f = self.state.prNew;
+          if (SRVP) {
+            if (!f.jmeno.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) { self.setState({ prNew: Object.assign({}, f, { err: 'Vyplňte jméno a platný e-mail.' }) }); return; }
+            if (f.kod === 'ucitelka' && !f.trida) { self.setState({ prNew: Object.assign({}, f, { err: 'Vyberte třídu.' }) }); return; }
+            SV.pozviZamestnance({ jmeno: f.jmeno.trim(), email: f.email.trim(), role: f.kod, trida: f.kod === 'ucitelka' ? f.trida : null }).then(function (kod) {
+              self.log('Pozvánka: ' + f.jmeno + ' (' + (RN[f.kod] || f.kod) + ')'); self._pr = null; nactiPr();
+              self.setState({ prNew: null, prPw: { title: 'Pozvánka vytvořena', jmeno: f.jmeno.trim(), email: f.email.trim().toLowerCase(), kam: ((R[f.kod] || {}).desky || []).map(function (d) { return ND[d]; }).join(', '), heslo: kod,
+                note: 'Pracovník otevře aplikaci školky → Mám pozvánku → zadá tento e-mail, zvolí si heslo a opíše kód. Kód platí 30 dní a jde použít jednou.' } });
+            }).catch(function (e) { self.setState({ prNew: Object.assign({}, f, { err: SV.chyba(e) }) }); });
+            return;
+          }
           SU.vytvor({ jmeno: f.jmeno, email: f.email, kod: f.kod, trida: f.trida }).then(function (r) {
             if (!r.ok) { self.setState({ prNew: Object.assign({}, f, { err: r.chyba }) }); return; }
             self.log('Vytvořen přístup: ' + f.jmeno + ' (' + (R[f.kod] || {}).nazev + ')');
@@ -3699,10 +3739,10 @@ class Component extends DCLogic {
           });
         },
         pwOpen: !!PW,
-        pw: PW ? Object.assign({}, PW, {
-          copy: function () { try { navigator.clipboard.writeText(PW.heslo); self.showToast('Heslo zkopírováno'); } catch (e) { self.showToast('Heslo si opište'); } },
+        pw: PW ? Object.assign({ note: 'Heslo se ukáže jen teď. Předejte ho osobně.' }, PW, {
+          copy: function () { try { navigator.clipboard.writeText(PW.note && /kód/.test(PW.note) ? 'Pozvánka do aplikace školky: e-mail ' + PW.email + ', kód ' + PW.heslo + '. Otevřete aplikaci → Mám pozvánku.' : PW.heslo); self.showToast('Heslo zkopírováno'); } catch (e) { self.showToast('Heslo si opište'); } },
           done: function () { self.setState({ prPw: null }); }
-        }) : { title: '', jmeno: '', email: '', kam: '', heslo: '', copy: function () {}, done: function () {} }
+        }) : { title: '', jmeno: '', email: '', kam: '', heslo: '', note: '', copy: function () {}, done: function () {} }
       };
     })();
 
@@ -4006,7 +4046,9 @@ class Component extends DCLogic {
     dlg.summaryFg = dlg.canSave ? '#17181A' : '#5A5C60';
 
     return {
-      school: { name: this.school.name }, year: this.syStart + '/' + (this.syStart + 1),
+      school: { name: UC && UC.server && UC.skola ? UC.skola : this.school.name },
+      provoz: UC && UC.server ? { label: 'Pilot · část ukázková', title: 'Ze serveru jsou Přístupy a Rodiče v LifeOS. Ostatní stránky zatím ukazují ukázková data.' } : { label: 'Zkušební provoz', title: 'Všechno funguje, ale nic neodchází ven' },
+      year: this.syStart + '/' + (this.syStart + 1),
       nav: nav, is: is, page: page,
       stats: stats, todo: todo, todoNone: todo.length === 0, classesToday: classesToday,
       deti: deti, kid: kid, gloss: gloss, teachers: teachers,

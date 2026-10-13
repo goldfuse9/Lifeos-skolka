@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Správa LifeOS</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+aside[aria-label="Detail školky"] > *{flex-shrink:0}
+body{margin:0}
+button,input,textarea{font-family:inherit}
+input::placeholder,textarea::placeholder{color:#8A8C90}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F8F9F7; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; position: relative; overflow: hidden">
+
+  <!-- ============================================================ MENU -->
+  <nav aria-label="Správa" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 26px 18px; display: flex; flex-direction: column; gap: 18px; border-right: 1px solid #EEF0ED">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="34" height="34" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="9" fill="#E9C46A"></circle><g stroke="#E9C46A" stroke-width="3.5" stroke-linecap="round"><path d="M24 5v5M24 38v5M5 24h5M38 24h5M10.6 10.6l3.5 3.5M33.9 33.9l3.5 3.5M10.6 37.4l3.5-3.5M33.9 14.1l3.5-3.5"></path></g></svg>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">LifeOS</span><span style="font-size: 13px; color: #5A5C60">Správa platformy</span></span>
+    </div>
+    <span style="align-self: flex-start; padding: 3px 10px; border-radius: 10px; background: #EDF4E4; color: #2F5212; font-size: 12px; font-weight: 800">Superadmin</span>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{filtry}}" as="f" hint-placeholder-count="4">
+        <button type="button" onClick="{{f.pick}}" aria-current="{{f.current}}" style="{{f.style}}"><span style="flex-grow: 1; text-align: left">{{f.label}}</span><span style="{{f.countStyle}}">{{f.n}}</span></button>
+      </sc-for>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <span style="width: 40px; height: 40px; border-radius: 20px; background: #E4ECCB; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #3A3C40">{{me.initials}}</span>
+      <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 800">{{me.jmeno}}</span><span style="font-size: 12px; color: #5A5C60">správce LifeOS</span></span>
+      <button type="button" onClick="{{me.logout}}" aria-label="Odhlásit" style="width: 40px; height: 40px; border-radius: 20px; border: 0; background: #FFFFFF; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"></path></svg></button>
+    </div>
+  </nav>
+
+  <!-- ============================================================ OBSAH -->
+  <main style="flex-grow: 1; min-width: 0; padding: 26px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+    <header style="display: flex; align-items: flex-end; gap: 14px">
+      <div style="flex-grow: 1">
+        <span style="font-size: 13px; font-weight: 700; color: #5A5C60">Provozovatel · školky, ředitelky, předplatné</span>
+        <h1 style="margin: 2px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Školky</h1>
+      </div>
+      <sc-if value="{{ready}}" hint-placeholder-val="{{true}}">
+        <button type="button" onClick="{{novaOpen}}" style="height: 48px; padding: 0 22px; border-radius: 24px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">+ Přidat školku</button>
+      </sc-if>
+    </header>
+
+    <sc-if value="{{offline}}" hint-placeholder-val="{{false}}">
+      <div role="note" style="padding: 18px 20px; border-radius: 20px; background: #F7F0DA; color: #5C4300; font-size: 15px; line-height: 22px">Správa LifeOS funguje jen v ostrém provozu (se serverem). Ve zkušebním provozu není co spravovat.</div>
+    </sc-if>
+    <sc-if value="{{hasErr}}" hint-placeholder-val="{{false}}">
+      <div role="alert" style="padding: 14px 18px; border-radius: 16px; background: #FCF4EF; color: #8A4513; font-size: 14px; font-weight: 600">{{err}}</div>
+    </sc-if>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+        <div style="{{s.style}}"><span style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #5A5C60">{{s.label}}</span><span style="font-size: 28px; font-weight: 800">{{s.value}}</span><span style="font-size: 13px; color: #3A3C40">{{s.sub}}</span></div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+      <section aria-label="Seznam školek" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+        <div style="display: grid; grid-template-columns: minmax(0, 1.6fr) 110px 110px 120px 60px minmax(0, 1fr); gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+          <span>Školka</span><span>Stav</span><span>Tarif</span><span>Předplatné do</span><span>Děti</span><span>Ředitelka</span>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+          <sc-if value="{{loading}}" hint-placeholder-val="{{false}}"><p style="margin: 0; padding: 20px; color: #5A5C60">Načítám…</p></sc-if>
+          <sc-if value="{{empty}}" hint-placeholder-val="{{false}}"><p style="margin: 0; padding: 20px; color: #5A5C60">Žádná školka v tomhle filtru.</p></sc-if>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+            <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.sel}}" style="{{r.style}}">
+              <span style="display: flex; flex-direction: column; min-width: 0; text-align: left"><span style="font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.nazev}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.sub}}</span></span>
+              <span><span style="{{r.stavStyle}}">{{r.stav}}</span></span>
+              <span style="font-size: 13px; text-align: left">{{r.tarif}}</span>
+              <span style="{{r.doStyle}}">{{r.predplatne}}</span>
+              <span style="font-size: 14px; font-weight: 700; text-align: left">{{r.deti}}</span>
+              <span style="font-size: 13px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.reditelka}}</span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+
+      <!-- ======================================================== DETAIL -->
+      <sc-if value="{{hasDetail}}" hint-placeholder-val="{{true}}">
+        <aside aria-label="Detail školky" style="width: 400px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 800">{{d.nazev}}</h2>
+            <span style="font-size: 13px; color: #5A5C60">{{d.sub}}</span>
+          </div>
+
+          <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Přístup školky</span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{d.stavy}}" as="c" hint-placeholder-count="3"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+          </div>
+          <span style="font-size: 12px; color: #5A5C60; margin-top: -6px">Blokovaná školka se nepřihlásí nikam — ředitelna, tablet, jídelna ani rodiče v LifeOS.</span>
+
+          <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Předplatné</span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{d.tarify}}" as="c" hint-placeholder-count="3"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <label for="adm-do" style="font-size: 14px; font-weight: 700">Placeno do</label>
+            <input id="adm-do" type="date" value="{{d.predplatneDo}}" onChange="{{d.onDo}}" style="height: 40px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 10px; font-size: 14px; color: #17181A">
+            <button type="button" onClick="{{d.plusMesic}}" style="height: 40px; padding: 0 12px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer">+1 měs.</button>
+            <button type="button" onClick="{{d.plusRok}}" style="height: 40px; padding: 0 12px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer">+1 rok</button>
+          </div>
+          <span style="{{d.doNoteStyle}}">{{d.doNote}}</span>
+          <label for="adm-pozn" style="font-size: 14px; font-weight: 700; margin-bottom: -8px">Poznámka (jen pro správce)</label>
+          <textarea id="adm-pozn" rows="2" onInput="{{d.onPozn}}" onChange="{{d.onPozn}}" placeholder="Např. faktura, kontakt na zřizovatele…" style="border-radius: 14px; border: 1px solid #E5E7E4; padding: 10px 12px; font-size: 14px; resize: none; color: #17181A">{{d.poznamka}}</textarea>
+          <button type="button" onClick="{{d.ulozit}}" style="height: 44px; border-radius: 22px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Uložit předplatné a poznámku</button>
+
+          <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Ředitelky</span>
+          <sc-if value="{{d.zadnaReditelka}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #5A5C60">Zatím žádná — pozvěte ji níž.</span></sc-if>
+          <sc-for list="{{d.reditelky}}" as="u" hint-placeholder-count="1">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{u.jmeno}}</span><span style="font-size: 12px; color: #5A5C60">{{u.email}} · {{u.stav}}</span></span>
+              <button type="button" onClick="{{u.toggle}}" style="{{u.toggleStyle}}">{{u.toggleLabel}}</button>
+            </div>
+          </sc-for>
+          <sc-for list="{{d.pozvanky}}" as="p" hint-placeholder-count="1">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #F3F4F2">
+              <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{p.jmeno}} · pozvánka</span><span style="font-size: 12px; color: #5A5C60">{{p.email}} · kód {{p.kod}} · platí do {{p.do}}</span></span>
+              <button type="button" onClick="{{p.zrusit}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513; font-size: 13px; font-weight: 700; cursor: pointer">Zrušit</button>
+            </div>
+          </sc-for>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; border: 1px dashed #D8DBD7">
+            <span style="font-size: 14px; font-weight: 800">Pozvat ředitelku</span>
+            <input type="text" aria-label="Jméno ředitelky" placeholder="Jméno a příjmení" value="{{d.pJmeno}}" onInput="{{d.onPJmeno}}" onChange="{{d.onPJmeno}}" style="height: 42px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 12px; font-size: 14px; color: #17181A">
+            <input type="email" aria-label="E-mail ředitelky" placeholder="e-mail, kterým se bude přihlašovat" value="{{d.pEmail}}" onInput="{{d.onPEmail}}" onChange="{{d.onPEmail}}" style="height: 42px; border-radius: 12px; border: 1px solid #E5E7E4; padding: 0 12px; font-size: 14px; color: #17181A">
+            <button type="button" onClick="{{d.pozvat}}" style="height: 42px; border-radius: 21px; border: 0; background: #17181A; color: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer">Vytvořit pozvánku</button>
+          </div>
+        </aside>
+      </sc-if>
+    </div>
+  </main>
+
+  <!-- ============================================================ NOVÁ ŠKOLKA -->
+  <sc-if value="{{nova.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 7">
+      <div role="dialog" aria-label="Nová školka" style="width: 560px; background: #FFFFFF; border-radius: 28px; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <span style="font-size: 24px; font-weight: 800">Nová školka</span>
+        <label for="nova-nazev" style="font-size: 14px; font-weight: 700; margin-bottom: -6px">Název</label>
+        <input id="nova-nazev" type="text" value="{{nova.f.nazev}}" onInput="{{nova.on.nazev}}" onChange="{{nova.on.nazev}}" placeholder="Mateřská škola Bohnice" style="height: 46px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 16px; color: #17181A">
+        <div style="display: flex; gap: 10px">
+          <div style="flex: 1 1 0; display: flex; flex-direction: column; gap: 6px"><label for="nova-izo" style="font-size: 14px; font-weight: 700">IZO</label><input id="nova-izo" type="text" value="{{nova.f.izo}}" onInput="{{nova.on.izo}}" onChange="{{nova.on.izo}}" style="height: 46px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 16px; color: #17181A"></div>
+          <div style="flex: 1 1 0; display: flex; flex-direction: column; gap: 6px"><label for="nova-redizo" style="font-size: 14px; font-weight: 700">RED_IZO</label><input id="nova-redizo" type="text" value="{{nova.f.redIzo}}" onInput="{{nova.on.redIzo}}" onChange="{{nova.on.redIzo}}" style="height: 46px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 16px; color: #17181A"></div>
+        </div>
+        <label for="nova-kontakt" style="font-size: 14px; font-weight: 700; margin-bottom: -6px">Kontakt (telefon školky)</label>
+        <input id="nova-kontakt" type="text" value="{{nova.f.kontakt}}" onInput="{{nova.on.kontakt}}" onChange="{{nova.on.kontakt}}" placeholder="+420 …" style="height: 46px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 16px; color: #17181A">
+        <span style="font-size: 14px; font-weight: 700; margin-bottom: -4px">Tarif</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{nova.tarify}}" as="c" hint-placeholder-count="3"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for></div>
+        <span style="font-size: 13px; color: #27407A; background: #EBF1FA; border-radius: 12px; padding: 8px 12px">Školka se založí jako „čeká na aktivaci“. Aktivní bude, až první ředitelka přijme pozvánku (nebo ji aktivujete ručně).</span>
+        <sc-if value="{{nova.hasErr}}" hint-placeholder-val="{{false}}"><span role="alert" style="font-size: 14px; font-weight: 600; color: #8A4513; background: #FCF4EF; border-radius: 12px; padding: 8px 12px">{{nova.err}}</span></sc-if>
+        <div style="display: flex; gap: 10px; margin-top: 4px">
+          <button type="button" onClick="{{nova.close}}" style="flex: 1 1 0; height: 50px; border-radius: 25px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 15px; font-weight: 700; cursor: pointer; color: #17181A">Zrušit</button>
+          <button type="button" onClick="{{nova.create}}" style="flex: 1.5 1 0; height: 50px; border-radius: 25px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">Založit školku</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ KÓD POZVÁNKY -->
+  <sc-if value="{{kod.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 8">
+      <div role="dialog" aria-label="Pozvánka" style="width: 500px; background: #FFFFFF; border-radius: 28px; padding: 26px 24px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <span style="font-size: 15px; font-weight: 700; color: #5A5C60">Pozvánka pro ředitelku</span>
+        <span style="font-size: 22px; font-weight: 800">{{kod.jmeno}}</span>
+        <span style="font-size: 14px; color: #3A3C40">{{kod.email}} · {{kod.skola}}</span>
+        <span style="margin-top: 6px; padding: 14px 22px; border-radius: 16px; background: #F3F4F2; font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; user-select: all">{{kod.kod}}</span>
+        <span style="font-size: 13px; color: #3A3C40; background: #EBF1FA; border-radius: 12px; padding: 10px 12px; line-height: 19px">Ředitelka otevře aplikaci školky → <b>Mám pozvánku</b> → zadá tento e-mail, zvolí si heslo a opíše kód. Kód platí 30 dní a jde použít jednou.</span>
+        <div style="display: flex; gap: 10px; width: 100%; margin-top: 6px">
+          <button type="button" onClick="{{kod.copy}}" style="flex: 1 1 0; height: 50px; border-radius: 25px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 15px; font-weight: 700; cursor: pointer; color: #17181A">Zkopírovat text</button>
+          <button type="button" onClick="{{kod.done}}" style="flex: 1 1 0; height: 50px; border-radius: 25px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">Hotovo</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{toast.show}}" hint-placeholder-val="{{false}}">
+    <div role="status" style="position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); padding: 14px 22px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; box-shadow: 0 10px 30px rgba(23,24,26,0.15); z-index: 9">{{toast.text}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+/* =============================================================================
+   Správa LifeOS (superadmin) — provozovatel platformy
+   -----------------------------------------------------------------------------
+   Zakládá školky, zve ředitelky (kód pozvánky), aktivuje / blokuje školky
+   a jejich ředitelky a vede předplatné. Dětská data nevidí — jen počty.
+   Všechno jde přes funkce v databázi (admin_*), které samy ověří, že je
+   přihlášený superadmin; aplikace sama nic nepovoluje.
+   ============================================================================= */
+var TARIFY = [['pilot', 'Pilot · zdarma'], ['hybrid', 'Hybrid · 2 500 Kč/měs.'], ['b2b', 'Školka · 4 500 Kč/měs.']];
+var STAVY = [['aktivni', 'Aktivní', '#EDF4E4', '#2F5212'], ['ceka', 'Čeká na aktivaci', '#F7F0DA', '#5C4300'], ['blokovana', 'Blokovaná', '#FCF4EF', '#8A4513']];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.skoly = null; this.err = ''; this.edit = {};
+    this.state = { filtr: 'vse', sel: null, nova: null, kod: null, toast: null };
+  }
+  sv() { var W = typeof window !== 'undefined' ? window : {}; return W.SkolkaServer && W.SkolkaServer.zapnuto ? W.SkolkaServer : null; }
+  componentDidMount() { this.nacti(); }
+  nacti() {
+    var self = this, SV = this.sv();
+    if (!SV) return;
+    SV.adminSkoly().then(function (r) {
+      self.skoly = r || []; self.err = '';
+      if (!self.state.sel && self.skoly.length) self.state.sel = self.skoly[0].id;
+      self.forceUpdate();
+    }).catch(function (e) { self.skoly = []; self.err = 'Nepodařilo se načíst školky: ' + SV.chyba(e); self.forceUpdate(); });
+  }
+  showToast(t) { var self = this; this.setState({ toast: t }); clearTimeout(this._t); this._t = setTimeout(function () { self.setState({ toast: null }); }, 2600); }
+  run(p, msg) {
+    var self = this, SV = this.sv();
+    return p.then(function (x) { if (msg) self.showToast(msg); self.nacti(); return x; })
+      .catch(function (e) { self.showToast('Nepovedlo se: ' + SV.chyba(e)); throw e; });
+  }
+  cz(iso) { if (!iso) return '—'; var a = String(iso).slice(0, 10).split('-'); return +a[2] + '. ' + +a[1] + '. ' + a[0]; }
+  iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  renderVals() {
+    var self = this, st = this.state, SV = this.sv();
+    var L = this.skoly || [];
+    var dnes = this.iso(new Date()), za30 = this.iso(new Date(Date.now() + 30 * 86400000));
+    var chip = function (on, bg, fg) {
+      return 'height: 38px; padding: 0 14px; border-radius: 19px; font-size: 13px; font-weight: 800; cursor: pointer; '
+        + (on ? 'border: 2px solid ' + (fg || '#1F3A5C') + '; background: ' + (bg || '#E6EDF6') + '; color: ' + (fg || '#1F3A5C') : 'border: 1px solid #E5E7E4; background: #FFFFFF; color: #3A3C40');
+    };
+    var F = [['vse', 'Všechny školky', function () { return true; }], ['aktivni', 'Aktivní', function (s) { return s.stav === 'aktivni'; }], ['ceka', 'Čekají na aktivaci', function (s) { return s.stav === 'ceka'; }], ['blokovana', 'Blokované', function (s) { return s.stav === 'blokovana'; }], ['konci', 'Předplatné končí', function (s) { return s.predplatne_do && s.predplatne_do <= za30; }]];
+    var cur = F.filter(function (f) { return f[0] === st.filtr; })[0] || F[0];
+    var list = L.filter(cur[2]);
+    var stavOf = function (k) { return STAVY.filter(function (x) { return x[0] === k; })[0] || STAVY[0]; };
+    var tarifOf = function (k) { var t = TARIFY.filter(function (x) { return x[0] === k; })[0]; return t ? t[1].split(' · ')[0] : k; };
+    var sel = L.filter(function (s) { return s.id === st.sel; })[0] || null;
+    var E = this.edit[st.sel] || (this.edit[st.sel] = {});
+    var sumDeti = L.reduce(function (a, s) { return a + (s.deti || 0); }, 0);
+    var nf = st.nova || {};
+    var setNova = function (k) { return function (e) { self.state.nova[k] = e.target.value; }; };
+    return {
+      ready: !!SV, offline: !SV, loading: !!SV && this.skoly === null, empty: !!SV && this.skoly !== null && !list.length,
+      hasErr: !!this.err, err: this.err,
+      me: { jmeno: 'Správce LifeOS', initials: 'LO', logout: function () { if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); } },
+      filtry: F.map(function (f) {
+        var on = st.filtr === f[0];
+        return { label: f[1], n: String(L.filter(f[2]).length), current: on ? 'page' : 'false', pick: function () { self.setState({ filtr: f[0] }); },
+          style: 'min-height: 38px; padding: 0 12px 0 14px; border-radius: 19px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600'),
+          countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; background: #E5E7E4; color: #3A3C40' };
+      }),
+      stats: [
+        { label: 'Školky', value: L.filter(function (s) { return s.stav === 'aktivni'; }).length + ' / ' + L.length, sub: 'aktivní / celkem' },
+        { label: 'Čeká na aktivaci', value: String(L.filter(function (s) { return s.stav === 'ceka'; }).length), sub: 'ředitelka ještě nepřijala pozvánku' },
+        { label: 'Děti', value: String(sumDeti), sub: 've všech školkách' },
+        { label: 'Předplatné končí', value: String(L.filter(function (s) { return s.predplatne_do && s.predplatne_do <= za30; }).length), sub: 'do 30 dní nebo už prošlé' }
+      ].map(function (x, i) { return Object.assign(x, { style: 'border-radius: 22px; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px; background: ' + (i === 3 && x.value !== '0' ? '#FAEBE4' : '#FFFFFF') }); }),
+      rows: list.map(function (s) {
+        var S = stavOf(s.stav), on = s.id === st.sel, prosle = s.predplatne_do && s.predplatne_do < dnes, brzy = s.predplatne_do && s.predplatne_do <= za30;
+        var red = (s.reditelky || []).map(function (u) { return u.jmeno + (u.aktivni ? '' : ' (blok.)'); }).join(', ') || ((s.pozvanky || []).length ? 'pozvánka odeslána' : '—');
+        return { nazev: s.nazev, sub: [s.izo ? 'IZO ' + s.izo : null, s.kontakt, s.tridy + ' tříd · ' + s.zamestnanci + ' zam. · ' + s.rodice + ' rodičů v LifeOS'].filter(Boolean).join(' · '),
+          stav: S[1], stavStyle: 'padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 800; background: ' + S[2] + '; color: ' + S[3],
+          tarif: tarifOf(s.tarif), predplatne: s.predplatne_do ? self.cz(s.predplatne_do) : '—',
+          doStyle: 'font-size: 13px; text-align: left; ' + (prosle ? 'color: #8A4513; font-weight: 800' : brzy ? 'color: #8A6D1F; font-weight: 700' : ''),
+          deti: String(s.deti), reditelka: red, sel: on ? 'true' : 'false',
+          pick: function () { self.setState({ sel: s.id }); },
+          style: 'width: 100%; display: grid; grid-template-columns: minmax(0, 1.6fr) 110px 110px 120px 60px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 20px; border: 0; border-bottom: 1px solid #F3F4F2; cursor: pointer; color: #17181A; font-family: inherit; background: ' + (on ? '#F3F6FA' : '#FFFFFF') };
+      }),
+      hasDetail: !!sel,
+      d: sel ? {
+        nazev: sel.nazev, sub: 'Založena ' + self.cz(sel.vytvoreno) + ' · ' + sel.deti + ' dětí · ' + sel.tridy + ' tříd',
+        stavy: STAVY.map(function (x) { return { label: x[1].replace(' na aktivaci', ''), on: sel.stav === x[0] ? 'true' : 'false', style: chip(sel.stav === x[0], x[2], x[3]),
+          pick: function () { if (sel.stav !== x[0]) self.run(SV.adminUpravSkolu(sel.id, { stav: x[0] }), sel.nazev + ': ' + x[1].toLowerCase()); } }; }),
+        tarify: TARIFY.map(function (x) { var t = E.tarif || sel.tarif; return { label: x[1], on: t === x[0] ? 'true' : 'false', style: chip(t === x[0]), pick: function () { E.tarif = x[0]; self.forceUpdate(); } }; }),
+        predplatneDo: E.predplatneDo || sel.predplatne_do || '',
+        onDo: function (e) { E.predplatneDo = e.target.value; self.forceUpdate(); },
+        plusMesic: function () { var b = new Date((E.predplatneDo || sel.predplatne_do || dnes) + 'T12:00:00'); if (b < new Date()) b = new Date(); b.setMonth(b.getMonth() + 1); E.predplatneDo = self.iso(b); self.forceUpdate(); },
+        plusRok: function () { var b = new Date((E.predplatneDo || sel.predplatne_do || dnes) + 'T12:00:00'); if (b < new Date()) b = new Date(); b.setFullYear(b.getFullYear() + 1); E.predplatneDo = self.iso(b); self.forceUpdate(); },
+        doNote: (function () { var x = E.predplatneDo || sel.predplatne_do; if (!x) return 'Bez data — předplatné se nehlídá.'; if (x < dnes) return 'Předplatné prošlo ' + self.cz(x) + '. Přístup se sám neblokuje — rozhodněte stavem výš.'; return x <= za30 ? 'Končí ' + self.cz(x) + ' — připomeňte platbu.' : 'Placeno do ' + self.cz(x) + '.'; })(),
+        doNoteStyle: 'font-size: 12px; margin-top: -6px; color: ' + ((E.predplatneDo || sel.predplatne_do || '9') < dnes ? '#8A4513' : '#5A5C60'),
+        poznamka: E.poznamka != null ? E.poznamka : (sel.poznamka || ''),
+        onPozn: function (e) { E.poznamka = e.target.value; },
+        ulozit: function () {
+          self.run(SV.adminUpravSkolu(sel.id, { tarif: E.tarif || null, predplatneDo: E.predplatneDo || null, poznamka: E.poznamka == null ? null : E.poznamka }), 'Uloženo').then(function () { self.edit[sel.id] = {}; });
+        },
+        zadnaReditelka: !(sel.reditelky || []).length && !(sel.pozvanky || []).length,
+        reditelky: (sel.reditelky || []).map(function (u) {
+          return { jmeno: u.jmeno, email: u.email || '—', stav: u.aktivni ? 'aktivní' : 'zablokovaná',
+            toggleLabel: u.aktivni ? 'Zablokovat' : 'Povolit',
+            toggleStyle: 'height: 34px; padding: 0 12px; border-radius: 17px; font-size: 13px; font-weight: 700; cursor: pointer; ' + (u.aktivni ? 'border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513' : 'border: 0; background: #EDF4E4; color: #2F5212'),
+            toggle: function () { self.run(SV.adminNastavUcet(u.id, !u.aktivni), u.jmeno + (u.aktivni ? ' — zablokována' : ' — povolena')); } };
+        }),
+        pozvanky: (sel.pozvanky || []).map(function (p) {
+          return { jmeno: p.jmeno, email: p.email, kod: String(p.kod).slice(0, 4) + '-' + String(p.kod).slice(4), do: self.cz(p.plati_do),
+            zrusit: function () { self.run(SV.zrusPozvanku(p.kod), 'Pozvánka zrušena'); } };
+        }),
+        pJmeno: E.pJmeno || '', pEmail: E.pEmail || '',
+        onPJmeno: function (e) { E.pJmeno = e.target.value; }, onPEmail: function (e) { E.pEmail = e.target.value; },
+        pozvat: function () {
+          var j = (E.pJmeno || '').trim(), m = (E.pEmail || '').trim();
+          if (!j || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)) { self.showToast('Vyplňte jméno a platný e-mail'); return; }
+          self.run(SV.adminPozviReditelku(sel.id, j, m)).then(function (k) { E.pJmeno = ''; E.pEmail = ''; self.setState({ kod: { kod: k, jmeno: j, email: m.toLowerCase(), skola: sel.nazev } }); });
+        }
+      } : {},
+      novaOpen: function () { self.setState({ nova: { nazev: '', izo: '', redIzo: '', kontakt: '', tarif: 'pilot', err: '' } }); },
+      nova: {
+        open: !!st.nova, f: nf, hasErr: !!nf.err, err: nf.err || '',
+        on: { nazev: setNova('nazev'), izo: setNova('izo'), redIzo: setNova('redIzo'), kontakt: setNova('kontakt') },
+        tarify: TARIFY.map(function (x) { return { label: x[1], on: nf.tarif === x[0] ? 'true' : 'false', style: chip(nf.tarif === x[0]), pick: function () { self.setState({ nova: Object.assign({}, self.state.nova, { tarif: x[0] }) }); } }; }),
+        close: function () { self.setState({ nova: null }); },
+        create: function () {
+          var f = self.state.nova;
+          if (!String(f.nazev || '').trim()) { self.setState({ nova: Object.assign({}, f, { err: 'Vyplňte název školky.' }) }); return; }
+          SV.adminZalozSkolu(f).then(function (id) { self.setState({ nova: null, sel: id, filtr: 'vse' }); self.showToast('Školka založena — pozvěte ředitelku'); self.nacti(); })
+            .catch(function (e) { self.setState({ nova: Object.assign({}, f, { err: SV.chyba(e) }) }); });
+        }
+      },
+      kod: st.kod ? Object.assign({ open: true }, st.kod, {
+        copy: function () { var K = st.kod, t = 'Dobrý den, posílám pozvánku do LifeOS · Digitální školka pro ' + K.skola + '. Otevřete aplikaci školky, zvolte „Mám pozvánku“, zadejte e-mail ' + K.email + ', zvolte si heslo a opište kód ' + K.kod + '. Kód platí 30 dní.'; try { navigator.clipboard.writeText(t); self.showToast('Text pozvánky zkopírován'); } catch (e) { self.showToast('Kód si opište'); } },
+        done: function () { self.setState({ kod: null }); }
+      }) : { open: false, kod: '', jmeno: '', email: '', skola: '', copy: function () {}, done: function () {} },
+      toast: { show: !!st.toast, text: st.toast || '' }
+    };
+  }
+}
+</script>
+</body>
+</html>

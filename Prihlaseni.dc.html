@@ -29,7 +29,7 @@ input::placeholder{color:#8A8C90}
   <!-- ============================================================ PŘIHLÁŠENÍ -->
   <section aria-label="Přihlášení" style="width: 460px; background: #FFFFFF; border-radius: 28px; padding: 26px 26px 22px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 3px rgba(23,24,26,0.04)">
     <div style="display: flex; flex-direction: column; gap: 2px">
-      <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Přihlášení</h1>
+      <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">{{nadpis}}</h1>
       <span style="font-size: 14px; color: #5A5C60">{{school}}</span>
     </div>
 
@@ -43,6 +43,7 @@ input::placeholder{color:#8A8C90}
       </div>
     </sc-if>
 
+    <sc-if value="{{showOblasti}}" hint-placeholder-val="{{true}}">
     <div role="radiogroup" aria-label="Kam se přihlásit" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
       <sc-for list="{{oblasti}}" as="o" hint-placeholder-count="3">
         <button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">
@@ -56,33 +57,56 @@ input::placeholder{color:#8A8C90}
       </sc-for>
     </div>
     <span style="font-size: 13px; color: #5A5C60; margin-top: -6px">{{oblastPopis}}</span>
+    </sc-if>
+    <sc-if value="{{pozvanka}}" hint-placeholder-val="{{false}}">
+      <div role="note" style="padding: 10px 14px; border-radius: 14px; background: #EBF1FA; color: #1F3A5C; font-size: 14px; line-height: 20px">Pozvánka: zadejte e-mail, na který přišla, zvolte si heslo a opište kód.</div>
+    </sc-if>
 
     <div style="display: flex; flex-direction: column; gap: 6px">
       <label for="prihlaseni-email" style="font-size: 14px; font-weight: 700">E-mail</label>
       <input id="prihlaseni-email" type="email" autocomplete="username" inputmode="email" placeholder="jmeno@ms-slunicko.cz" value="{{email}}" onInput="{{onEmail}}" onChange="{{onEmail}}" onKeyDown="{{onKey}}" style="height: 52px; border-radius: 16px; border: 1px solid #E5E7E4; padding: 0 16px; font-size: 16px; color: #17181A; background: #FFFFFF">
     </div>
     <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="prihlaseni-heslo" style="font-size: 14px; font-weight: 700">Heslo</label>
+      <label for="prihlaseni-heslo" style="font-size: 14px; font-weight: 700">{{hesloLabel}}</label>
       <div style="position: relative; display: flex">
         <input id="prihlaseni-heslo" type="{{hesloTyp}}" autocomplete="current-password" placeholder="••••••••" value="{{heslo}}" onInput="{{onHeslo}}" onChange="{{onHeslo}}" onKeyDown="{{onKey}}" style="flex-grow: 1; min-width: 0; height: 52px; border-radius: 16px; border: 1px solid #E5E7E4; padding: 0 92px 0 16px; font-size: 16px; color: #17181A; background: #FFFFFF">
         <button type="button" onClick="{{toggleHeslo}}" aria-label="{{hesloToggleAria}}" style="position: absolute; right: 6px; top: 6px; height: 40px; padding: 0 12px; border-radius: 12px; border: 0; background: #F3F4F2; font-size: 13px; font-weight: 700; color: #3A3C40; cursor: pointer">{{hesloToggle}}</button>
       </div>
     </div>
 
+    <sc-if value="{{pozvanka}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="prihlaseni-kod" style="font-size: 14px; font-weight: 700">Kód pozvánky</label>
+        <input id="prihlaseni-kod" type="text" autocomplete="one-time-code" placeholder="ABCD-EFGH" value="{{kod}}" onInput="{{onKod}}" onChange="{{onKod}}" onKeyDown="{{onKey}}" style="height: 52px; border-radius: 16px; border: 1px solid #E5E7E4; padding: 0 16px; font: 700 20px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #17181A; background: #FFFFFF">
+      </div>
+    </sc-if>
+    <sc-if value="{{hasInfo}}" hint-placeholder-val="{{false}}">
+      <div role="status" style="padding: 10px 14px; border-radius: 14px; background: #EDF4E4; color: #2F5212; font-size: 14px; font-weight: 600; line-height: 20px">{{info}}</div>
+    </sc-if>
     <sc-if value="{{hasChyba}}" hint-placeholder-val="{{false}}">
       <div role="alert" style="padding: 10px 14px; border-radius: 14px; background: #FCF4EF; color: #8A4513; font-size: 14px; font-weight: 600; line-height: 20px">{{chyba}}</div>
     </sc-if>
 
     <button type="button" onClick="{{prihlasit}}" style="{{prihlasitStyle}}">{{prihlasitLabel}}</button>
 
-    <span style="font-size: 13px; color: #5A5C60; line-height: 19px; text-align: center">Přístup vytváří ředitelka školy. Zapomenuté heslo vám vygeneruje znovu.</span>
+    <sc-if value="{{srv}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; justify-content: center; gap: 18px">
+        <button type="button" onClick="{{togglePozvanka}}" style="border: 0; background: transparent; padding: 4px; font-size: 14px; font-weight: 700; color: #1F3A5C; cursor: pointer; text-decoration: underline">{{pozvankaLink}}</button>
+        <sc-if value="{{showZapomenute}}" hint-placeholder-val="{{true}}">
+          <button type="button" onClick="{{zapomenute}}" style="border: 0; background: transparent; padding: 4px; font-size: 14px; font-weight: 700; color: #3A3C40; cursor: pointer; text-decoration: underline">Zapomenuté heslo</button>
+        </sc-if>
+      </div>
+    </sc-if>
+    <span style="font-size: 13px; color: #5A5C60; line-height: 19px; text-align: center">{{pata}}</span>
   </section>
 
   <!-- ============================================================ ZKUŠEBNÍ PROVOZ -->
+  <sc-if value="{{showDemo}}" hint-placeholder-val="{{true}}">
   <div role="note" style="width: 460px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 14px; border-radius: 18px; background: #F7F0DA; color: #5C4300; font-size: 13px; line-height: 18px">
     <span style="flex-grow: 1; min-width: 0"><b style="font-weight: 800">Zkušební provoz</b> · {{demo.email}} · heslo <b style="font-weight: 800">skolka</b></span>
     <button type="button" onClick="{{demo.fill}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #FFFFFF; color: #5C4300; font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0">Vyplnit</button>
   </div>
+  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1194,"height":834}}'>
@@ -99,9 +123,10 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     var A = this.api();
-    var chtel = A.chtel && /^(reditel|trida|jidelna)$/.test(A.chtel) ? A.chtel : '';
+    var chtel = A.chtel && /^(reditel|trida|jidelna|admin)$/.test(A.chtel) ? A.chtel : '';
     this.chtel = chtel;
-    this.state = { oblast: chtel || (A.posledniOblast && A.posledniOblast()) || 'reditel', email: '', heslo: '', ukazHeslo: false, chyba: '', busy: false };
+    var ob = chtel || (A.posledniOblast && A.posledniOblast()) || 'reditel';
+    this.state = { oblast: ob === 'admin' && chtel !== 'admin' ? 'reditel' : ob, email: '', heslo: '', kod: '', ukazHeslo: false, chyba: '', info: '', busy: false, pozvanka: false };
   }
 
   api() {
@@ -110,15 +135,28 @@ class Component extends DCLogic {
     return { prihlas: function () { return Promise.resolve({ ok: false, chyba: 'Na plátně se přihlásit nedá — otevřete aplikaci.' }); }, posledniOblast: function () { return ''; } };
   }
 
+  srv() { var A = this.api(); return !!(A.server && A.server()); }
   login() {
     var self = this, st = this.state;
     if (st.busy) return;
     if (!st.email.trim()) { this.setState({ chyba: 'Napište e-mail.' }); return; }
     if (!st.heslo) { this.setState({ chyba: 'Napište heslo.' }); return; }
-    this.setState({ busy: true, chyba: '' });
-    Promise.resolve(this.api().prihlas(st.oblast, st.email, st.heslo)).then(function (r) {
-      if (!r || !r.ok) self.setState({ busy: false, chyba: (r && r.chyba) || 'Přihlášení se nepovedlo.' });
+    if (st.pozvanka && !st.kod.trim()) { this.setState({ chyba: 'Opište kód pozvánky.' }); return; }
+    this.setState({ busy: true, chyba: '', info: '' });
+    var p = st.pozvanka ? this.api().registruj(st.oblast, st.email, st.heslo, st.kod) : this.api().prihlas(st.oblast, st.email, st.heslo);
+    Promise.resolve(p).then(function (r) {
+      if (r && r.ok) return;
+      if (r && r.potvrdit) { self.setState({ busy: false, info: r.chyba, chyba: '' }); return; }
+      // Účet je, ale ještě bez školky → nabídnout kód pozvánky.
+      self.setState({ busy: false, chyba: (r && r.chyba) || 'Přihlášení se nepovedlo.', pozvanka: !!(r && r.bezSkoly) || self.state.pozvanka });
     }).catch(function () { self.setState({ busy: false, chyba: 'Přihlášení se nepovedlo. Zkuste to znovu.' }); });
+  }
+  zapomenute() {
+    var self = this, st = this.state;
+    if (!st.email.trim()) { this.setState({ chyba: 'Napište e-mail, na který vám pošleme odkaz.' }); return; }
+    Promise.resolve(this.api().zapomenuteHeslo(st.email)).then(function (r) {
+      self.setState(r && r.ok ? { info: 'Poslali jsme vám e-mail s odkazem na nové heslo.', chyba: '' } : { chyba: (r && r.chyba) || 'Nepovedlo se.', info: '' });
+    });
   }
 
   renderVals() {
@@ -140,7 +178,7 @@ class Component extends DCLogic {
       };
     });
     var cur = O.filter(function (o) { return o[0] === st.oblast; })[0] || O[0];
-    var NZ = { reditel: 'Ředitelna', trida: 'Třída', jidelna: 'Jídelna' };
+    var NZ = { reditel: 'Ředitelna', trida: 'Třída', jidelna: 'Jídelna', admin: 'Správa LifeOS' };
     var U = this.api().aktualni ? this.api().aktualni() : null;
     var ses = U ? {
       on: true, jmeno: U.jmeno, role: U.role,
@@ -150,9 +188,19 @@ class Component extends DCLogic {
       go: function () { self.api().otevri(U.desky[0]); },
       logout: function () { self.api().odhlas(); }
     } : { on: false, jmeno: '', role: '', hasWhy: false, why: '', goLabel: '', go: function () {}, logout: function () {} };
+    var SRV = this.srv(), ADMIN = this.chtel === 'admin';
     return {
-      ses: ses,
-      school: 'MŠ Sluníčko · Praha 6', oblasti: oblasti, oblastPopis: cur[2],
+      ses: ses, srv: SRV, showDemo: !SRV, showOblasti: !ADMIN,
+      nadpis: ADMIN ? 'Správa LifeOS' : st.pozvanka ? 'Mám pozvánku' : 'Přihlášení',
+      school: ADMIN ? 'Jen pro provozovatele — školky, ředitelky, předplatné' : SRV ? 'Přihlaste se do své školky' : 'MŠ Sluníčko · Praha 6',
+      pozvanka: st.pozvanka, kod: st.kod, onKod: function (e) { self.setState({ kod: e.target.value, chyba: '' }); },
+      hesloLabel: st.pozvanka ? 'Nové heslo (aspoň 8 znaků)' : 'Heslo',
+      pozvankaLink: st.pozvanka ? 'Zpět na přihlášení' : 'Mám pozvánku',
+      togglePozvanka: function () { self.setState({ pozvanka: !self.state.pozvanka, chyba: '', info: '' }); },
+      showZapomenute: !st.pozvanka, zapomenute: function () { self.zapomenute(); },
+      info: st.info, hasInfo: !!st.info,
+      pata: SRV ? (st.pozvanka ? 'Pozvánku posílá ředitelka (zaměstnancům) nebo správce LifeOS (ředitelce).' : 'Přístup vytváří ředitelka školy pozvánkou.') : 'Přístup vytváří ředitelka školy. Zapomenuté heslo vám vygeneruje znovu.',
+      oblasti: oblasti, oblastPopis: cur[2],
       email: st.email, heslo: st.heslo, hesloTyp: st.ukazHeslo ? 'text' : 'password',
       hesloToggle: st.ukazHeslo ? 'Skrýt' : 'Zobrazit', hesloToggleAria: st.ukazHeslo ? 'Skrýt heslo' : 'Zobrazit heslo',
       toggleHeslo: function () { self.setState({ ukazHeslo: !self.state.ukazHeslo }); },
@@ -161,7 +209,7 @@ class Component extends DCLogic {
       onHeslo: function (e) { self.setState({ heslo: e.target.value, chyba: '' }); },
       onKey: function (e) { if (e.key === 'Enter') self.login(); },
       prihlasit: function () { self.login(); },
-      prihlasitLabel: st.busy ? 'Přihlašuji…' : ({ reditel: 'Přihlásit do ředitelny', trida: 'Přihlásit do třídy', jidelna: 'Přihlásit do jídelny' })[cur[0]],
+      prihlasitLabel: st.busy ? 'Přihlašuji…' : st.pozvanka ? 'Vytvořit účet a přihlásit' : ADMIN ? 'Přihlásit do správy' : ({ reditel: 'Přihlásit do ředitelny', trida: 'Přihlásit do třídy', jidelna: 'Přihlásit do jídelny' })[cur[0]],
       prihlasitStyle: 'height: 56px; border: 0; border-radius: 28px; background: #DCE6F2; color: #1F3A5C; font-size: 16px; font-weight: 800; cursor: pointer; ' + (st.busy ? 'opacity: 0.6' : ''),
       demo: { email: DEMO[st.oblast], fill: function () { self.setState({ email: DEMO[self.state.oblast], heslo: 'skolka', chyba: '' }); } }
     };

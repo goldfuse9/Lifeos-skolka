@@ -21,6 +21,7 @@ const DESKY = {
   'Trida.dc.html': 'trida',
   'Reditel.dc.html': 'reditel',
   'Jidelna.dc.html': 'jidelna',
+  'Admin.dc.html': 'admin',
 };
 /* Na jaký rozměr je která deska nakreslená. Menší okno = deska se celá
    zmenší, aby se vešla; větší okno = roztáhne se. Pod 60 % se už dál
@@ -30,6 +31,7 @@ const ROZMER = {
   trida: [1194, 834],
   reditel: [1440, 900],
   jidelna: [1440, 900],
+  admin: [1440, 900],
 };
 const MIN_ZOOM = 0.6;
 let aktualni = null;
@@ -72,9 +74,10 @@ const ROLE = {
   asistent:   { nazev: 'asistent/ka pedagoga', desky: ['trida'], trida: true },
   vedouci_sj: { nazev: 'vedoucí školní jídelny', desky: ['jidelna'] },
   kucharka:   { nazev: 'kuchařka', desky: ['jidelna'] },
+  superadmin: { nazev: 'správce LifeOS', desky: ['admin'] },
 };
 const TRIDY = { slunicka: 'Sluníčka', berusky: 'Berušky', motylci: 'Motýlci' };
-const NAZEV_DESKY = { reditel: 'Ředitelna', jidelna: 'Jídelna', trida: 'Třída' };
+const NAZEV_DESKY = { reditel: 'Ředitelna', jidelna: 'Jídelna', trida: 'Třída', admin: 'Správa LifeOS' };
 const KLIC_UCTU = 'skolka-prihlaseni-v1';
 const KLIC_PRISTUPU = 'skolka-pristupy-v1';
 
@@ -154,7 +157,7 @@ function noveHeslo() {
 
 /* Ostrý provoz (server.js + config.js): účet je ze Supabase. */
 const SRV = () => (window.SkolkaServer && window.SkolkaServer.zapnuto ? window.SkolkaServer : null);
-const SRV_ROLE = { reditelka: 'reditelka', zastupce: 'zastupce', ucitelka: 'ucitelka', hospodarka: 'hospodarka', kucharka: 'kucharka' };
+const SRV_ROLE = { reditelka: 'reditelka', zastupce: 'zastupce', ucitelka: 'ucitelka', hospodarka: 'hospodarka', kucharka: 'kucharka', superadmin: 'superadmin' };
 function ucetZeServeru(s) {
   const r = ROLE[SRV_ROLE[s.role] || 'ucitelka'];
   const t = s.tridy[0];
@@ -174,21 +177,34 @@ function nactiUcet() {
   return p ? ucetZ(p) : null;
 }
 
+/* Tablet třídy bez dětí nemá co ukázat — místo prázdné desky srozumitelná věta. */
+async function prazdnaTrida(u, kam) {
+  if (kam !== 'trida' || !SRV() || !u.trida) return null;
+  let deti = [];
+  try { deti = await SRV().nactiTridu(u.trida); } catch (e) { return null; }
+  if (deti.length) return null;
+  try { await SRV().odhlas(); } catch (e) { /* nic */ }
+  return { ok: false, chyba: 'Účet je v pořádku. Ve třídě ' + (u.tridaNazev || '') + ' ale zatím nejsou žádné děti — tablet se otevře, až je ředitelka do třídy zapíše.' };
+}
+
 window.SkolkaUcet = {
   role: ROLE, tridy: TRIDY, nazevDesky: NAZEV_DESKY,
   aktualni: nactiUcet,
   muze: (klic) => { const u = nactiUcet(); return !!u && u.desky.includes(klic); },
   /* Přihlašovací obrazovka: oblast (reditel / trida / jidelna), e-mail, heslo. */
-  async prihlas(oblast, email, heslo) {
+  async prihlas(oblast, email, heslo, kod) {
     const mail = String(email || '').trim().toLowerCase();
     if (SRV()) {
-      const r = await SRV().prihlas(mail, heslo);
+      const r = await SRV().prihlas(mail, heslo, kod);
       if (!r.ok) return r;
       const u = ucetZeServeru(r.ucet);
+      if (u.kod === 'superadmin') { otevri('admin'); return { ok: true }; }
       if (!u.desky.includes(oblast)) {
         await SRV().odhlas();
         return { ok: false, chyba: 'Tento přístup do části „' + NAZEV_DESKY[oblast] + '“ nevede.' + (u.desky.length ? ' Patří do: ' + u.desky.map((d) => NAZEV_DESKY[d]).join(', ') + '.' : ' Učitelka zatím nemá přiřazenou třídu.') };
       }
+      const prazdna = await prazdnaTrida(u, oblast);
+      if (prazdna) return prazdna;
       try { localStorage.setItem('skolka-oblast', oblast); } catch (e) { /* nic */ }
       otevri(oblast);
       return { ok: true };
@@ -208,6 +224,23 @@ window.SkolkaUcet = {
     otevri(oblast);
     return { ok: true };
   },
+  /* Ostrý provoz: nový účet z pozvánky (e-mail, heslo, kód). */
+  async registruj(oblast, email, heslo, kod) {
+    if (!SRV()) return { ok: false, chyba: 'Pozvánky fungují jen v ostrém provozu.' };
+    const r = await SRV().registruj(email, heslo, kod);
+    if (!r.ok) return r;
+    const u = ucetZeServeru(r.ucet);
+    const kam = u.desky.includes(oblast) ? oblast : u.desky[0];
+    const prazdna = await prazdnaTrida(u, kam);
+    if (prazdna) return prazdna;
+    try { localStorage.setItem('skolka-oblast', kam); } catch (e) { /* nic */ }
+    otevri(kam);
+    return { ok: true };
+  },
+  async zapomenuteHeslo(email) {
+    if (!SRV()) return { ok: false, chyba: 'Heslo v zkušebním provozu obnoví ředitelka (Přístupy → Nové heslo).' };
+    try { await SRV().zapomenuteHeslo(email); return { ok: true }; } catch (e) { return { ok: false, chyba: SRV().chyba(e) }; }
+  },
   odhlas() {
     if (SRV()) SRV().odhlas();
     try { localStorage.removeItem(KLIC_UCTU); } catch (e) { /* nic */ }
@@ -218,7 +251,7 @@ window.SkolkaUcet = {
   posledniOblast() { try { return localStorage.getItem('skolka-oblast') || ''; } catch (e) { return ''; } },
 
   /* ---- správa přístupů: jen ředitelka ---- */
-  smiSpravovat() { const u = nactiUcet(); return !!u && u.kod === 'reditelka' && !u.server; },
+  smiSpravovat() { const u = nactiUcet(); return !!u && (u.kod === 'reditelka' || (u.server && u.kod === 'zastupce')); },
   server: () => !!SRV(),
   pristupy() { return nactiPristupy().map((p) => Object.assign(ucetZ(p), { aktivni: p.aktivni, vytvoreno: p.vytvoreno, posledni: p.posledni })); },
   /* Vrátí { ok, heslo } — heslo se ukáže jen jednou. */
@@ -308,7 +341,7 @@ async function otevri(chtene, zHashe, vychozi) {
     if (klic === 'trida' && SRV()) {
       const u = nactiUcet();
       const deti = await SRV().nactiTridu(u.trida);
-      if (!deti.length) throw new Error('Ve třídě ' + u.tridaNazev + ' zatím nejsou žádné děti. Ředitelka je přidá do třídy v databázi.');
+      if (!deti.length) throw new Error('Ve třídě ' + u.tridaNazev + ' zatím nejsou žádné děti — tablet se otevře, až je ředitelka do třídy zapíše.');
       window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti, omluvy: await SRV().omluvy(deti).catch(() => []) };
     }
     aktualni = klic;
