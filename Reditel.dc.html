@@ -786,8 +786,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                   <sc-for list="{{r.zast}}" as="z" hint-placeholder-count="1">
                     <span style="display: flex; align-items: center; gap: 10px; justify-content: space-between">
                       <span style="font-size: 14px">{{z.jmeno}}</span>
-                      <sc-if value="{{z.propojen}}" hint-placeholder-val="{{false}}"><span style="padding: 4px 10px; border-radius: 12px; background: #EDF4E4; color: #2F5212; font-size: 13px; font-weight: 700">v LifeOS ✓</span></sc-if>
-                      <sc-if value="{{z.nepropojen}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{z.kod}}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Kód pro LifeOS</button></sc-if>
+                      <span style="display: flex; align-items: center; gap: 8px">
+                        <sc-if value="{{z.propojen}}" hint-placeholder-val="{{false}}"><span style="padding: 4px 10px; border-radius: 12px; background: #EDF4E4; color: #2F5212; font-size: 13px; font-weight: 700">v LifeOS ✓</span></sc-if>
+                        <button type="button" onClick="{{z.kod}}" style="{{z.kodStyle}}">{{z.kodLabel}}</button>
+                      </span>
                     </span>
                   </sc-for>
                 </span>
@@ -798,7 +800,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <aside aria-label="Jak propojit" style="width: 300px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
           <h2 style="margin: 0; font-size: 18px; font-weight: 800">Jak to funguje</h2>
           <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #3A3C40">Rodič v LifeOS otevře kartu dítěte → Školka → Propojit se školkou a opíše kód. Pak uvidí příchod a odchod, zprávy od učitelky, jídelníček a akce.</p>
-          <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #5A5C60">Kód platí 14 dní a jde použít jednou. Nový kód zneplatní starý.</p>
+          <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #5A5C60">Kód platí 14 dní a jde použít jednou. Nový kód zneplatní starý nepoužitý. „Nový kód“ u propojeného rodiče se hodí, když má nový telefon nebo se odpojil.</p>
           <button type="button" onClick="{{lo.reload}}" style="height: 40px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer">Obnovit</button>
         </aside>
       </div>
@@ -3632,6 +3634,8 @@ class Component extends DCLogic {
           var zz = d.zastupci.length ? d.zastupci : [{ id: null, jmeno: 'Rodič', propojen: false }];
           return { jmeno: d.jmeno, trida: d.trida, zast: zz.map(function (z) {
             return { jmeno: z.jmeno, propojen: z.propojen, nepropojen: !z.propojen,
+              kodLabel: z.propojen ? 'Nový kód' : 'Kód pro LifeOS',
+              kodStyle: 'height: 36px; padding: 0 14px; border-radius: 18px; font-size: 13px; font-weight: 800; cursor: pointer; ' + (z.propojen ? 'border: 1px solid #E5E7E4; background: #FFFFFF; color: #17181A' : 'border: 0; background: #DCE6F2; color: #1F3A5C'),
               kod: function () {
                 SV.kodRodice(d.id, z.id).then(function (c) { self.log('Kód pro LifeOS: ' + d.jmeno + ' (' + z.jmeno + ')'); self.setState({ loCode: { code: c, pro: d.jmeno + ' · ' + z.jmeno } }); })
                   .catch(function (e) { self.showToast('Kód se nepodařilo vydat: ' + SV.chyba(e)); });
