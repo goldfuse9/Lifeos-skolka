@@ -126,7 +126,8 @@ class Component extends DCLogic {
     var chtel = A.chtel && /^(reditel|trida|jidelna|admin)$/.test(A.chtel) ? A.chtel : '';
     this.chtel = chtel;
     var ob = chtel || (A.posledniOblast && A.posledniOblast()) || 'reditel';
-    this.state = { oblast: ob === 'admin' && chtel !== 'admin' ? 'reditel' : ob, email: '', heslo: '', kod: '', ukazHeslo: false, chyba: '', info: '', busy: false, pozvanka: false };
+    var ZE = A.zEmailu || null; if (ZE) A.zEmailu = null;
+    this.state = { oblast: ob === 'admin' && chtel !== 'admin' ? 'reditel' : ob, email: '', heslo: '', kod: '', ukazHeslo: false, chyba: ZE && ZE.chyba || '', info: ZE && ZE.info || '', busy: false, pozvanka: !!(ZE && ZE.pozvanka) };
   }
 
   api() {
