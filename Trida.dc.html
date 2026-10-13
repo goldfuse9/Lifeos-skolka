@@ -283,7 +283,8 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-content: start; flex-grow: 1; min-height: 0; overflow-y: auto">
+      <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-content: start; flex-grow: 1; min-width: 0; min-height: 0; overflow-y: auto">
         <sc-for list="{{doch.kids}}" as="k" hint-placeholder-count="28">
           <button type="button" onClick="{{k.tap}}" aria-label="{{k.aria}}" style="{{k.tileStyle}}">
             <sc-if value="{{k.hasClsDot}}" hint-placeholder-val="{{false}}">
@@ -298,6 +299,23 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <span style="font-size: 11px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{k.detail}}</span>
           </button>
         </sc-for>
+      </div>
+      <aside aria-label="Omluvenky" style="width: 290px; flex-shrink: 0; background: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700">Omluvenky <span style="font-weight: 600; color: #5A5C60">{{doch.omlCount}}</span></h3>
+        <sc-if value="{{doch.omlNone}}" hint-placeholder-val="{{false}}">
+          <span style="font-size: 14px; color: #5A5C60; line-height: 1.4">Dnes ani dál zatím nikdo omluvený není.</span>
+        </sc-if>
+        <sc-for list="{{doch.oml}}" as="o" hint-placeholder-count="3">
+          <button type="button" onClick="{{o.pick}}" style="display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 10px; border-radius: 16px; border: 0; background: {{o.bg}}; cursor: pointer">
+            <span style="width: 36px; height: 36px; border-radius: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #FFFFFF"><svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{o.symRef}}"></use></svg></span>
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+              <span style="font-size: 14px; font-weight: 700; color: #17181A">{{o.name}}</span>
+              <span style="font-size: 13px; font-weight: 700; color: {{o.kdyFg}}">{{o.kdy}}</span>
+              <span style="font-size: 12px; color: #5A5C60">{{o.sub}}</span>
+            </span>
+          </button>
+        </sc-for>
+      </aside>
       </div>
 
       <div style="display: flex; align-items: center; gap: 16px; background: #FFFFFF; border-radius: 20px; padding: 12px 18px">
@@ -1224,6 +1242,7 @@ class Component extends DCLogic {
       this.albums = []; this.events = []; this.meetings = {}; this.konz = {}; this.kniha[SRVT.id] = [];
       this.state.viewCls = SRVT.id;
       this.state.picked = this.kids[0] ? this.kids[0].id : null;
+      this.srvOmluvy = SRVT.omluvy || [];
     }
   }
 
@@ -1231,7 +1250,9 @@ class Component extends DCLogic {
     var self = this;
     if (!this.srv) return;
     this._stopSrv = window.SkolkaServer.sleduj(this.state.viewCls, function () {
-      window.SkolkaServer.obnovDen(self.kids).then(function () { self.setState({}); }).catch(function () { /* další pokus při příští změně */ });
+      Promise.all([window.SkolkaServer.obnovDen(self.kids), window.SkolkaServer.omluvy(self.kids)])
+        .then(function (r) { self.srvOmluvy = r[1]; self.setState({}); })
+        .catch(function () { /* další pokus při příští změně */ });
     });
   }
 
@@ -1588,6 +1609,39 @@ class Component extends DCLogic {
         return tile;
       })
     };
+
+    /* Omluvenky: dnešní i dopředu (rodiče omlouvají z aplikace na víc dní). */
+    (function () {
+      var DNYK = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so'];
+      var todayIso = self.iso(new Date());
+      var fmtD = function (iso) { var d = self.parseIso(iso); return DNYK[d.getDay()] + ' ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
+      var next = function (iso) { var d = self.parseIso(iso); do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6); return self.iso(d); };
+      var rows = [];
+      if (self.srv) {
+        var by = {};
+        (self.srvOmluvy || []).forEach(function (r) { (by[r.dite_id] = by[r.dite_id] || []).push(r); });
+        Object.keys(by).forEach(function (id) {
+          var k = self.byId[id]; if (!k) return;
+          var list = by[id].sort(function (a, b) { return a.den < b.den ? -1 : 1; }), cur = null;
+          list.forEach(function (r) {
+            if (cur && next(cur.to) === r.den && cur.duvod === (r.omluvenka || '')) { cur.to = r.den; if (!r.strava_prihlasena && !cur.obedOd) cur.obedOd = r.den; if (r.strava_prihlasena) cur.obed = false; }
+            else { cur = { k: k, from: r.den, to: r.den, duvod: r.omluvenka || '', obed: !r.strava_prihlasena, obedOd: r.strava_prihlasena ? null : r.den }; rows.push(cur); }
+          });
+        });
+      } else {
+        kids.forEach(function (k) { if (k.att === 'excused') rows.push({ k: k, from: todayIso, to: todayIso, duvod: k.excuse.split(' · ')[0], obed: true }); });
+      }
+      rows.sort(function (a, b) { return a.from < b.from ? -1 : a.from > b.from ? 1 : (a.k.name < b.k.name ? -1 : 1); });
+      doch.oml = rows.map(function (r) {
+        var dnes = r.from <= todayIso;
+        var kdy = r.from === r.to ? (dnes ? 'dnes' : fmtD(r.from)) : (dnes ? 'dnes' : fmtD(r.from)) + ' – ' + fmtD(r.to);
+        return { name: r.k.name, symRef: '#z-' + r.k.sym, kdy: kdy, kdyFg: dnes ? '#6B22A8' : '#1F3A5C',
+          sub: [r.duvod, r.obed ? 'oběd odhlášen' : r.obedOd ? 'oběd odhlášen od ' + fmtD(r.obedOd) : 'oběd zůstává'].filter(Boolean).join(' · '),
+          bg: dnes ? '#F3E8FC' : '#F3F4F2', pick: function () { self.setState({ picked: r.k.id, tab: 'trida' }); } };
+      });
+      doch.omlCount = rows.length ? String(rows.length) : '';
+      doch.omlNone = rows.length === 0;
+    })();
 
     /* -------------------------------------------------- vrstvy zápisu */
     var kind = st.sheet;
