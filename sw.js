@@ -4,12 +4,15 @@
    Po každé změně souboru zvedněte VERZE, jinak si tablet nechá starou.
    ============================================================================= */
 
-const VERZE = 'skolka-v25';
+const VERZE = 'skolka-v26';
 const SOUBORY = [
   './',
   './index.html',
   './dc.js',
   './qrcode.js',
+  './vendor/supabase-2.115.0.js',
+  './config.js',
+  './server.js',
   './shell.js',
   './Trida.dc.html',
   './Reditel.dc.html',

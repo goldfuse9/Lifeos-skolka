@@ -768,6 +768,53 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     <!-- ========================================================== NASTAVENÍ
          Všechny údaje školky na jednom místě; matrika, web, dokumenty
          i platby si je berou odsud. -->
+    <!-- ========================================================== RODIČE V LIFEOS (ostrý provoz) -->
+    <sc-if value="{{is.lifeos}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+        <section aria-label="Rodiče v LifeOS" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px minmax(0, 1.4fr); gap: 12px; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+            <span>Dítě</span><span>Třída</span><span>Rodiče</span>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+            <sc-if value="{{lo.loading}}" hint-placeholder-val="{{false}}"><p style="margin: 0; padding: 20px; font-size: 15px; color: #5A5C60">Načítám ze serveru…</p></sc-if>
+            <sc-if value="{{lo.hasErr}}" hint-placeholder-val="{{false}}"><p style="margin: 0; padding: 20px; font-size: 15px; color: #8A4513">{{lo.err}}</p></sc-if>
+            <sc-for list="{{lo.rows}}" as="r" hint-placeholder-count="4">
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px minmax(0, 1.4fr); gap: 12px; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F3F4F2">
+                <span style="font-size: 15px; font-weight: 700">{{r.jmeno}}</span>
+                <span style="font-size: 14px; color: #3A3C40">{{r.trida}}</span>
+                <span style="display: flex; flex-direction: column; gap: 6px">
+                  <sc-for list="{{r.zast}}" as="z" hint-placeholder-count="1">
+                    <span style="display: flex; align-items: center; gap: 10px; justify-content: space-between">
+                      <span style="font-size: 14px">{{z.jmeno}}</span>
+                      <sc-if value="{{z.propojen}}" hint-placeholder-val="{{false}}"><span style="padding: 4px 10px; border-radius: 12px; background: #EDF4E4; color: #2F5212; font-size: 13px; font-weight: 700">v LifeOS ✓</span></sc-if>
+                      <sc-if value="{{z.nepropojen}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{z.kod}}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Kód pro LifeOS</button></sc-if>
+                    </span>
+                  </sc-for>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+        <aside aria-label="Jak propojit" style="width: 300px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800">Jak to funguje</h2>
+          <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #3A3C40">Rodič v LifeOS otevře kartu dítěte → Školka → Propojit se školkou a opíše kód. Pak uvidí příchod a odchod, zprávy od učitelky, jídelníček a akce.</p>
+          <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #5A5C60">Kód platí 14 dní a jde použít jednou. Nový kód zneplatní starý.</p>
+          <button type="button" onClick="{{lo.reload}}" style="height: 40px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer">Obnovit</button>
+        </aside>
+      </div>
+      <sc-if value="{{lo.hasCode}}" hint-placeholder-val="{{false}}">
+        <div role="dialog" aria-label="Kód pro rodiče" style="position: fixed; inset: 0; background: rgba(23,24,26,0.32); display: flex; align-items: center; justify-content: center; z-index: 40">
+          <div style="width: 440px; background: #FFFFFF; border-radius: 28px; padding: 26px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center">
+            <span style="font-size: 13px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Kód pro LifeOS</span>
+            <span style="font-size: 16px; font-weight: 700">{{lo.codeFor}}</span>
+            <span style="font-size: 44px; font-weight: 800; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; padding: 10px 22px; border-radius: 20px; background: #F3F4F2">{{lo.code}}</span>
+            <span style="font-size: 14px; color: #3A3C40">Platí 14 dní, jde použít jednou.</span>
+            <button type="button" onClick="{{lo.closeCode}}" style="margin-top: 6px; height: 48px; padding: 0 28px; border-radius: 24px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">Hotovo</button>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
     <!-- ========================================================== PŘÍSTUPY -->
     <sc-if value="{{is.pristupy}}" hint-placeholder-val="{{false}}">
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
@@ -2606,7 +2653,8 @@ class Component extends DCLogic {
     var ALLOW = role === 'hospodarka' ? ['prehled', 'deti', 'dochazka', 'platby', 'zpravy', 'archiv'] : null;
     var UC = this.ucet, board = function (b) { return !UC || UC.desky.indexOf(b) !== -1; };
     var SU = typeof window !== 'undefined' ? window.SkolkaUcet : null;
-    var allowed = function (p) { if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); return !ALLOW || ALLOW.indexOf(p) !== -1; };
+    var SRVON = !!(SU && SU.server && SU.server());
+    var allowed = function (p) { if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
     var kids = this.kids.filter(function (k) { return !k.ended && (!k.zahajeni || k.zahajeni <= todayIso); });
@@ -2641,7 +2689,7 @@ class Component extends DCLogic {
       ['prehled', 'Přehled', ''],
       ['#', 'Děti'], ['deti', 'Kartotéka dětí', kids.length], ['zapis', 'Zápis', ''], ['dochazka', 'Docházka', neoml.length || ''],
       ['#', 'Školka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''], ['jidelna', 'Školní jídelna', ''],
-      ['#', 'Rodiče a veřejnost'], ['zpravy', 'Zprávy rodičům', ''], ['web', 'Webové stránky', webMissing || ''],
+      ['#', 'Rodiče a veřejnost'], ['lifeos', 'Rodiče v LifeOS', ''], ['zpravy', 'Zprávy rodičům', ''], ['web', 'Webové stránky', webMissing || ''],
       ['#', 'Peníze'], ['platby', 'Platby', unpaidPrev.length || ''],
       ['#', 'Povinná evidence'], ['matrika', 'Matrika MŠMT', matErr.length ? matErr.length : ''], ['urazy', 'Kniha úrazů', urazPending.length ? urazPending.length : ''], ['dokumenty', 'Dokumenty', docTodo || ''], ['archiv', 'Archiv', ''],
       ['#', 'Školka a účet'], ['nastaveni', 'Nastavení školky', ''], ['pristupy', 'Přístupy', '']
@@ -2664,7 +2712,7 @@ class Component extends DCLogic {
       };
     });
     var is = {};
-    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'dokumenty', 'archiv', 'nastaveni', 'pristupy'].forEach(function (p) { is[p] = st.page === p; });
+    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'dokumenty', 'archiv', 'nastaveni', 'pristupy', 'lifeos'].forEach(function (p) { is[p] = st.page === p; });
 
     var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
     var today = this.today;
@@ -2686,6 +2734,7 @@ class Component extends DCLogic {
       web: ['Skládají se z údajů v ředitelně — kontakty, třídy, zápis, platby', 'Webové stránky', '', null],
       nastaveni: ['Údaje, ze kterých se skládá matrika, web, dokumenty i platby', 'Nastavení školky', '', null],
       dokumenty: ['Povinné dokumenty školy — předvyplněné z údajů školky', 'Dokumenty', '', null],
+      lifeos: ['Ostrý provoz · data ze serveru', 'Rodiče v LifeOS', '', null],
       pristupy: ['Kdo se kam přihlásí · jeden člověk = jeden přístup', 'Přístupy', '+ Nový přístup', function () { self.setState({ prNew: { jmeno: '', email: '', kod: 'ucitelka', trida: '', err: '' } }); }]
     };
     var P = PAGES[st.page];
@@ -3567,6 +3616,34 @@ class Component extends DCLogic {
       });
     })();
 
+    /* -------------------------------------------------- rodiče v LifeOS (server) */
+    var lo = (function () {
+      var SV = typeof window !== 'undefined' ? window.SkolkaServer : null;
+      var load = function () {
+        self._loLoading = true; self._loErr = '';
+        SV.detiSkoly().then(function (r) { self._lo = r; self._loLoading = false; self.forceUpdate(); })
+          .catch(function (e) { self._loLoading = false; self._loErr = 'Nepodařilo se načíst: ' + SV.chyba(e); self.forceUpdate(); });
+      };
+      if (st.page === 'lifeos' && SV && SV.zapnuto && !self._lo && !self._loLoading && !self._loErr) setTimeout(load, 0);
+      var kod = st.loCode;
+      return {
+        loading: !!self._loLoading, hasErr: !!self._loErr, err: self._loErr || '',
+        rows: (self._lo || []).map(function (d) {
+          var zz = d.zastupci.length ? d.zastupci : [{ id: null, jmeno: 'Rodič', propojen: false }];
+          return { jmeno: d.jmeno, trida: d.trida, zast: zz.map(function (z) {
+            return { jmeno: z.jmeno, propojen: z.propojen, nepropojen: !z.propojen,
+              kod: function () {
+                SV.kodRodice(d.id, z.id).then(function (c) { self.log('Kód pro LifeOS: ' + d.jmeno + ' (' + z.jmeno + ')'); self.setState({ loCode: { code: c, pro: d.jmeno + ' · ' + z.jmeno } }); })
+                  .catch(function (e) { self.showToast('Kód se nepodařilo vydat: ' + SV.chyba(e)); });
+              } };
+          }) };
+        }),
+        reload: function () { self._lo = null; self._loErr = ''; load(); self.forceUpdate(); },
+        hasCode: !!kod, code: kod ? kod.code : '', codeFor: kod ? kod.pro : '',
+        closeCode: function () { self.setState({ loCode: null }); self._lo = null; load(); }
+      };
+    })();
+
     /* -------------------------------------------------- přístupy */
     var pr = (function () {
       var R = SU ? SU.role : {}, TR = SU ? SU.tridy : {}, ND = SU ? SU.nazevDesky : {};
@@ -3938,7 +4015,7 @@ class Component extends DCLogic {
         return [{ title: 'Učitelé', sub: cnt(ped.length, 'pedagog', 'pedagogové', 'pedagogů') + ' · ředitelka, zástupkyně a učitelky', items: ped },
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
-      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, imp: imp, payDlg: payDlg,
+      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, lo: lo, imp: imp, payDlg: payDlg,
       dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }
