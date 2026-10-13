@@ -162,17 +162,30 @@
     },
     /* Nový účet z pozvánky: e-mail (stejný jako v pozvánce), heslo, kód. */
     async registruj(email, heslo, kod) {
+      var self = this;
       try {
         var mail = String(email || '').trim().toLowerCase();
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw new Error('E-mail nevypadá správně.');
         if (!heslo || heslo.length < 8) throw new Error('Heslo musí mít aspoň 8 znaků.');
         if (!kod) throw new Error('Opište kód z pozvánky.');
-        var r = await klient().auth.signUp({ email: mail, password: heslo });
+        try { if (!C.testToken) await klient().auth.signOut(); } catch (x) { /* nic */ }
+        /* Účet už může existovat (např. po potvrzení e-mailu) → nejdřív přihlásit. */
+        var p = await klient().auth.signInWithPassword({ email: mail, password: heslo });
+        if (!p.error) return self.prihlas(mail, heslo, kod);
+        if (/not confirmed/i.test(p.error.message || '') || p.error.code === 'email_not_confirmed') {
+          var poslano = false;
+          try { var rs = await klient().auth.resend({ type: 'signup', email: mail, options: { emailRedirectTo: location.origin + location.pathname } }); poslano = !rs.error; } catch (x) { /* nic */ }
+          return { ok: false, potvrdit: true, chyba: 'E-mail ještě není potvrzený. ' + (poslano ? 'Poslali jsme nový odkaz — klikněte' : 'Klikněte') + ' na odkaz v e-mailu od nás (zkontrolujte i hromadnou poštu nebo spam) a pak to zkuste znovu.' };
+        }
+        var r = await klient().auth.signUp({ email: mail, password: heslo, options: { emailRedirectTo: location.origin + location.pathname } });
+        var existuje = 'Účet s tímto e-mailem už existuje, ale heslo nesedí. Zadejte heslo, které jste si zvolili, nebo použijte „Zapomenuté heslo“.';
         if (r.error) {
-          if (/already registered|already exists/i.test(r.error.message || '')) return this.prihlas(mail, heslo, kod);
+          if (/already registered|already exists/i.test(r.error.message || '')) throw new Error(existuje);
           throw r.error;
         }
-        if (!r.data.session) return { ok: false, potvrdit: true, chyba: 'Poslali jsme vám e-mail. Potvrďte adresu odkazem v něm a pak se přihlaste — kód zadáte znovu.' };
+        /* Supabase u existujícího e-mailu nevrací chybu, jen uživatele bez identit. */
+        if (r.data.user && Array.isArray(r.data.user.identities) && r.data.user.identities.length === 0) throw new Error(existuje);
+        if (!r.data.session) return { ok: false, potvrdit: true, chyba: 'Poslali jsme vám e-mail. Potvrďte adresu odkazem v něm, pak se vraťte sem a stiskněte tlačítko znovu (e-mail, heslo i kód nechte stejné).' };
         ok(await klient().rpc('prijmi_pozvanku', { p_kod: kod }));
         var u = await profil(r.data.user.id);
         u.email = mail;

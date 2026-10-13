@@ -374,6 +374,18 @@ window.addEventListener('hashchange', () => {
   if (PODLE_JMENA[klic]) otevri(klic, true);
 });
 
+/* Návrat z odkazu v e-mailu od Supabase (potvrzení adresy / obnova hesla).
+   Adresa nese tokeny nebo chybu v # — přihlašovací obrazovka řekne, co dál. */
+(function () {
+  const h = location.hash || '';
+  if (!/access_token=|error_description=|type=(signup|recovery)/.test(h)) return;
+  const q = new URLSearchParams(h.slice(1));
+  window.SkolkaUcet.zEmailu = q.get('error_description')
+    ? { chyba: 'Odkaz z e-mailu už neplatí (' + q.get('error_description').replace(/\+/g, ' ') + '). Zvolte „Mám pozvánku“ a zadejte e-mail, heslo a kód znovu — pokud e-mail ještě není potvrzený, pošleme nový odkaz.' }
+    : { info: q.get('type') === 'recovery' ? 'Odkaz pro nové heslo funguje — přihlaste se a heslo si změňte.' : 'E-mail je potvrzený. Zadejte e-mail, heslo a kód z pozvánky a dokončete přihlášení.' , pozvanka: q.get('type') !== 'recovery' };
+  try { if (SRV()) SRV().odhlas(); } catch (e) { /* nic */ }
+  history.replaceState(null, '', location.pathname + '#prihlaseni');
+})();
 const zacatek = (location.hash || '').slice(1);
 otevri(PODLE_JMENA[zacatek] ? zacatek : 'prihlaseni', true, !PODLE_JMENA[zacatek]);
 
