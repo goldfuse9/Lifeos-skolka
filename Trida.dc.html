@@ -1211,6 +1211,39 @@ class Component extends DCLogic {
       this.me = this.ucet.jmeno;
       if (this.ucet.trida) { this.state.viewCls = this.ucet.trida; this.state.picked = this.ucet.trida === 'slunicka' ? 'oliver' : this.ucet.trida + '-0'; }
     }
+    /* Ostrý provoz: děti, docházka a zápisy jsou ze serveru (shell.js je
+       načte před otevřením desky). Ukázkové třídy a akce se schovají. */
+    var SRVT = typeof window !== 'undefined' ? window.__skolkaServerTrida : null;
+    this.srv = !!(this.ucet && this.ucet.server && SRVT && window.SkolkaServer);
+    if (this.srv) {
+      this.classes = [{ id: SRVT.id, name: SRVT.nazev, gen: SRVT.nazev, loc: 've třídě ' + SRVT.nazev, color: '#E9C46A', teacher: this.me }];
+      this.staff = {}; this.staff[SRVT.id] = [this.me];
+      this.kids = SRVT.deti; this.byId = {};
+      var by = this.byId;
+      this.kids.forEach(function (k) { by[k.id] = k; });
+      this.albums = []; this.events = []; this.meetings = {}; this.konz = {}; this.kniha[SRVT.id] = [];
+      this.state.viewCls = SRVT.id;
+      this.state.picked = this.kids[0] ? this.kids[0].id : null;
+    }
+  }
+
+  componentDidMount() {
+    var self = this;
+    if (!this.srv) return;
+    this._stopSrv = window.SkolkaServer.sleduj(this.state.viewCls, function () {
+      window.SkolkaServer.obnovDen(self.kids).then(function () { self.setState({}); }).catch(function () { /* další pokus při příští změně */ });
+    });
+  }
+
+  componentWillUnmount() {
+    if (this._stopSrv) this._stopSrv();
+  }
+
+  /* Ostrý provoz: změnu pošle na server; když se nepovede, řekne to. */
+  srvSend(p, co) {
+    var self = this;
+    if (!this.srv || !p) return;
+    p.catch(function (e) { self.showToast('Nepodařilo se uložit na server (' + co + '): ' + window.SkolkaServer.chyba(e)); });
   }
 
   /* Příchod a odchod se zapisují až po potvrzení — klepnutí omylem nic nezmění. */
@@ -1485,6 +1518,7 @@ class Component extends DCLogic {
         s.att = 'present'; s.arrived = self.now(); s.left = null;
         self.addLog(s, { t: s.arrived, type: 'dochazka', title: 'Příchod', sub: '' });
         self.showToast(s.name + ' — příchod zapsán');
+        if (self.srv) self.srvSend(window.SkolkaServer.dochazka(s), 'příchod');
       });
     };
     var sel = {
@@ -1511,6 +1545,7 @@ class Component extends DCLogic {
         var k = self.byId[u.id];
         Object.assign(k, u.before);
         k.log.pop();
+        if (self.srv) self.srvSend(window.SkolkaServer.dochazka(k), 'vrácení');
         self.setState({ undo: null });
       },
       kids: kids.filter(function (k) { return filter === 'all' || k.att === filter; }).map(function (k) {
@@ -1547,6 +1582,7 @@ class Component extends DCLogic {
               self.addLog(k, { t: t, type: 'dochazka', title: 'Odchod', sub: 'Vyzvedává ' + (k.pickupToday ? k.pickupToday.who : k.usualPickup) });
               label = k.name + ' odchod';
             }
+            if (self.srv) self.srvSend(window.SkolkaServer.dochazka(k), 'docházka');
             self.setState({ undo: { id: k.id, before: before, label: label } });
         }
         return tile;
@@ -1729,6 +1765,16 @@ class Component extends DCLogic {
       }
       if (kind === 'poznamka') {
         self.addLog(k, { t: t, type: 'poznamka', title: summary, sub: '' });
+      }
+      if (self.srv) {
+        var SV = window.SkolkaServer, care = (f.care || []).join(', ');
+        if (kind === 'teplota') self.srvSend(SV.zapis(k, { cas: t, druh: 'teplota', titulek: 'Teplota', hodnota: self.fmt(tv) + ' °C', text: ({ 'Čelo': 'Měřeno na čele', 'Ucho': 'Měřeno v uchu', 'Podpaží': 'Měřeno v podpaží' })[f.method || 'Čelo'] + (urg === 'call' ? ' · voláme vám' : ''), osetreni: null }, self.me), 'teplota');
+        if (kind === 'symptomy') self.srvSend(SV.zapis(k, { cas: t, druh: 'info', titulek: hasMood ? SYM_MOODS[f.mood].title : 'Není mu dobře', hodnota: symTv ? self.fmt(symTv) + ' °C' : null, text: symParts.slice(hasMood ? 1 : 0).join(' · ') + (urg === 'call' ? ' · voláme vám' : '') }, self.me), 'příznaky');
+        if (kind === 'uraz') {
+          self.srvSend(SV.zapis(k, { cas: t, druh: 'uraz', titulek: f.what, hodnota: areaLabel, text: [f.place ? PLACE[f.place] : '', (f.text || '').trim()].filter(Boolean).join(' · '), osetreni: care || 'bez ošetření' }, self.me), 'úraz');
+          self.srvSend(SV.uraz(k, { co: f.what + ' — ' + areaLabel, kde: f.place ? PLACE[f.place].replace(/^(ve|na|v) /, '') : '', osetreni: care, svedek: f.witness && f.witness !== 'Nikdo další' ? f.witness : '', komentar: (f.text || '').trim() }), 'kniha úrazů');
+        }
+        if (kind === 'poznamka') self.srvSend(SV.zapis(k, { cas: t, druh: 'info', titulek: 'Poznámka', text: summary }, self.me), 'poznámka');
       }
       self.setState({ sheet: null, f: {} });
       self.showToast('Odesláno rodičům: ' + k.name + (kind === 'uraz' ? ' · v knize úrazů' : ''));
