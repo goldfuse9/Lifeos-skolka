@@ -269,6 +269,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <section aria-label="Náhrady na týden" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0">
           <div style="display: flex; align-items: center; gap: 10px">
             <h2 style="margin: 0; font-size: 18px; font-weight: 800; flex-grow: 1">Náhrady · {{wk.label}}</h2>
+            <button type="button" role="switch" aria-checked="{{die.nahradyOn}}" onClick="{{die.toggleNahrady}}" style="{{die.nahradyStyle}}">{{die.nahradyLabel}}</button>
             <button type="button" onClick="{{wk.prev}}" aria-label="Předchozí týden" style="width: 40px; height: 40px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 17px; font-weight: 800; cursor: pointer; color: #17181A">‹</button>
             <button type="button" onClick="{{wk.next}}" aria-label="Další týden" style="width: 40px; height: 40px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 17px; font-weight: 800; cursor: pointer; color: #17181A">›</button>
           </div>
@@ -526,7 +527,31 @@ class Component extends DCLogic {
   serviceDay() { var d = new Date(this.today), w = d.getDay(); if (w === 6) d.setDate(d.getDate() + 2); if (w === 0) d.setDate(d.getDate() + 1); return d; }
   serviceMonday() { var d = this.serviceDay(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return this.iso(d); }
 
-  persistKeys() { return ['ings', 'dishes', 'diets', 'staff', 'weeks']; }
+  persistKeys() { return ['ings', 'dishes', 'diets', 'staff', 'weeks', 'nahradyOn']; }
+
+  /* Ostrý provoz (server.js): jídelníček a nastavení náhrad jdou na server. */
+  srvOn() {
+    var SU = typeof window !== 'undefined' ? window.SkolkaUcet : null, SV = typeof window !== 'undefined' ? window.SkolkaServer : null;
+    return SU && SU.server && SU.server() && SV ? SV : null;
+  }
+  componentDidMount() {
+    var self = this, SV = this.srvOn();
+    if (SV) SV.nahradyObedu().then(function (v) { if (v !== (self.nahradyOn !== false)) { self.nahradyOn = v; self.forceUpdate(); } }).catch(function () { /* zůstane místní nastavení */ });
+  }
+  /* Týden pro server: každý chod s alergeny a náhradou podle alergenu. */
+  weekForServer(mon) {
+    var self = this, W = this.week(mon), out = [];
+    W.days.forEach(function (day, di) {
+      self.SLOTS.forEach(function (sl) {
+        var d = self.dish(day[sl[0]]);
+        if (!d) return;
+        var A = self.allergens(d), nah = {};
+        if (self.nahradyOn !== false) A.forEach(function (n) { var t = W.subs[di + '|' + sl[0] + '|' + n] != null ? W.subs[di + '|' + sl[0] + '|' + n] : (d.sub[n] || ''); if (t) nah[n] = t; });
+        out.push({ den: self.addDays(mon, di), chod: sl[0], nazev: d.name, alergeny: A, nahrady: nah });
+      });
+    });
+    return out;
+  }
   restore() {
     var raw = null, self = this;
     try { raw = localStorage.getItem('skolka-jidelna-v1'); } catch (e) { return; }
@@ -816,6 +841,8 @@ class Component extends DCLogic {
         if (!df.val) return;
         var WW = self.week(df.mon), was = WW.published;
         WW.days[df.di][df.slot] = df.val;
+        var SVx = self.srvOn();
+        if (SVx && WW.srvPublished) SVx.zverejniJidelnicek(self.weekForServer(df.mon)).catch(function (e) { self.showToast('Změna se na server neuložila: ' + SVx.chyba(e)); });
         self.setState({ dlg: null });
         self.showToast(was ? 'Uloženo · rodiče vidí změnu v aplikaci' : 'Uloženo do návrhu');
       };
@@ -905,8 +932,8 @@ class Component extends DCLogic {
     var todayIso = info.sIso;
     var wk = {
       label: wkLabel, mon: mon,
-      status: W.published ? 'Zveřejněno rodičům' : (empty ? 'Návrh · chybí ' + empty + ' ' + (empty === 1 ? 'jídlo' : empty <= 4 ? 'jídla' : 'jídel') : 'Návrh · připraveno ke zveřejnění'),
-      statusStyle: 'height: 30px; padding: 0 12px; border-radius: 15px; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; ' + (W.published ? 'background: #EDF4E4; color: #2F5212' : 'background: #F7F0DA; color: #5C4300'),
+      status: (this.srvOn() ? W.srvPublished : W.published) ? 'Zveřejněno rodičům' : (empty ? 'Návrh · chybí ' + empty + ' ' + (empty === 1 ? 'jídlo' : empty <= 4 ? 'jídla' : 'jídel') : 'Návrh · připraveno ke zveřejnění'),
+      statusStyle: 'height: 30px; padding: 0 12px; border-radius: 15px; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; ' + ((this.srvOn() ? W.srvPublished : W.published) ? 'background: #EDF4E4; color: #2F5212' : 'background: #F7F0DA; color: #5C4300'),
       prev: function () { self.setState({ weekOff: st.weekOff - 1 }); },
       next: function () { self.setState({ weekOff: st.weekOff + 1 }); },
       canCopy: empty > 0 && !!this.weeks[this.addDays(mon, -7)],
@@ -1008,7 +1035,17 @@ class Component extends DCLogic {
       });
       return { label: cap(DNY[x.getDay()]) + ' ' + x.getDate() + '. ' + (x.getMonth() + 1) + '.', rows: rowsD };
     }).filter(function (d) { return d.rows.length; });
+    var NAHR = this.nahradyOn !== false;
     var die = {
+      nahradyOn: NAHR ? 'true' : 'false',
+      nahradyLabel: NAHR ? 'Náhrady děláme' : 'Náhrady neděláme',
+      nahradyStyle: 'height: 40px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 800; cursor: pointer; ' + (NAHR ? 'border: 0; background: #EDF4E4; color: #2F5212' : 'border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513'),
+      toggleNahrady: function () {
+        self.nahradyOn = !NAHR; self.save(); self.forceUpdate();
+        var SV = self.srvOn();
+        if (SV) SV.nastavNahrady(self.nahradyOn).catch(function (e) { self.showToast('Nepodařilo se uložit na server: ' + SV.chyba(e)); });
+        self.showToast(self.nahradyOn ? 'Náhrady zapnuté — rodiče je uvidí u jídelníčku' : 'Náhrady vypnuté — rodiče uvidí jen alergeny');
+      },
       kids: this.diets.map(function (k) {
         return { name: k.name, cls: clsById[k.cls].name, dotStyle: dot(clsById[k.cls].color), bez: k.a.map(function (n) { return self.A[n][0] + ' (' + n + ')'; }).join(', '), pozn: k.pozn,
           ok: k.ok ? 'true' : 'false', okLabel: k.ok ? '✓ Doporučení lékaře doloženo' : 'Chybí doporučení lékaře',
@@ -1033,9 +1070,19 @@ class Component extends DCLogic {
     });
 
     /* -------------------------------------------------- stránka */
+    // Na serveru se zveřejňuje zvlášť — ukázkové týdny jsou „zveřejněné“ jen v prohlížeči.
+    var PUB = this.srvOn() ? !!W.srvPublished : !!W.published;
     var publishWeek = function () {
-      if (W.published) return;
+      if (PUB) return;
       if (empty) { self.showToast('Nejdřív doplňte ' + empty + ' ' + (empty === 1 ? 'jídlo' : empty <= 4 ? 'jídla' : 'jídel')); return; }
+      var SV = self.srvOn();
+      if (SV) {
+        SV.zverejniJidelnicek(self.weekForServer(mon)).then(function () {
+          W.published = true; W.srvPublished = true; self.save(); self.forceUpdate();
+          self.showToast('Zveřejněno · rodiče vidí jídelníček v aplikaci');
+        }).catch(function (e) { self.showToast('Zveřejnit se nepodařilo: ' + SV.chyba(e)); });
+        return;
+      }
       W.published = true; self.forceUpdate();
       self.showToast('Zveřejněno · rodiče vidí jídelníček v aplikaci');
     };
@@ -1049,7 +1096,7 @@ class Component extends DCLogic {
           + '<div class="ft">Vydala: ' + e(ME.name) + '</div>';
         self.printDoc('Výdejní list', body);
       }],
-      jidelnicek: ['Týden ' + wkLabel + ' · alergeny se načítají ze surovin', 'Jídelníček', W.published ? '✓ Zveřejněno' : 'Zveřejnit rodičům', publishWeek],
+      jidelnicek: ['Týden ' + wkLabel + ' · alergeny se načítají ze surovin', 'Jídelníček', PUB ? '✓ Zveřejněno' : 'Zveřejnit rodičům', publishWeek],
       jidla: [this.dishes.length + ' jídel · ' + this.ings.length + ' surovin', 'Jídla a suroviny', '+ Nové jídlo', function () {
         var id = 'j' + Date.now(), t = st.typ !== 'vse' ? st.typ : 'obed';
         self.dishes.unshift({ id: id, type: t, name: 'Nové jídlo', ings: [], sub: {} });
@@ -1059,7 +1106,7 @@ class Component extends DCLogic {
       kucharky: [this.staff.length + ' v kuchyni · zdravotní průkaz a hygiena', 'Kuchařky', '+ Přidat kuchařku', openStaff(null)]
     };
     var P = PAGES[st.page] || PAGES.prehled;
-    var page = { kicker: P[0], title: P[1], hasAction: !!P[2], actionLabel: P[2], action: P[3] || function () {}, actionStyle: primary(!(st.page === 'jidelnicek' && W.published)) };
+    var page = { kicker: P[0], title: P[1], hasAction: !!P[2], actionLabel: P[2], action: P[3] || function () {}, actionStyle: primary(!(st.page === 'jidelnicek' && PUB)) };
 
     var cycle = function () { var i = self.staff.indexOf(ME); var nx = self.staff[(i + 1) % self.staff.length]; self.setState({ me: nx.id }); self.showToast('Přihlášena: ' + nx.name); };
     var me = { name: ME.name, role: UC && ME.id === 'host' ? UC.role : ME.role, av: this.avatar(ME, 40), profile: ME.id === 'host' ? function () {} : openStaff(ME), switch: cycle,

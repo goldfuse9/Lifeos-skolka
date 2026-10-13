@@ -306,14 +306,22 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <span style="font-size: 14px; color: #5A5C60; line-height: 1.4">Dnes ani dál zatím nikdo omluvený není.</span>
         </sc-if>
         <sc-for list="{{doch.oml}}" as="o" hint-placeholder-count="3">
-          <button type="button" onClick="{{o.pick}}" style="display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 10px; border-radius: 16px; border: 0; background: {{o.bg}}; cursor: pointer">
-            <span style="width: 36px; height: 36px; border-radius: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #FFFFFF"><svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{o.symRef}}"></use></svg></span>
-            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
-              <span style="font-size: 14px; font-weight: 700; color: #17181A">{{o.name}}</span>
-              <span style="font-size: 13px; font-weight: 700; color: {{o.kdyFg}}">{{o.kdy}}</span>
-              <span style="font-size: 12px; color: #5A5C60">{{o.sub}}</span>
-            </span>
-          </button>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 16px; background: {{o.bg}}">
+            <button type="button" onClick="{{o.pick}}" style="display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 0; border: 0; background: transparent; cursor: pointer">
+              <span style="width: 36px; height: 36px; border-radius: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #FFFFFF"><svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true"><use href="{{o.symRef}}"></use></svg></span>
+              <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                <span style="font-size: 14px; font-weight: 700; color: #17181A">{{o.name}}</span>
+                <span style="font-size: 13px; font-weight: 700; color: {{o.kdyFg}}">{{o.kdy}}</span>
+                <span style="font-size: 12px; color: #5A5C60">{{o.sub}}</span>
+              </span>
+            </button>
+            <sc-if value="{{o.canConfirm}}" hint-placeholder-val="{{false}}">
+              <button type="button" onClick="{{o.confirm}}" style="height: 40px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Potvrdit omluvenku</button>
+            </sc-if>
+            <sc-if value="{{o.confirmed}}" hint-placeholder-val="{{false}}">
+              <span style="font-size: 13px; font-weight: 700; color: #2F5212">✓ {{o.confirmedLabel}}</span>
+            </sc-if>
+          </div>
         </sc-for>
       </aside>
       </div>
@@ -1624,8 +1632,9 @@ class Component extends DCLogic {
           var k = self.byId[id]; if (!k) return;
           var list = by[id].sort(function (a, b) { return a.den < b.den ? -1 : 1; }), cur = null;
           list.forEach(function (r) {
-            if (cur && next(cur.to) === r.den && cur.duvod === (r.omluvenka || '')) { cur.to = r.den; if (!r.strava_prihlasena && !cur.obedOd) cur.obedOd = r.den; if (r.strava_prihlasena) cur.obed = false; }
-            else { cur = { k: k, from: r.den, to: r.den, duvod: r.omluvenka || '', obed: !r.strava_prihlasena, obedOd: r.strava_prihlasena ? null : r.den }; rows.push(cur); }
+            var pot = !!r.omluva_potvrzena;
+            if (cur && next(cur.to) === r.den && cur.duvod === (r.omluvenka || '') && cur.pot === pot) { cur.to = r.den; if (!r.strava_prihlasena && !cur.obedOd) cur.obedOd = r.den; if (r.strava_prihlasena) cur.obed = false; }
+            else { cur = { k: k, from: r.den, to: r.den, duvod: r.omluvenka || '', obed: !r.strava_prihlasena, obedOd: r.strava_prihlasena ? null : r.den, pot: pot, kdo: r.omluvu_potvrdil || '' }; rows.push(cur); }
           });
         });
       } else {
@@ -1637,7 +1646,15 @@ class Component extends DCLogic {
         var kdy = r.from === r.to ? (dnes ? 'dnes' : fmtD(r.from)) : (dnes ? 'dnes' : fmtD(r.from)) + ' – ' + fmtD(r.to);
         return { name: r.k.name, symRef: '#z-' + r.k.sym, kdy: kdy, kdyFg: dnes ? '#6B22A8' : '#1F3A5C',
           sub: [r.duvod, r.obed ? 'oběd odhlášen' : r.obedOd ? 'oběd odhlášen od ' + fmtD(r.obedOd) : 'oběd zůstává'].filter(Boolean).join(' · '),
-          bg: dnes ? '#F3E8FC' : '#F3F4F2', pick: function () { self.setState({ picked: r.k.id, tab: 'trida' }); } };
+          bg: dnes ? '#F3E8FC' : '#F3F4F2', pick: function () { self.setState({ picked: r.k.id, tab: 'trida' }); },
+          canConfirm: !!self.srv && !r.pot, confirmed: !!self.srv && r.pot,
+          confirmedLabel: 'Potvrzeno' + (r.kdo ? ' · ' + r.kdo.split(' ')[0] : ''),
+          confirm: function () {
+            self.srvSend(window.SkolkaServer.potvrdOmluvenku(r.k, r.from, r.to).then(function () {
+              (self.srvOmluvy || []).forEach(function (x) { if (x.dite_id === r.k.id && x.den >= r.from && x.den <= r.to) { x.omluva_potvrzena = new Date().toISOString(); x.omluvu_potvrdil = self.me; } });
+              self.showToast('Omluvenka potvrzena · rodiče dostanou oznámení'); self.setState({});
+            }), 'potvrzení omluvenky');
+          } };
       });
       doch.omlCount = rows.length ? String(rows.length) : '';
       doch.omlNone = rows.length === 0;

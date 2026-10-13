@@ -71,12 +71,13 @@
   /* Značky ze šatny — stejné klíče jako v desce třídy. Na serveru zatím
      nejsou, takže se dítěti přidělí podle pořadí ve třídě. */
   var ZNACKY = [['snehulak', 'sněhulák'], ['jablko', 'jablíčko'], ['auticko', 'autíčko'], ['kytka', 'kytička'], ['micek', 'míček'], ['motyl', 'motýl'], ['lodicka', 'lodička'], ['srdce', 'srdíčko'], ['hvezda', 'hvězdička'], ['tresne', 'třešničky'], ['muchomurka', 'muchomůrka'], ['mesic', 'měsíček'], ['domecek', 'domeček'], ['destnik', 'deštník'], ['strom', 'stromeček'], ['beruska', 'beruška'], ['rybka', 'rybička'], ['balonek', 'balónek'], ['klic', 'klíček'], ['mracek', 'mráček'], ['mrkev', 'mrkvička'], ['hruska', 'hruška'], ['zvonek', 'zvoneček'], ['duha', 'duha'], ['hrnek', 'hrníček'], ['list', 'lístek'], ['slunce', 'sluníčko'], ['snek', 'šnek']];
+  function zn(d, i) { var z = ZNACKY.filter(function (x) { return x[0] === d.znacka; })[0]; return z || ZNACKY[i % ZNACKY.length]; }
   var DRUH_LOG = { teplota: 'teplota', uraz: 'uraz', jidlo: 'poznamka', spanek: 'poznamka', info: 'symptom' };
 
   /* Řádky ze serveru → dítě tak, jak ho zná deska třídy. */
   function diteProDesku(d, i, doch, vyz, ud, tridaId) {
     var k = {
-      id: d.id, name: d.jmeno + ' ' + (d.prijmeni || '').charAt(0) + '.', sym: ZNACKY[i % ZNACKY.length][0], symName: ZNACKY[i % ZNACKY.length][1],
+      id: d.id, name: d.jmeno + ' ' + (d.prijmeni || '').charAt(0) + '.', sym: zn(d, i)[0], symName: zn(d, i)[1],
       allergies: d.alergie ? String(d.alergie).split(/\s*[,;]\s*/).filter(Boolean) : [],
       usualPickup: 'rodiče', pickupToday: null, att: 'expected', arrived: null, left: null, excuse: '',
       temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, noPhoto: false, ppv: false, server: true
@@ -151,7 +152,7 @@
 
     /* ---------------------------------------------------- tablet třídy */
     async nactiTridu(tridaId) {
-      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
+      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
       var den = deti.length ? await denTridy(deti.map(function (d) { return d.id; })) : { doch: {}, vyz: {}, ud: {} };
       return deti.map(function (d, i) { return diteProDesku(d, i, den.doch[d.id], den.vyz[d.id], den.ud[d.id], tridaId); });
     },
@@ -164,7 +165,11 @@
     /* Omluvenky od dneška dál (i na víc dní dopředu) — pro přehled na tabletu. */
     async omluvy(kids) {
       if (!kids.length) return [];
-      return ok(await klient().from('dochazka').select('dite_id, den, omluvenka, strava_prihlasena').eq('stav', 'omluven').gte('den', dnes()).in('dite_id', kids.map(function (k) { return k.id; })).order('den').limit(500));
+      return ok(await klient().from('dochazka').select('dite_id, den, omluvenka, strava_prihlasena, omluva_potvrzena, omluvu_potvrdil').eq('stav', 'omluven').gte('den', dnes()).in('dite_id', kids.map(function (k) { return k.id; })).order('den').limit(500));
+    },
+    /* Učitelka potvrdí omluvenku — rodič v LifeOS dostane oznámení. */
+    async potvrdOmluvenku(k, od, doDne) {
+      return ok(await klient().rpc('potvrd_omluvenku', { p_dite: k.id, p_od: od, p_do: doDne }));
     },
     /* Docházka dítěte podle stavu na desce. */
     async dochazka(k) {
@@ -202,6 +207,20 @@
       var vid = function () { if (document.visibilityState === 'visible') hned(); };
       document.addEventListener('visibilitychange', vid);
       return function () { document.removeEventListener('visibilitychange', vid); try { klient().removeChannel(kanal); } catch (e) { /* nic */ } };
+    },
+
+    /* --------------------------------------------------------- jídelna */
+    /* Zveřejní týden: [{ den, chod, nazev, alergeny, nahrady }] */
+    async zverejniJidelnicek(dny) {
+      return ok(await klient().rpc('zverejni_jidelnicek', { p_dny: dny }));
+    },
+    async nahradyObedu() {
+      var u = nactiUcet();
+      var r = ok(await klient().from('skoly').select('nahrady_obedu').eq('id', u.skolaId).maybeSingle());
+      return r ? r.nahrady_obedu !== false : true;
+    },
+    async nastavNahrady(zap) {
+      return ok(await klient().rpc('nastav_nahrady', { p: !!zap }));
     },
 
     /* --------------------------------------------- ředitelna: rodiče v LifeOS */
