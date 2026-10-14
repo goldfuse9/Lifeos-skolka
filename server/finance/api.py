@@ -58,9 +58,12 @@ def prihlaseny_z_jwt(authorization: Annotated[str | None, Header()] = None, db: 
         data = jwt.decode(authorization[7:], os.environ["SUPABASE_JWT_SECRET"], algorithms=["HS256"], audience="authenticated")
     except Exception:
         raise HTTPException(401, "Přihlášení vypršelo nebo je neplatné.")
-    r = db._q("select skola_id, role from uzivatele where id = %s", (data["sub"],))  # type: ignore[attr-defined]
+    # Blokace účtu i školky platí i tady (stejně jako moje_role() v databázi).
+    r = db._q(  # type: ignore[attr-defined]
+        "select u.skola_id, u.role from uzivatele u join skoly s on s.id = u.skola_id"
+        " where u.id = %s and u.aktivni and s.stav = 'aktivni'", (data["sub"],))
     if not r:
-        raise HTTPException(403, "Účet nemá přístup.")
+        raise HTTPException(403, "Účet nemá přístup (neexistuje nebo je zablokovaný).")
     return Prihlaseny(data["sub"], str(r[0]["skola_id"]), r[0]["role"])
 
 

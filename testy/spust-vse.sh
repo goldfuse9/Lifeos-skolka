@@ -10,6 +10,13 @@ DB=${1:-skolka_lokal}; PR=${2:-3001}; PX=${3:-3002}; WEB=${4:-8767}
 ./reset.sh "$DB" >/dev/null
 echo "######## bezpečnost (databáze)"; ./bezpecnost.sh "$DB"; B=$?
 echo "######## E2E (prohlížeč)"; TEST_DB=$DB PROXY_PORT=$PX WEB_PORT=$WEB node e2e/spust.js; E=$?
+F=0
+echo "######## Finance API (Python, pytest)"
+PG="psql -h ${PGHOST_TEST:-/home/claude/.pgtest} -p ${PGPORT_TEST:-5499} -U postgres -q"
+$PG -d postgres -c "drop database if exists ${DB}_fin with (force)" -c "create database ${DB}_fin" >/dev/null 2>&1
+$PG -d "${DB}_fin" -f lokalni/supabase-stub.sql >/dev/null 2>&1; $PG -d "${DB}_fin" -f ../supabase/setup.sql >/dev/null 2>&1
+(cd ../server && TEST_DATABASE_URL="postgresql://postgres@/${DB}_fin?host=${PGHOST_TEST:-/home/claude/.pgtest}&port=${PGPORT_TEST:-5499}" python3 -m pytest -q tests 2>&1 | tail -1) | tee /tmp/skolka-fin.out
+grep -q "passed" /tmp/skolka-fin.out && ! grep -q "failed\|error" /tmp/skolka-fin.out || F=1
 L=0
 LIFEOS=${LIFEOS_DIR:-/home/claude/lifeos-a/mobile}
 if [ -d "$LIFEOS/node_modules" ]; then
@@ -22,5 +29,5 @@ else
   echo "######## LifeOS přeskočen (nastavte LIFEOS_DIR na …/lifeos/mobile s node_modules)"
 fi
 ./reset.sh "$DB" >/dev/null
-echo; [[ $B == 0 && $E == 0 && $L == 0 ]] && echo "VŠE PROŠLO" || echo "NĚCO SELHALO (bezpečnost=$B, e2e=$E, lifeos=$L)"
-[[ $B == 0 && $E == 0 && $L == 0 ]]
+echo; [[ $B == 0 && $E == 0 && $L == 0 && $F == 0 ]] && echo "VŠE PROŠLO" || echo "NĚCO SELHALO (bezpečnost=$B, e2e=$E, finance=$F, lifeos=$L)"
+[[ $B == 0 && $E == 0 && $L == 0 && $F == 0 ]]
