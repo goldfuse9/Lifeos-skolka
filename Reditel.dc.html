@@ -1829,7 +1829,7 @@ class Component extends DCLogic {
     var w = typeof window !== 'undefined' ? window : {};
     if (!w.__skolka) {
       var saved = null;
-      try { saved = JSON.parse(localStorage.getItem('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
+      try { saved = JSON.parse(window.SkolkaUloziste.get('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
       var d0 = new Date(), today = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate();
       if (saved && saved.day !== today) { saved.att = {}; saved.kidAtt = null; }
       w.__skolka = saved || { urazy: [], att: {}, kniha: {}, urazNo: 3 };
@@ -1839,7 +1839,7 @@ class Component extends DCLogic {
   }
 
   saveStore() {
-    try { localStorage.setItem('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* bez úložiště to funguje dál, jen se nic nepamatuje */ }
+    try { window.SkolkaUloziste.set('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* bez úložiště to funguje dál, jen se nic nepamatuje */ }
   }
 
   /* Zkušební provoz: všechno, co se v ředitelně změní, zůstane v tomto
@@ -1848,7 +1848,7 @@ class Component extends DCLogic {
 
   restore() {
     var raw = null;
-    try { raw = localStorage.getItem('skolka-reditel-v1'); } catch (e) { return; }
+    try { raw = window.SkolkaUloziste.get('skolka-reditel-v1'); } catch (e) { return; }
     if (!raw) return;
     var data;
     try { data = JSON.parse(raw, function (k, v) { return k === 'birth' && typeof v === 'string' ? new Date(v) : v; }); } catch (e) { return; }
@@ -1869,13 +1869,13 @@ class Component extends DCLogic {
     this._s = setTimeout(function () {
       var data = { alergSeed: true };
       self.persistKeys().forEach(function (k) { data[k] = self[k]; });
-      try { localStorage.setItem('skolka-reditel-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
+      try { window.SkolkaUloziste.set('skolka-reditel-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
       self.saveStore();
     }, 300);
   }
 
   resetDemo() {
-    try { localStorage.removeItem('skolka-reditel-v1'); localStorage.removeItem('skolka-sdilene-v1'); } catch (e) { /* nic */ }
+    try { window.SkolkaUloziste.remove('skolka-reditel-v1'); window.SkolkaUloziste.remove('skolka-sdilene-v1'); } catch (e) { /* nic */ }
     if (typeof window !== 'undefined') { window.__skolka = null; window.location.reload(); }
   }
 

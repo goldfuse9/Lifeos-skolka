@@ -429,7 +429,7 @@ class Component extends DCLogic {
     this.TYPES = [['svacina', 'Svačiny'], ['polevka', 'Polévky'], ['obed', 'Hlavní jídla'], ['napoj', 'Nápoje']];
     this.CLASSES = [{ id: 'slunicka', name: 'Sluníčka', color: '#E9C46A', n: 28 }, { id: 'berusky', name: 'Berušky', color: '#E08A80', n: 18 }, { id: 'motylci', name: 'Motýlci', color: '#86A8DE', n: 16 }];
     this.school = { name: 'MŠ Sluníčko', nazev: 'Mateřská škola Sluníčko, Praha 6', adresa: 'Na Hutích 12, 160 00 Praha 6', telefon: '220 123 456', email: 'skolka@ms-slunicko.cz', ico: '70891234' };
-    try { var r = JSON.parse(localStorage.getItem('skolka-reditel-v1') || 'null'); if (r && r.school) this.school = Object.assign(this.school, r.school); } catch (e) { /* bez ředitelny stačí výchozí údaje */ }
+    try { var r = JSON.parse(window.SkolkaUloziste.get('skolka-reditel-v1') || 'null'); if (r && r.school) this.school = Object.assign(this.school, r.school); } catch (e) { /* bez ředitelny stačí výchozí údaje */ }
 
     // Suroviny: [název, alergeny, skupina pro pestrost]
     var I = {
@@ -554,7 +554,7 @@ class Component extends DCLogic {
   }
   restore() {
     var raw = null, self = this;
-    try { raw = localStorage.getItem('skolka-jidelna-v1'); } catch (e) { return; }
+    try { raw = window.SkolkaUloziste.get('skolka-jidelna-v1'); } catch (e) { return; }
     if (!raw) return;
     var data; try { data = JSON.parse(raw); } catch (e) { return; }
     this.persistKeys().forEach(function (k) { if (data[k] !== undefined) self[k] = data[k]; });
@@ -566,7 +566,7 @@ class Component extends DCLogic {
     this._s = setTimeout(function () {
       var data = { me: self.state.me };
       self.persistKeys().forEach(function (k) { data[k] = self[k]; });
-      try { localStorage.setItem('skolka-jidelna-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
+      try { window.SkolkaUloziste.set('skolka-jidelna-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
       self.saveStore();
     }, 300);
   }
@@ -575,7 +575,7 @@ class Component extends DCLogic {
     var w = typeof window !== 'undefined' ? window : {};
     if (!w.__skolka) {
       var saved = null;
-      try { saved = JSON.parse(localStorage.getItem('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
+      try { saved = JSON.parse(window.SkolkaUloziste.get('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
       var d0 = new Date(), today = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate();
       if (saved && saved.day !== today) { saved.att = {}; saved.kidAtt = null; }
       w.__skolka = saved || { urazy: [], att: {}, kniha: {}, urazNo: 3 };
@@ -583,7 +583,7 @@ class Component extends DCLogic {
     }
     return w.__skolka;
   }
-  saveStore() { try { localStorage.setItem('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* nic */ } }
+  saveStore() { try { window.SkolkaUloziste.set('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* nic */ } }
 
   showToast(text) {
     var self = this;

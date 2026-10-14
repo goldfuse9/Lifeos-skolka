@@ -37,10 +37,10 @@ db-anon-role = "anon"
 jwt-secret = "tajny-testovaci-klic-pro-postgrest-0123456789"
 server-port = $PR
 CONF
-pgrep -f "postgrest $STAV/pgrst.conf" >/dev/null || (nohup "$PGRST" "$STAV/pgrst.conf" > "$STAV/pgrst.log" 2>&1 </dev/null &)
+pgrep -f "postgrest $STAV/pgrst.conf" >/dev/null || (setsid nohup "$PGRST" "$STAV/pgrst.conf" > "$STAV/pgrst.log" 2>&1 </dev/null &)
 # 4) proxy (/rest/v1 → PostgREST, /auth/v1 emulace)
-pgrep -f "sbproxy.js $DB" >/dev/null || (TEST_DB=$DB PGRST_PORT=$PR PROXY_PORT=$PX nohup node sbproxy.js "$DB" > "$STAV/proxy.log" 2>&1 </dev/null &)
+pgrep -f "sbproxy.js $DB" >/dev/null || (TEST_DB=$DB PGRST_PORT=$PR PROXY_PORT=$PX setsid nohup node sbproxy.js "$DB" > "$STAV/proxy.log" 2>&1 </dev/null &)
 # 5) statický web
-pgrep -f "http.server $WEB" >/dev/null || (cd ../.. && nohup python3 -m http.server "$WEB" > "$STAV/web.log" 2>&1 </dev/null &)
+pgrep -f "http.server $WEB" >/dev/null || (cd ../.. && setsid nohup python3 -m http.server "$WEB" > "$STAV/web.log" 2>&1 </dev/null &)
 sleep 2
 curl -sf "http://localhost:$PX/rest/v1/" -o /dev/null && echo "OK: db=$DB postgrest=$PR proxy=$PX web=$WEB" || { echo "proxy neodpovídá, viz $STAV"; exit 1; }

@@ -1286,7 +1286,7 @@ class Component extends DCLogic {
     var w = typeof window !== 'undefined' ? window : {};
     if (!w.__skolka) {
       var saved = null;
-      try { saved = JSON.parse(localStorage.getItem('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
+      try { saved = JSON.parse(window.SkolkaUloziste.get('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
       var d0 = new Date(), today = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate();
       if (saved && saved.day !== today) { saved.att = {}; saved.kidAtt = null; }
       w.__skolka = saved || { urazy: [], att: {}, kniha: {}, urazNo: 3 };
@@ -1298,7 +1298,7 @@ class Component extends DCLogic {
   saveStore() {
     var self = this;
     clearTimeout(this._ss);
-    this._ss = setTimeout(function () { try { localStorage.setItem('skolka-sdilene-v1', JSON.stringify(self.store())); } catch (e) { /* bez úložiště */ } }, 300);
+    this._ss = setTimeout(function () { try { window.SkolkaUloziste.set('skolka-sdilene-v1', JSON.stringify(self.store())); } catch (e) { /* bez úložiště */ } }, 300);
   }
 
   /* Stejná kreslená postava jako v ředitelně; fotka má přednost. */

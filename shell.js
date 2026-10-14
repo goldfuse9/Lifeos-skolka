@@ -157,6 +157,20 @@ function noveHeslo() {
 
 /* Ostrý provoz (server.js + config.js): účet je ze Supabase. */
 const SRV = () => (window.SkolkaServer && window.SkolkaServer.zapnuto ? window.SkolkaServer : null);
+
+/* Úložiště desek. Zkušební provoz: localStorage (ukázková data zůstanou i po
+   zavření). Ostrý provoz: jen v paměti otevřené stránky — skutečná data jsou
+   na serveru a v prohlížeči (sdílený počítač, tablet) po nikom nesmí zůstat.
+   Starší verze ukládaly i v ostrém provozu → při startu se smažou. */
+const DATA_DESEK = ['skolka-reditel-v1', 'skolka-sdilene-v1', 'skolka-jidelna-v1'];
+const pametDesek = {};
+window.SkolkaUloziste = {
+  get(k) { if (SRV()) return Object.prototype.hasOwnProperty.call(pametDesek, k) ? pametDesek[k] : null; try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { if (SRV()) { pametDesek[k] = String(v); return; } try { localStorage.setItem(k, v); } catch (e) { /* plné nebo zakázané */ } },
+  remove(k) { delete pametDesek[k]; if (!SRV()) { try { localStorage.removeItem(k); } catch (e) { /* nic */ } } },
+  vycisti() { DATA_DESEK.forEach((k) => { delete pametDesek[k]; }); },
+};
+if (SRV()) { try { DATA_DESEK.forEach((k) => localStorage.removeItem(k)); } catch (e) { /* nic */ } }
 const SRV_ROLE = { reditelka: 'reditelka', zastupce: 'zastupce', ucitelka: 'ucitelka', hospodarka: 'hospodarka', kucharka: 'kucharka', superadmin: 'superadmin' };
 function ucetZeServeru(s) {
   const r = ROLE[SRV_ROLE[s.role] || 'ucitelka'];
@@ -242,6 +256,7 @@ window.SkolkaUcet = {
     try { await SRV().zapomenuteHeslo(email); return { ok: true }; } catch (e) { return { ok: false, chyba: SRV().chyba(e) }; }
   },
   odhlas() {
+    window.SkolkaUloziste.vycisti();
     if (SRV()) SRV().odhlas();
     try { localStorage.removeItem(KLIC_UCTU); } catch (e) { /* nic */ }
     window.__ucetBezUloziste = null;

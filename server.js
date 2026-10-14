@@ -25,8 +25,31 @@
         ? { accessToken: function () { return Promise.resolve(C.testToken); } }
         : { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'skolka-sb-auth' } };
       sb = window.supabase.createClient(C.url, C.key, o);
+      if (!C.testToken) hlidejJinyUcet();
     }
     return sb;
+  }
+  /* Dvě záložky jednoho prohlížeče sdílí přihlášení. Když se v jiné záložce
+     přihlásí někdo jiný (nebo se odhlásí), tahle záložka nesmí dál zapisovat
+     pod cizím účtem — vrátí se na přihlášení. */
+  var prihlasuji = false;
+  function hlidejJinyUcet() {
+    var konec = function () {
+      pamet = null;
+      try { if (window.SkolkaUloziste) window.SkolkaUloziste.vycisti(); } catch (e) { /* nic */ }
+      location.hash = '#prihlaseni';
+      location.reload();
+    };
+    var zkontroluj = function (uid) {
+      if (prihlasuji || !pamet || pamet.role === undefined) return;
+      if (!uid || uid !== pamet.id) konec();
+    };
+    window.addEventListener('storage', function (e) {
+      if (e.key !== 'skolka-sb-auth') return;
+      var uid = null;
+      try { var v = JSON.parse(e.newValue || 'null'); uid = v && v.user ? v.user.id : null; } catch (x) { uid = null; }
+      zkontroluj(uid);
+    });
   }
   function chyba(e) {
     var m = (e && (e.message || e.error_description)) || String(e || '');
@@ -138,6 +161,7 @@
     ucet: nactiUcet,
 
     async prihlas(email, heslo, kod) {
+      prihlasuji = true;
       try {
         var uid = mojeId();
         if (!uid) {
@@ -158,11 +182,12 @@
       } catch (e) {
         try { if (!C.testToken) await klient().auth.signOut(); } catch (x) { /* nic */ }
         return { ok: false, chyba: chyba(e), bezSkoly: !!(e && e.bezSkoly) };
-      }
+      } finally { prihlasuji = false; }
     },
     /* Nový účet z pozvánky: e-mail (stejný jako v pozvánce), heslo, kód. */
     async registruj(email, heslo, kod) {
       var self = this;
+      prihlasuji = true;
       try {
         var mail = String(email || '').trim().toLowerCase();
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw new Error('E-mail nevypadá správně.');
@@ -193,7 +218,7 @@
         return { ok: true, ucet: u };
       } catch (e) {
         return { ok: false, chyba: chyba(e) };
-      }
+      } finally { prihlasuji = false; }
     },
     async zapomenuteHeslo(email) {
       var r = await klient().auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: location.origin + location.pathname + '#prihlaseni' });
