@@ -353,3 +353,105 @@ language sql stable security definer set search_path = public as $$
   group by x.dite_id, to_char(x.den, 'YYYY-MM')
 $$;
 grant execute on function dochazka_souhrn(date, date) to authenticated;
+
+-- =============================================================================
+-- Jídelna v ostrém provozu (C1–C8, C13, C15, C16)
+-- Alergeny a náhrady se ukládají přímo k chodu v jídelníčku (náhrada platí jen
+-- pro ten den; vypnutí náhrad je jen skryje, nesmaže). Katalog jídel a surovin
+-- kuchyně je pracovní pomůcka → jeden JSON na školku.
+-- =============================================================================
+alter table jidelnicek add column if not exists alergeny smallint[];
+alter table jidelnicek add column if not exists nahrady jsonb;
+
+create table if not exists jidelna_katalog (
+  skola_id uuid primary key references skoly on delete cascade,
+  data jsonb not null,
+  zmeneno timestamptz not null default now(),
+  zmenil uuid
+);
+alter table jidelna_katalog enable row level security;
+drop policy if exists katalog on jidelna_katalog;
+create policy katalog on jidelna_katalog for all using (coalesce(je_kuchyne(), false) and skola_id = moje_skola())
+  with check (coalesce(je_kuchyne(), false) and skola_id = moje_skola());
+grant select, insert, update on jidelna_katalog to authenticated;
+
+drop function if exists zverejni_jidelnicek(jsonb);
+create or replace function zverejni_jidelnicek(p_dny jsonb, p_od date default null, p_do date default null) returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  sk uuid := moje_skola();
+  r jsonb; j uuid; dr text; n int := 0; vden date; a smallint[];
+begin
+  if not coalesce(moje_role() in ('kucharka', 'reditelka'), false) then raise exception 'Jídelníček zveřejňuje jídelna.'; end if;
+  if jsonb_typeof(p_dny) <> 'array' then raise exception 'Chybná data jídelníčku.'; end if;
+  for r in select * from jsonb_array_elements(p_dny) loop
+    vden := (r->>'den')::date;
+    if extract(isodow from vden) > 5 then raise exception 'Jídelníček je jen na pracovní dny (% je víkend).', vden; end if;
+    if p_od is not null and (vden < p_od or vden > p_do) then raise exception 'Den % není v zveřejňovaném týdnu.', vden; end if;
+    if coalesce(r->>'chod', '') not in ('prs', 'pol', 'obed', 'sv', 'nap') then raise exception 'Neznámý chod.'; end if;
+    if coalesce(trim(r->>'nazev'), '') = '' then raise exception 'Chybí název jídla (%).', vden; end if;
+    a := coalesce(array(select jsonb_array_elements_text(coalesce(r->'alergeny', '[]'::jsonb))::smallint order by 1), '{}');
+    if exists (select 1 from unnest(a) x where x < 1 or x > 14) then raise exception 'Alergeny jsou čísla 1–14.'; end if;
+    dr := case r->>'chod' when 'pol' then 'polevka' when 'obed' then 'obed' when 'nap' then 'napoj' else 'svacina' end;
+    select id into j from jidla where skola_id = sk and nazev = trim(r->>'nazev') and druh = dr limit 1;
+    if j is null then insert into jidla (skola_id, nazev, druh) values (sk, trim(r->>'nazev'), dr) returning id into j; end if;
+    insert into jidelnicek (skola_id, den, chod, jidlo_id, zverejneno, alergeny, nahrady)
+      values (sk, vden, r->>'chod', j, true, a, coalesce(r->'nahrady', '{}'::jsonb))
+      on conflict (skola_id, den, chod) do update set jidlo_id = excluded.jidlo_id, zverejneno = true, alergeny = excluded.alergeny, nahrady = excluded.nahrady;
+    n := n + 1;
+  end loop;
+  -- vyprázdněné chody v zveřejňovaném týdnu zmizí i rodičům
+  if p_od is not null then
+    delete from jidelnicek x where x.skola_id = sk and x.den between p_od and p_do
+      and not exists (select 1 from jsonb_array_elements(p_dny) e where (e->>'den')::date = x.den and e->>'chod' = x.chod);
+  end if;
+  return n;
+end $$;
+
+create or replace function jidelnicek_tyden(p_od date, p_do date)
+returns table (den date, chod text, nazev text, alergeny smallint[], nahrady jsonb)
+language sql stable security definer set search_path = public as $$
+  select j.den, j.chod, x.nazev,
+         coalesce(j.alergeny, (select array_agg(distinct a order by a) from jidlo_suroviny js join suroviny s on s.id = js.surovina_id, unnest(s.alergeny) a where js.jidlo_id = x.id), '{}'),
+         case when (select nahrady_obedu from skoly where id = moje_skola()) then
+           coalesce(j.nahrady, (select jsonb_object_agg(n.alergen, n.text) from nahrady n where n.jidlo_id = x.id), '{}'::jsonb)
+         else '{}'::jsonb end
+  from jidelnicek j join jidla x on x.id = j.jidlo_id
+  where j.skola_id = moje_skola() and j.zverejneno and j.den between p_od and p_do
+  order by j.den, array_position(array['prs', 'pol', 'obed', 'sv', 'nap'], j.chod)
+$$;
+
+-- kuchyně: celý jídelníček (i se skrytými náhradami) pro desku jídelny
+create or replace function jidelnicek_kuchyne(p_od date, p_do date)
+returns table (den date, chod text, nazev text, alergeny smallint[], nahrady jsonb, zverejneno boolean)
+language sql stable security definer set search_path = public as $$
+  select j.den, j.chod, x.nazev,
+         coalesce(j.alergeny, (select array_agg(distinct a order by a) from jidlo_suroviny js join suroviny s on s.id = js.surovina_id, unnest(s.alergeny) a where js.jidlo_id = x.id), '{}'),
+         coalesce(j.nahrady, (select jsonb_object_agg(n.alergen, n.text) from nahrady n where n.jidlo_id = x.id), '{}'::jsonb), j.zverejneno
+  from jidelnicek j join jidla x on x.id = j.jidlo_id
+  where coalesce(je_kuchyne(), false) and j.skola_id = moje_skola() and j.den between p_od and p_do
+$$;
+
+-- počty jídel na den podle tříd (odhlášené obědy z omluvenek rodičů)
+create or replace function obedy_den(p_den date)
+returns table (trida_id uuid, trida text, barva text, deti int, odhlaseno int)
+language sql stable security definer set search_path = public as $$
+  select t.id, t.nazev, t.barva,
+         count(d.id)::int,
+         count(d.id) filter (where exists (select 1 from dochazka x where x.dite_id = d.id and x.den = p_den and x.strava_prihlasena = false))::int
+  from tridy t left join deti d on d.trida_id = t.id and d.ukonceno is null and (d.zahajeni is null or d.zahajeni <= p_den)
+  where coalesce(je_kuchyne(), false) and t.skola_id = moje_skola()
+  group by t.id, t.nazev, t.barva order by t.nazev
+$$;
+
+-- děti s alergií pro kuchyni (jméno, první písmeno příjmení, třída, alergie, dieta)
+create or replace function deti_diety()
+returns table (dite_id uuid, jmeno text, trida_id uuid, alergie text, doporuceni_lekare boolean, poznamka text)
+language sql stable security definer set search_path = public as $$
+  select d.id, d.jmeno || ' ' || left(d.prijmeni, 1) || '.', d.trida_id, d.alergie, coalesce(x.doporuceni_lekare, false), x.poznamka
+  from deti d left join diety x on x.dite_id = d.id
+  where coalesce(je_kuchyne(), false) and d.skola_id = moje_skola() and d.ukonceno is null
+    and (coalesce(trim(d.alergie), '') <> '' or x.dite_id is not null)
+  order by d.jmeno
+$$;
+grant execute on function zverejni_jidelnicek(jsonb, date, date), jidelnicek_tyden(date, date), jidelnicek_kuchyne(date, date), obedy_den(date), deti_diety() to authenticated;

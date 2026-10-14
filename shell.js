@@ -358,6 +358,13 @@ async function otevri(chtene, zHashe, vychozi) {
       const iso = (x) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
       window.__skolkaServerReditelna = await SRV().nactiReditelnu(rok + '-09-01', iso(d));
     }
+    if (klic === 'jidelna' && SRV()) {
+      const iso = (x) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+      const den = new Date(); if (den.getDay() === 6) den.setDate(den.getDate() + 2); if (den.getDay() === 0) den.setDate(den.getDate() + 1);
+      const po = new Date(den); po.setDate(po.getDate() - ((po.getDay() + 6) % 7));
+      const od = new Date(po); od.setDate(od.getDate() - 7); const doDne = new Date(po); doDne.setDate(doDne.getDate() + 25);
+      window.__skolkaServerJidelna = await SRV().nactiJidelnu(iso(od), iso(doDne), iso(den));
+    }
     if (klic === 'trida' && SRV()) {
       const u = nactiUcet();
       const deti = await SRV().nactiTridu(u.trida);

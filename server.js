@@ -289,8 +289,32 @@
 
     /* --------------------------------------------------------- jídelna */
     /* Zveřejní týden: [{ den, chod, nazev, alergeny, nahrady }] */
-    async zverejniJidelnicek(dny) {
-      return ok(await klient().rpc('zverejni_jidelnicek', { p_dny: dny }));
+    async zverejniJidelnicek(dny, od, doDne) {
+      var arg = { p_dny: dny };
+      if (od) { arg.p_od = od; arg.p_do = doDne; }
+      return ok(await klient().rpc('zverejni_jidelnicek', arg));
+    },
+    /* Jídelna v ostrém provozu: katalog jídel, jídelníček, počty jídel na den, diety. */
+    async nactiJidelnu(od, doDne, den) {
+      var u = nactiUcet();
+      var r = await Promise.all([
+        klient().from('jidelna_katalog').select('data').eq('skola_id', u.skolaId).maybeSingle(),
+        klient().rpc('jidelnicek_kuchyne', { p_od: od, p_do: doDne }),
+        klient().rpc('obedy_den', { p_den: den }),
+        klient().rpc('deti_diety'),
+        klient().from('skoly').select('nazev, nahrady_obedu').eq('id', u.skolaId).maybeSingle(),
+        klient().from('uzivatele').select('id', { count: 'exact', head: true }).neq('role', 'rodic').eq('aktivni', true)
+      ]);
+      var D = r.slice(0, 5).map(ok);
+      if (r[5].error) throw r[5].error;
+      return { katalog: D[0] ? D[0].data : null, menu: D[1], obedy: D[2], diety: D[3], skola: D[4], zamestnancu: r[5].count || 0, den: den };
+    },
+    async ulozKatalog(data) {
+      var u = nactiUcet();
+      ok(await klient().from('jidelna_katalog').upsert({ skola_id: u.skolaId, data: data, zmeneno: new Date().toISOString(), zmenil: u.id }));
+    },
+    async ulozDietu(diteId, doporuceni, poznamka) {
+      ok(await klient().from('diety').upsert({ dite_id: diteId, doporuceni_lekare: !!doporuceni, poznamka: poznamka || null }));
     },
     async nahradyObedu() {
       var u = nactiUcet();
