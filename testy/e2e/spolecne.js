@@ -27,8 +27,11 @@ async function stranka(rozmer = { width: 1440, height: 900 }, zkusebni = false) 
   await ctx.route('**/realtime/**', (r) => r.abort());
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   const p = await ctx.newPage();
-  p.chyby = [];
+  p.chyby = []; p.http = [];
   p.on('pageerror', (e) => p.chyby.push('PAGEERROR ' + e.message));
+  // chyby v konzoli aplikace (bez šumu testovacího prostředí: písma, SW, realtime, načítání zdrojů)
+  p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|ERR_|fonts|Service Worker|realtime|WebSocket/i.test(m.text())) p.chyby.push('CONSOLE ' + m.text().slice(0, 200)); });
+  p.on('response', (r) => { if (r.status() >= 500 && /\/rest\/v1|\/auth\/v1/.test(r.url())) p.chyby.push('HTTP ' + r.status() + ' ' + r.url().split('/v1/')[1]); else if (r.status() >= 400 && /\/rest\/v1/.test(r.url())) p.http.push(r.status() + ' ' + r.url().split('/v1/')[1]); });
   return p;
 }
 async function konec() { if (prohlizec) await prohlizec.close(); prohlizec = null; }

@@ -162,5 +162,22 @@ echo "== odpojení rodiče"
 t "rodič odpojí své dítě (server zapomene propojení)" 0 $RODA "" "select odpoj_rodice('$EMA'); select count(*) from deti;"
 t "po odpojení rodič nemá účet ve školce" 0 $RODA "" "select odpoj_rodice('$EMA'); reset role; select count(*) from uzivatele where id='$RODA';"
 t "cizí rodič neodpojí cizí dítě" 1 $ROD2A "" "select odpoj_rodice('$EMA'); reset role; select count(*) from zastupci where dite_id='$EMA' and uzivatel_id='$RODA';"
+echo "== regresní audit (R1, R5, R6, R10, D13, zprávy)"
+t "zveřejnění nesmaže jídelníček mimo jeden týden" ERR $KA kucharka@test.cz "select zverejni_jidelnicek('[]', '2000-01-03', '2099-12-31');"
+t "ředitelka A nepřipojí k dítěti rodiče školky B" ERR $RA reditelka@test.cz "update zastupci set uzivatel_id='$RODB' where dite_id='$EMA';"
+t "ředitelka A nevloží akci pro třídu školky B" ERR $RA reditelka@test.cz "insert into akce (skola_id, trida_id, den, nazev) values ('$A', '$ZAB', current_date + 3, 'x');"
+t "hospodářka A nevloží platbu dítěti B" ERR $HA hospodarka@test.cz "insert into platby (skola_id, datum, castka, dite_id) values ('$A', current_date, 100, '$ADAM');"
+t "odpoj_rodice cizího dítěte nic nesmaže" 1 $NO bezrole@test.cz "reset role; insert into zastupci (dite_id, jmeno, poradi) values ('$ADAM', 'osiřelý', 9); set local role authenticated; select odpoj_rodice('$ADAM'); reset role; select count(*) from zastupci where dite_id='$ADAM' and jmeno='osiřelý';"
+t "rodič nedostane omluvu za den, kdy dítě je ve školce" ERR $RODA "" "reset role; insert into dochazka (dite_id, den, stav, prichod) values ('$EMA', current_date + 1, 'pritomen', '08:00'); set local role authenticated; select count(*) from omluv_dite('$EMA', current_date + 1, current_date + 1, 'x');"
+t "zpráva neplatnému adresátovi neprojde" ERR $RA reditelka@test.cz "insert into zpravy (skola_id, komu, predmet, text) values ('$A', 'nesmysl', 'x', 'x');"
+t "zpráva pro třídu cizí školky neprojde" ERR $RA reditelka@test.cz "insert into zpravy (skola_id, komu, predmet, text) values ('$A', 'trida:$ZAB', 'x', 'x');"
+t "náhled kódu nevrací datum narození" "Ema|" $NO bezrole@test.cz "reset role; insert into parovaci_kody (kod, skola_id, dite_id, plati_do) values ('QQQQRRRR','$A','$EMA', now()+interval '1 day'); set local role authenticated; select jmeno || '|' || coalesce(datum_narozeni::text, '') from nahled_kodu('QQQQ-RRRR');"
+t "uloz_chody: víkend odmítnut" ERR $KA kucharka@test.cz "select uloz_chody(jsonb_build_array(jsonb_build_object('den', (date_trunc('week', current_date)::date + 5)::text, 'chod', 'obed', 'nazev', 'x')));"
+t "uloz_chody: neplatný alergen česky" ERR $KA kucharka@test.cz "select uloz_chody('[{\"den\":\"2026-10-12\",\"chod\":\"obed\",\"nazev\":\"x\",\"alergeny\":[\"abc\"]}]');"
+t "uloz_chody: učitelka nesmí" ERR $UA ucitelka@test.cz "select uloz_chody('[]');"
+t "uloz_chody: návrh rodič nevidí" 0 $RODA "" "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$KA',true) \\g /dev/null
+select uloz_chody(jsonb_build_array(jsonb_build_object('den', (date_trunc('week', current_date)::date + 7)::text, 'chod', 'obed', 'nazev', 'Návrh X', 'zverejnit', false)));
+select set_config('request.jwt.claim.sub','$RODA',true) \\g /dev/null
+select count(*) from jidelnicek_tyden(date_trunc('week', current_date)::date + 7, date_trunc('week', current_date)::date + 11) where nazev='Návrh X';"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

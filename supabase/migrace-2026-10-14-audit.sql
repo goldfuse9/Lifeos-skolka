@@ -383,7 +383,11 @@ declare
   r jsonb; j uuid; dr text; n int := 0; vden date; a smallint[];
 begin
   if not coalesce(moje_role() in ('kucharka', 'reditelka'), false) then raise exception 'Jídelníček zveřejňuje jídelna.'; end if;
-  if jsonb_typeof(p_dny) <> 'array' then raise exception 'Chybná data jídelníčku.'; end if;
+  if p_dny is null or jsonb_typeof(p_dny) <> 'array' then raise exception 'Chybná data jídelníčku.'; end if;
+  -- R1: mazání vyprázdněných chodů jen v jednom týdnu (pondělí až pátek)
+  if not (p_od is null or (p_do is not null and extract(isodow from p_od) = 1 and p_do = p_od + 4)) then
+    raise exception 'Zveřejňuje se vždy jeden týden (pondělí až pátek).';
+  end if;
   for r in select * from jsonb_array_elements(p_dny) loop
     vden := (r->>'den')::date;
     if extract(isodow from vden) > 5 then raise exception 'Jídelníček je jen na pracovní dny (% je víkend).', vden; end if;
@@ -510,3 +514,161 @@ begin
   end if;
 end $$;
 grant execute on function odpoj_rodice(uuid) to authenticated;
+
+-- =============================================================================
+-- Regresní audit (R1, R8, R9, R12): jídelníček se ukládá po jednotlivých chodech
+-- (návrh i zveřejněný). Dvě otevřené desky si nepřepíší celý týden a nic se
+-- nemaže hromadně podle rozsahu.
+-- =============================================================================
+create or replace function uloz_chody(p_chody jsonb) returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  sk uuid := moje_skola();
+  r jsonb; j uuid; dr text; n int := 0; vden date; a smallint[];
+begin
+  if not coalesce(moje_role() in ('kucharka', 'reditelka'), false) then raise exception 'Jídelníček upravuje jídelna.'; end if;
+  if p_chody is null or jsonb_typeof(p_chody) <> 'array' then raise exception 'Chybná data jídelníčku.'; end if;
+  for r in select * from jsonb_array_elements(p_chody) loop
+    begin
+      vden := (r->>'den')::date;
+    exception when others then raise exception 'Neplatné datum v jídelníčku.';
+    end;
+    if vden is null then raise exception 'Chybí den.'; end if;
+    if extract(isodow from vden) > 5 then raise exception 'Jídelníček je jen na pracovní dny (% je víkend).', to_char(vden, 'DD. MM. YYYY'); end if;
+    if coalesce(r->>'chod', '') not in ('prs', 'pol', 'obed', 'sv', 'nap') then raise exception 'Neznámý chod.'; end if;
+    if coalesce((r->>'smazat')::boolean, false) then
+      delete from jidelnicek where skola_id = sk and den = vden and chod = r->>'chod';
+      n := n + 1; continue;
+    end if;
+    if coalesce(trim(r->>'nazev'), '') = '' then raise exception 'Chybí název jídla (%).', to_char(vden, 'DD. MM.'); end if;
+    begin
+      a := coalesce(array(select jsonb_array_elements_text(coalesce(r->'alergeny', '[]'::jsonb))::smallint order by 1), '{}');
+    exception when others then raise exception 'Alergeny jsou čísla 1–14.';
+    end;
+    if exists (select 1 from unnest(a) x where x < 1 or x > 14) then raise exception 'Alergeny jsou čísla 1–14.'; end if;
+    if r ? 'nahrady' and jsonb_typeof(r->'nahrady') <> 'object' then raise exception 'Chybné náhrady.'; end if;
+    dr := case r->>'chod' when 'pol' then 'polevka' when 'obed' then 'obed' when 'nap' then 'napoj' else 'svacina' end;
+    select id into j from jidla where skola_id = sk and nazev = trim(r->>'nazev') and druh = dr limit 1;
+    if j is null then insert into jidla (skola_id, nazev, druh) values (sk, trim(r->>'nazev'), dr) returning id into j; end if;
+    insert into jidelnicek (skola_id, den, chod, jidlo_id, zverejneno, alergeny, nahrady)
+      values (sk, vden, r->>'chod', j, coalesce((r->>'zverejnit')::boolean, false), a, coalesce(r->'nahrady', '{}'::jsonb))
+      on conflict (skola_id, den, chod) do update set jidlo_id = excluded.jidlo_id, zverejneno = excluded.zverejneno,
+        alergeny = excluded.alergeny, nahrady = excluded.nahrady;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+do $$ begin
+  alter table jidelnicek add constraint jidelnicek_pracovni_den check (extract(isodow from den) <= 5) not valid;
+exception when duplicate_object then null; end $$;
+
+create or replace function nahled_kodu(p_kod text)
+returns table (jmeno text, prijmeni text, datum_narozeni date, skola text, trida text)
+language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  perform hlidej_pokusy_kodu();
+  -- R4: datum narození se v náhledu nevrací (jméno, školka a třída k potvrzení stačí)
+  return query
+    select d.jmeno, d.prijmeni, null::date, s.nazev, t.nazev
+    from parovaci_kody k join deti d on d.id = k.dite_id join skoly s on s.id = k.skola_id left join tridy t on t.id = d.trida_id
+    where k.kod = upper(regexp_replace(coalesce(p_kod, ''), '[^A-Za-z0-9]', '', 'g'))
+      and k.pouzito is null and k.zruseno is null and k.plati_do > now() and s.stav = 'aktivni';
+  if not found then insert into pokusy_kodu (uzivatel_id) values (auth.uid()); end if;
+end $$;
+
+-- R5: k dítěti jde připojit jen účet rodiče téže školky
+drop policy if exists zast_menit on zastupci;
+create policy zast_menit on zastupci for all using (je_vedeni() and exists (select 1 from deti d where d.id = dite_id and d.skola_id = moje_skola()))
+  with check (je_vedeni() and exists (select 1 from deti d where d.id = dite_id and d.skola_id = moje_skola())
+    and (uzivatel_id is null or exists (select 1 from uzivatele u where u.id = uzivatel_id and u.skola_id = moje_skola() and u.role = 'rodic')));
+
+-- R6: akce a alba jen pro třídy vlastní školky, platby jen pro děti vlastní školky
+do $$ declare p record; begin
+  for p in select policyname, tablename from pg_policies where tablename in ('akce', 'alba', 'platby') and cmd in ('INSERT', 'ALL', 'UPDATE') loop
+    execute format('drop policy %I on %I', p.policyname, p.tablename);
+  end loop;
+end $$;
+create policy akce_psat on akce for all using (je_vedeni() and skola_id = moje_skola() or (moje_role() = 'ucitelka' and skola_id = moje_skola() and trida_id is not null and je_ucitelka_tridy(trida_id)))
+  with check (skola_id = moje_skola() and (trida_id is null or exists (select 1 from tridy t where t.id = trida_id and t.skola_id = moje_skola()))
+    and (je_vedeni() or (moje_role() = 'ucitelka' and trida_id is not null and je_ucitelka_tridy(trida_id))));
+create policy alba_psat on alba for all using (skola_id = moje_skola() and (je_vedeni() or (moje_role() = 'ucitelka' and je_ucitelka_tridy(trida_id))))
+  with check (skola_id = moje_skola() and exists (select 1 from tridy t where t.id = trida_id and t.skola_id = moje_skola())
+    and (je_vedeni() or (moje_role() = 'ucitelka' and je_ucitelka_tridy(trida_id))));
+create policy platby_psat on platby for all using (coalesce(je_finance(), false) and skola_id = moje_skola())
+  with check (coalesce(je_finance(), false) and skola_id = moje_skola() and (dite_id is null or exists (select 1 from deti d where d.id = dite_id and d.skola_id = moje_skola())));
+
+-- R10: odpojení smaže jen vlastní, právě odpojený záznam zástupce
+create or replace function odpoj_rodice(p_dite uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare z uuid[];
+begin
+  if auth.uid() is null then raise exception 'Nejste přihlášeni.'; end if;
+  with u as (update zastupci set uzivatel_id = null where dite_id = p_dite and uzivatel_id = auth.uid() returning id) select array_agg(id) into z from u;
+  if z is null then return; end if;
+  delete from zastupci where id = any(z) and poradi = 9 and telefon is null and email is null;
+  if not exists (select 1 from zastupci where uzivatel_id = auth.uid()) then
+    delete from uzivatele where id = auth.uid() and role = 'rodic';
+  end if;
+end $$;
+
+-- D13: rodič nedostane „omluveno“ za den, kdy už dítě je ve školce
+create or replace function omluv_dite(p_dite uuid, p_od date, p_do date, p_duvod text default null)
+returns table (den date, obed_odhlasen boolean)
+language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
+declare
+  ted timestamp := now() at time zone 'Europe/Prague';
+  dni int := 1; do_ time := '08:00';
+  d date; rodic boolean := coalesce(moje_role() = 'rodic', false); zapsano boolean;
+begin
+  if not (moje_role() in ('rodic', 'reditelka', 'zastupce', 'ucitelka') and moje_dite(p_dite)) then
+    raise exception 'Toto dítě omluvit nemůžete.';
+  end if;
+  if p_do < p_od or p_do > p_od + 31 then raise exception 'Omluvit jde nejvýš měsíc dopředu.'; end if;
+  if rodic and p_od < ted::date then raise exception 'Zpětně omlouvá jen školka.'; end if;
+  select f.omluva_dni_predem, f.omluva_do into dni, do_
+    from financni_nastaveni f join deti x on x.skola_id = f.skola_id where x.id = p_dite;
+  dni := coalesce(dni, 1); do_ := coalesce(do_, '08:00');
+  d := p_od;
+  while d <= p_do loop
+    if extract(isodow from d) < 6 then
+      insert into dochazka (dite_id, den, stav, omluvenka, omluva_zadana, strava_prihlasena, omluva_potvrzena, omluvu_potvrdil)
+      values (p_dite, d, 'omluven', p_duvod, now(), not (ted < (d - dni) + do_), null, null)
+      on conflict (dite_id, den) do update
+        set stav = 'omluven', omluvenka = excluded.omluvenka, omluva_zadana = excluded.omluva_zadana,
+            strava_prihlasena = excluded.strava_prihlasena, omluva_potvrzena = null, omluvu_potvrdil = null
+        where dochazka.stav <> 'pritomen' and not (rodic and dochazka.stav = 'neomluven')
+      returning true into zapsano;
+      if coalesce(zapsano, false) then
+        den := d; obed_odhlasen := ted < (d - dni) + do_;
+        return next;
+      end if;
+      zapsano := null;
+    end if;
+    d := d + 1;
+  end loop;
+  if rodic and not found then raise exception 'V tyto dny už dítě ve školce je — omluvit nejde.'; end if;
+end $$;
+
+-- zprávy: adresát musí být platný (vse / zamestnanci / třída nebo dítě vlastní školky)
+create or replace function hlidej_zpravu() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not (new.komu in ('vse', 'zamestnanci')
+          or (new.komu like 'trida:%' and exists (select 1 from tridy t where t.id::text = substr(new.komu, 7) and t.skola_id = new.skola_id))
+          or (new.komu like 'dite:%' and exists (select 1 from deti d where d.id::text = substr(new.komu, 6) and d.skola_id = new.skola_id))) then
+    raise exception 'Neplatný adresát zprávy.';
+  end if;
+  return new;
+end $$;
+drop trigger if exists b_hlidej_zpravu on zpravy;
+create trigger b_hlidej_zpravu before insert or update on zpravy for each row execute function hlidej_zpravu();
+
+-- R7: práva i u funkcí přidaných v této migraci
+revoke execute on all functions in schema public from public, anon;
+grant execute on all functions in schema public to authenticated;
+revoke execute on function hlidej_pokusy_kodu(), nahodny_kod() from authenticated;
+
+-- R2: podrobnosti záznamu o úrazu pro ČŠI (druh, část těla, zdroj, příčina, opatření)
+alter table urazy add column if not exists zaznam jsonb;

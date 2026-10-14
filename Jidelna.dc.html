@@ -546,10 +546,16 @@ class Component extends DCLogic {
     var n0 = 0;
     (D.menu || []).forEach(function (r) {
       var d = dle[TYP[r.chod] + '|' + r.nazev];
+      /* Jídlo z katalogu jen když sedí i alergeny — jinak by kuchyně viděla jiné alergeny než rodiče. */
+      if (d && JSON.stringify(self.allergens(d)) !== JSON.stringify((r.alergeny || []).slice().sort(function (a, b) { return a - b; }))) d = null;
       if (!d) {
-        d = { id: 'srv' + (n0++), type: TYP[r.chod], name: r.nazev, ings: [], sub: {}, a: (r.alergeny || []).slice() };
-        Object.keys(r.nahrady || {}).forEach(function (k) { d.sub[k] = r.nahrady[k]; });
-        self.dishes.push(d); dle[d.type + '|' + d.name] = d;
+        var klic = TYP[r.chod] + '|' + r.nazev + '|' + (r.alergeny || []).join(',');
+        d = dle[klic];
+        if (!d) {
+          d = { id: 'srv' + (n0++), type: TYP[r.chod], name: r.nazev, ings: [], sub: {}, a: (r.alergeny || []).slice() };
+          Object.keys(r.nahrady || {}).forEach(function (k) { d.sub[k] = r.nahrady[k]; });
+          self.dishes.push(d); dle[klic] = d;
+        }
       }
       var mon = self.mondayOf(r.den), W = self.week(mon), di = (self.fromIso(r.den).getDay() + 6) % 7;
       if (di > 4) return;
@@ -561,9 +567,18 @@ class Component extends DCLogic {
     this.srvSnap = this.srvStav();
   }
   mondayOf(iso) { var d = this.fromIso(iso); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return this.iso(d); }
+  /* Chody všech načtených týdnů (návrhy i zveřejněné) jako „den|chod“ → řádek. */
+  srvChody() {
+    var self = this, o = {};
+    Object.keys(this.weeks).forEach(function (m) {
+      var pub = !!self.weeks[m].srvPublished;
+      self.weekForServer(m).forEach(function (r) { r.zverejnit = pub; o[r.den + '|' + r.chod] = r; });
+    });
+    return o;
+  }
   srvStav() {
-    var self = this, o = { katalog: JSON.stringify({ dishes: this.dishes, ings: this.ings }), weeks: {}, diets: {} };
-    Object.keys(this.weeks).forEach(function (m) { if (self.weeks[m].srvPublished) o.weeks[m] = JSON.stringify(self.weekForServer(m)); });
+    var o = { katalog: JSON.stringify({ dishes: this.dishes, ings: this.ings }), chody: {}, diets: {} }, ch = this.srvChody();
+    Object.keys(ch).forEach(function (k) { o.chody[k] = JSON.stringify(ch[k]); });
     this.diets.forEach(function (k) { o.diets[k.id] = k.ok; });
     return o;
   }
@@ -578,13 +593,15 @@ class Component extends DCLogic {
     try {
       var kat = JSON.stringify({ dishes: this.dishes, ings: this.ings });
       if (kat !== sn.katalog && zkus('katalog', kat)) { poslano++; try { await SV.ulozKatalog(JSON.parse(kat)); sn.katalog = kat; } catch (e) { chyby.push('jídla a suroviny: ' + SV.chyba(e)); } }
-      var mons = Object.keys(this.weeks);
-      for (var i = 0; i < mons.length; i++) {
-        var m = mons[i], W = this.weeks[m]; if (!W.srvPublished) continue;
-        var wf = this.weekForServer(m), ws = JSON.stringify(wf);
-        if (ws === sn.weeks[m] || !zkus('w' + m, ws)) continue;
+      /* Jídelníček po chodech: posílá se jen to, co se změnilo (návrh i zveřejněné),
+         takže dvě otevřené desky si nepřepíší celý týden. */
+      var ch = this.srvChody(), zmeny = [], nove = {};
+      Object.keys(ch).forEach(function (k) { var js = JSON.stringify(ch[k]); nove[k] = js; if (sn.chody[k] !== js) zmeny.push(ch[k]); });
+      Object.keys(sn.chody).forEach(function (k) { if (!ch[k]) { var x = k.split('|'); zmeny.push({ den: x[0], chod: x[1], smazat: true }); } });
+      var zs = JSON.stringify(zmeny);
+      if (zmeny.length && zkus('chody', zs)) {
         poslano++;
-        try { await SV.zverejniJidelnicek(wf, m, this.addDays(m, 4)); sn.weeks[m] = ws; } catch (e) { chyby.push('jídelníček ' + m + ': ' + SV.chyba(e)); }
+        try { await SV.ulozChody(zmeny); sn.chody = nove; } catch (e) { chyby.push('jídelníček: ' + SV.chyba(e)); }
       }
       for (var j = 0; j < this.diets.length; j++) {
         var k = this.diets[j]; if (sn.diets[k.id] === k.ok || !zkus('d' + k.id, k.ok)) continue;
@@ -595,6 +612,7 @@ class Component extends DCLogic {
     if (chyby.length) this.showToast('Neuloženo na server — ' + chyby[0]);
     else if (poslano) this.forceUpdate();
     if (this._znovu) { this._znovu = false; this.srvSync(); }
+    return chyby;
   }
 
   /* -------------------------------------------------- data a ukládání */
@@ -1158,11 +1176,21 @@ class Component extends DCLogic {
     var publishWeek = function () {
       if (PUB) return;
       if (empty) { self.showToast('Nejdřív doplňte ' + empty + ' ' + (empty === 1 ? 'jídlo' : empty <= 4 ? 'jídla' : 'jídel')); return; }
+      if (self.srv) {
+        W.published = true; W.srvPublished = true;
+        clearTimeout(self._s);
+        if (self.srvPokus) delete self.srvPokus.chody;
+        self.srvSync().then(function (chyby) {
+          if (chyby && chyby.length) { W.published = false; W.srvPublished = false; self.forceUpdate(); self.showToast('Zveřejnit se nepodařilo: ' + chyby[0]); }
+          else self.showToast('Zveřejněno · rodiče vidí jídelníček v aplikaci');
+        });
+        self.forceUpdate();
+        return;
+      }
       var SV = self.srvOn();
       if (SV) {
-        var wf = self.weekForServer(mon);
-        SV.zverejniJidelnicek(wf, mon, self.addDays(mon, 4)).then(function () {
-          W.published = true; W.srvPublished = true; if (self.srvSnap) self.srvSnap.weeks[mon] = JSON.stringify(wf); self.save(); self.forceUpdate();
+        SV.zverejniJidelnicek(self.weekForServer(mon)).then(function () {
+          W.published = true; W.srvPublished = true; self.save(); self.forceUpdate();
           self.showToast('Zveřejněno · rodiče vidí jídelníček v aplikaci');
         }).catch(function (e) { self.showToast('Zveřejnit se nepodařilo: ' + SV.chyba(e)); });
         return;

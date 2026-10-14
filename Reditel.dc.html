@@ -1612,7 +1612,7 @@ class Component extends DCLogic {
     this.urazy = (D.urazy || []).map(function (u) {
       var d = new Date(u.kdy), k = kidById[u.dite_id];
       return { id: u.id, no: u.cislo, date: self.iso(d), time: d.getHours() + ':' + self.pad(d.getMinutes(), 2), place: u.kde || '', child: k ? k.first + ' ' + k.last : '', kidId: u.dite_id,
-        what: u.co, care: u.osetreni || '', by: jmenoUc[u.zapsal] || '', witness: u.svedek || '', absent: u.dny_absence || 0, record: u.zaznam_odeslan || null, parents: null, comment: u.komentar || '' };
+        what: u.co, care: u.osetreni || '', by: jmenoUc[u.zapsal] || '', witness: u.svedek || '', absent: u.dny_absence || 0, record: u.zaznam_odeslan || null, parents: null, comment: u.komentar || '', zaznam: u.zaznam || null, tablet: true };
     });
     var komuN = function (k) { if (k === 'vse') return 'Celá školka'; if (k === 'zamestnanci') return 'Zaměstnanci'; if (/^trida:/.test(k)) { var c = self.classes.filter(function (x) { return 'trida:' + x.id === k; })[0]; return c ? 'Třída ' + c.name : 'Třída'; } if (/^dite:/.test(k)) { var kk = kidById[k.slice(5)]; return kk ? 'Rodiče: ' + kk.first + ' ' + kk.last : 'Rodiče dítěte'; } return k; };
     this.messages = (D.zpravy || []).map(function (z) { var d = new Date(z.odeslano); return { id: z.id, title: z.predmet, text: z.text, to: komuN(z.komu), komu: z.komu, at: self.cz(d), by: jmenoUc[z.odeslal] || '', read: 0, total: 0, app: 0, mail: 0 }; });
@@ -1642,7 +1642,7 @@ class Component extends DCLogic {
     this.kids.forEach(function (k) { o.kids[k.id] = JSON.stringify(self.srvDite(k)); });
     this.classes.forEach(function (c) { o.classes[c.id] = JSON.stringify([c.name, c.code, c.color, +c.capacity, c.provoz || 'C']); });
     o.ut = {}; this.teachers.forEach(function (t) { o.ut[t.id] = t.classes.slice().sort(); });
-    this.urazy.forEach(function (u) { if (u.id) o.urazy[u.id] = JSON.stringify([+u.absent || 0, u.record || null, u.comment || '']); });
+    this.urazy.forEach(function (u) { if (u.id) o.urazy[u.id] = JSON.stringify([+u.absent || 0, u.record || null, u.comment || '', u.zaznam || null]); });
     return o;
   }
   jeUuid(id) { return /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(String(id || '')); }
@@ -1691,10 +1691,10 @@ class Component extends DCLogic {
       }
       for (var u = 0; u < this.urazy.length; u++) {
         var ur = this.urazy[u]; if (!ur.id) continue;
-        var us = JSON.stringify([+ur.absent || 0, ur.record || null, ur.comment || '']);
+        var us = JSON.stringify([+ur.absent || 0, ur.record || null, ur.comment || '', ur.zaznam || null]);
         if (snap.urazy[ur.id] === us || !zkus('u' + ur.id, us)) continue;
         poslano++;
-        try { await SV.ulozUraz(ur.id, { dny_absence: +ur.absent || 0, zaznam_odeslan: ur.record || null, komentar: ur.comment || null }); snap.urazy[ur.id] = us; }
+        try { await SV.ulozUraz(ur.id, { dny_absence: +ur.absent || 0, zaznam_odeslan: ur.record || null, komentar: ur.comment || null, zaznam: ur.zaznam || null }); snap.urazy[ur.id] = us; }
         catch (e) { chyby.push('úraz č. ' + ur.no + ': ' + SV.chyba(e)); }
       }
       for (var m = 0; m < this.messages.length; m++) {
@@ -1909,6 +1909,9 @@ class Component extends DCLogic {
      (tady zjednodušeně, přesná kontrola proběhne na straně MŠMT). */
   missing(k) {
     var m = [];
+    /* Ostrý provoz: hospodářka osobní údaje (RČ, adresu) nevidí — nejsou „chybějící“. */
+    var osobni = !this.srv || this.state.role === 'reditelka' || (this.ucet && this.ucet.kod === 'zastupce');
+    if (!osobni) { if (!k.zahajeni) m.push(['zahajeni', 'datum zahájení']); if (!k.zastupce) m.push(['zastupce', 'zákonný zástupce']); if (!k.telefon) m.push(['telefon', 'telefon zástupce']); return m; }
     if (!k.rc && !k.foreignCode) m.push(['rc', 'rodné číslo']);
     else if (k.rc && !this.rcInfo(k.rc).ok) m.push(['rc', 'neplatné rodné číslo (' + this.rcInfo(k.rc).why + ')']);
     if (!k.obcan) m.push(['obcan', 'státní občanství']);
@@ -2947,7 +2950,7 @@ class Component extends DCLogic {
     });
     if (unpaidPrev.length) todo.push(todoItem('#F7F0DA', '#C99A00', 'Po splatnosti: ' + nDeti(unpaidPrev.length), unpaidPrev.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '. ' + self.fmtH(self.kUhrade(k.id)); }).join(', ') + ' — pošlete upomínku', 'Platby', go('platby', { payFilter: 'dluh' }), 'platby'));
     var noPhoto = kids.filter(function (k) { return !k.souhlasFoto; });
-    if (noPhoto.length) todo.push(todoItem('#F3F4F2', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — učitelky to vidí v galerii', 'Seznam', go('deti'), 'deti'));
+    if (noPhoto.length) todo.push(todoItem('#F3F4F2', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + (self.srv ? ' — doplňte souhlas v kartě dítěte' : ' — učitelky to vidí v galerii'), 'Seznam', go('deti'), 'deti'));
     var noVax = kids.filter(function (k) { return !k.ockovani && !self.ppv(k); });
     noVax.forEach(function (k) { todo.push(todoItem('#F3F4F2', '#8A8C90', 'Chybí doklad o očkování: ' + k.first + ' ' + k.last, 'Dítě mimo povinné předškolní vzdělávání musí mít doklad o očkování', 'Karta', openKid(k))); });
     CL.forEach(function (c) {
@@ -3269,9 +3272,10 @@ class Component extends DCLogic {
         deadline: dl.getDate() + '. ' + (dl.getMonth() + 1) + '.', doneAt: u.record ? self.cz(new Date(u.record)) : '',
         record: function () { self.setState({ dlg: 'zaznam', df: Object.assign({ uid: u.no }, self.zaznamDefaults(u)) }); },
         download: function () { self.download({ name: 'zaznam-o-urazu-' + u.no + '-' + self.syStart + '.html', text: self.zaznamHtml(u), type: 'text/html' }); },
-        parentsOff: !app || !!u.parents,
+        /* Ostrý provoz: úraz z tabletu dostali rodiče do aplikace hned při zápisu učitelky. */
+        parentsOff: self.srv || !app || !!u.parents,
         parentsHint: !app ? 'Rodiče nemají mobilní aplikaci — povolíte ji v kartě dítěte' : '',
-        parentsLabel: !app ? 'Bez aplikace' : u.parents ? 'Posláno ' + self.cz(new Date(u.parents)).replace(/ \d{4}$/, '') : 'Poslat rodičům',
+        parentsLabel: !app ? 'Bez aplikace' : self.srv ? 'Mají v aplikaci' : u.parents ? 'Posláno ' + self.cz(new Date(u.parents)).replace(/ \d{4}$/, '') : 'Poslat rodičům',
         parentsStyle: 'height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 800; ' + (!app ? 'border: 0; background: #F3F4F2; color: #A0A2A6; cursor: not-allowed' : u.parents ? 'border: 0; background: #EDF4E4; color: #2F5212; cursor: default' : 'border: 0; background: #DCE6F2; color: #1F3A5C; cursor: pointer'),
         sendParents: function () { if (!app || u.parents) return; u.parents = self.iso(self.today); self.log('Úraz č. ' + u.no + ' poslán rodičům do aplikace — ' + u.child); self.forceUpdate(); self.showToast('Rodiče ' + u.child.split(' ')[0] + ' dostali zápis o úrazu do aplikace'); }
       };
@@ -3856,7 +3860,7 @@ class Component extends DCLogic {
       var list = !SRVP ? (SU ? SU.pristupy() : []) : (self._pr || []).map(function (z) {
         var pozv = !!z.pozvanka;
         return { id: z.id, jmeno: z.jmeno, email: z.email || '', role: (RN[z.role] || z.role) + (z.trida ? ' · ' + z.trida : '') + (pozv ? ' · pozvánka ' + z.pozvanka : ''),
-          desky: ((R[z.role] || {}).desky || []), aktivni: pozv ? true : !!z.aktivni, posledni: null, pozvanka: z.pozvanka, plati: z.plati_do, srvRole: z.role };
+          desky: ((R[z.role] || {}).desky || []).filter(function (d) { return d !== 'trida' || !!z.trida; }), aktivni: pozv ? true : !!z.aktivni, posledni: null, pozvanka: z.pozvanka, plati: z.plati_do, srvRole: z.role };
       });
       var dd = function (iso) { if (!iso) return ''; var d = new Date(iso); return isNaN(d) ? '' : d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + (iso.length > 10 ? d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') : ''); };
       var rows = list.map(function (u) {
@@ -4186,13 +4190,18 @@ class Component extends DCLogic {
           areas: [area('Opatření proti opakování', 'opatreni', 'Co se změní, aby se to neopakovalo')],
           hasExtra: true, extraLabel: 'Náhled záznamu ke stažení', extra: function () { var tmp = Object.assign({}, U, { zaznam: { druh: df.druh, cast: df.cast, zdroj: df.zdroj, pricina: df.pricina, opatreni: df.opatreni, dohled: df.dohled } }); self.download({ name: 'zaznam-o-urazu-' + U.no + '-' + self.syStart + '.html', text: self.zaznamHtml(tmp), type: 'text/html' }); },
           canSave: okZz,
-          summary: okZz ? 'Odejde ČŠI a pojišťovně ' + (UK ? UK.pojistovna : '') + '; kopii dostanou rodiče. Ve zkušebním provozu se odeslání jen zapíše.' : 'Vyberte druh, místo na těle, zdroj a příčinu.',
-          saveLabel: okZz ? 'Odeslat ČŠI a pojišťovně' : 'Doplňte záznam',
+          summary: !okZz ? 'Vyberte druh, místo na těle, zdroj a příčinu.' : this.srv ? 'Záznam si stáhnete a pošlete ČŠI a pojišťovně ' + (UK ? UK.pojistovna + ' ' : '') + 'sami (datovou schránkou nebo e-mailem) do 5. dne dalšího měsíce. Aplikace ho za vás neposílá.' : 'Odejde ČŠI a pojišťovně ' + (UK ? UK.pojistovna : '') + '; kopii dostanou rodiče. Ve zkušebním provozu se odeslání jen zapíše.',
+          saveLabel: okZz ? (this.srv ? 'Stáhnout a označit jako odeslaný' : 'Odeslat ČŠI a pojišťovně') : 'Doplňte záznam',
           save: function () {
             if (!okZz) return;
             U.zaznam = { druh: df.druh, cast: df.cast, zdroj: df.zdroj, pricina: df.pricina, opatreni: (df.opatreni || '').trim(), dohled: df.dohled };
             U.record = self.iso(self.today);
             if (UK && UK.app && !U.parents) U.parents = U.record;
+            if (self.srv) {
+              self.download({ name: 'zaznam-o-urazu-' + U.no + '-' + self.syStart + '.html', text: self.zaznamHtml(U), type: 'text/html' });
+              self.setState({ dlg: null, df: {} }); self.showToast('Záznam stažen a označen jako odeslaný — pošlete ho ČŠI a pojišťovně');
+              return;
+            }
             self.log('Záznam o úrazu č. ' + U.no + ' odeslán ČŠI a pojišťovně — ' + U.child);
             self.setState({ dlg: null, df: {} }); self.showToast('Záznam o úrazu odeslán ČŠI a pojišťovně (zkušební provoz)');
           }

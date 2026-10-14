@@ -21,6 +21,16 @@ module.exports = async () => {
   sql(`update uzivatele set aktivni = false where id = '${UB}'`);
   await q.reload(); await q.waitForTimeout(2500);
   kontrola('zablokovaný účet: po obnovení přihlášení s vysvětlením, bez technické chyby', (await q.evaluate(() => location.hash)) === '#prihlaseni' && /zablokovaný/.test(await hlaska(q)) && !(await q.locator('body').innerText()).includes('at '));
+  // blokace během otevřené desky: první odepřený zápis → ověření účtu → přihlášení s vysvětlením
+  sql(`update uzivatele set aktivni = true where id = '${UB}'`);
+  const w = await stranka({ width: 1194, height: 834 });
+  await prihlas(w, 'Třída', 'ucitelka.b@test.cz', 'noveheslo123');
+  sql(`update uzivatele set aktivni = false where id = '${UB}'`);
+  await w.click('[role=tab]:has-text("Docházka")'); await w.waitForTimeout(300);
+  await w.click('div[aria-label="Docházka"] button[aria-label^="Adam"]'); await w.waitForTimeout(300);
+  await w.click('[role=alertdialog] button:has-text("Zapsat příchod")');
+  await w.waitForFunction(() => location.hash === '#prihlaseni', null, { timeout: 25000 }).catch(() => {});
+  kontrola('zablokování během práce: tablet se odhlásí a děti zmizí', (await w.evaluate(() => location.hash)) === '#prihlaseni' && !(await w.locator('body').innerText()).includes('Adam'), await hlaska(w));
   kontrola('technické chyby česky', await q.evaluate(() => /oprávnění/.test(window.SkolkaServer.chyba({ message: 'new row violates row-level security policy for table "dochazka"' })) && !/unexpected/.test(window.SkolkaServer.chyba({ message: 'some unexpected internal failure' }))));
   kontrola('bez chyb JS', [p, q].every((x) => !x.chyby.length), [p, q].flatMap((x) => x.chyby).join('; '));
   await konec();

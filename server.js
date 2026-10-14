@@ -67,7 +67,23 @@
     if (m && /^[\x00-\x7F]*$/.test(m)) { try { console.warn('Server:', m); } catch (x) { /* nic */ } return 'Server školky odpověděl chybou. Zkuste to znovu, případně dejte vědět správci.'; }
     return m;
   }
-  function ok(r) { if (r.error) throw r.error; return r.data; }
+  function ok(r) { if (r.error) { hlidejOdepreni(r.error); throw r.error; } return r.data; }
+  /* Odepřený zápis/čtení během práce (zablokovaný účet nebo školka): ověřit účet
+     a případně odhlásit s vysvětlením — data dětí nesmí zůstat na obrazovce. */
+  var overuji = false;
+  function hlidejOdepreni(e) {
+    var m = (e && (e.message || e.code)) || '';
+    if (overuji || !/row-level security|permission denied|JWT expired|42501|PGRST301/i.test(String(m))) return;
+    overuji = true;
+    setTimeout(function () {
+      API.overUcet().then(function (o) {
+        overuji = false;
+        if (o.ok || !window.SkolkaUcet) return;
+        window.SkolkaUcet.zEmailu = o.chyba ? { chyba: o.chyba } : null;
+        window.SkolkaUcet.odhlas();
+      }).catch(function () { overuji = false; });
+    }, 0);
+  }
   function dnes() {
     var d = new Date();
     return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();
@@ -119,7 +135,7 @@
       id: d.id, name: d.jmeno + ' ' + (d.prijmeni || '').charAt(0) + '.', sym: zn(d, i)[0], symName: zn(d, i)[1],
       allergies: d.alergie ? String(d.alergie).split(/\s*[,;]\s*/).filter(Boolean) : [],
       usualPickup: 'rodiče', pickupToday: null, att: 'expected', arrived: null, left: null, excuse: '',
-      temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, noPhoto: false, ppv: false, server: true
+      temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, noPhoto: false, ppv: false, server: true, female: d.pohlavi === 'F'
     };
     aplikuj(k, doch, vyz, ud);
     return k;
@@ -161,7 +177,7 @@
     return { doch: doch, vyz: vyz, ud: ud };
   }
 
-  window.SkolkaServer = {
+  var API = window.SkolkaServer = {
     zapnuto: zapnuto,
     dnes: dnes,
     chyba: chyba,
@@ -267,7 +283,7 @@
 
     /* ---------------------------------------------------- tablet třídy */
     async nactiTridu(tridaId) {
-      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
+      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka, pohlavi').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
       var den = deti.length ? await denTridy(deti.map(function (d) { return d.id; })) : { doch: {}, vyz: {}, ud: {} };
       return deti.map(function (d, i) { return diteProDesku(d, i, den.doch[d.id], den.vyz[d.id], den.ud[d.id], tridaId); });
     },
@@ -375,6 +391,7 @@
       if (r[5].error) throw r[5].error;
       return { katalog: D[0] ? D[0].data : null, menu: D[1], obedy: D[2], diety: D[3], skola: D[4], zamestnancu: r[5].count || 0, den: den };
     },
+    async ulozChody(chody) { return ok(await klient().rpc('uloz_chody', { p_chody: chody })); },
     async ulozKatalog(data) {
       var u = nactiUcet();
       ok(await klient().from('jidelna_katalog').upsert({ skola_id: u.skolaId, data: data, zmeneno: new Date().toISOString(), zmenil: u.id }));
@@ -419,7 +436,7 @@
         ved ? klient().rpc('deti_osobni') : prazdno,
         klient().from('uzivatele').select('id, jmeno, role, email, aktivni').neq('role', 'rodic').order('jmeno'),
         klient().from('ucitel_trida').select('ucitel_id, trida_id'),
-        klient().from('urazy').select('id, cislo, rok, dite_id, kdy, kde, co, osetreni, svedek, komentar, zapsal, dny_absence, zaznam_odeslan').order('kdy', { ascending: false }).limit(500),
+        klient().from('urazy').select('id, cislo, rok, dite_id, kdy, kde, co, osetreni, svedek, komentar, zapsal, dny_absence, zaznam_odeslan, zaznam').order('kdy', { ascending: false }).limit(500),
         klient().rpc('dochazka_souhrn', { p_od: od, p_do: doDne }),
         klient().from('dochazka').select('dite_id, stav, prichod, odchod').eq('den', dnes()),
         klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100)

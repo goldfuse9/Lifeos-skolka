@@ -50,7 +50,8 @@ http.createServer((req, res) => {
           const uid = r.slice(2); const email = PSQL(`select coalesce(email,'') from auth.users where id='${uid}'`);
           return send(res, 200, sess(uid, email || undefined));
         }
-        if (req.url.startsWith('/auth/v1/logout') || req.url.startsWith('/auth/v1/recover')) { res.writeHead(204, cors); return res.end(); }
+        if (req.url.startsWith('/auth/v1/logout')) { res.writeHead(204, cors); return res.end(); }
+        if (req.url.startsWith('/auth/v1/recover') || req.url.startsWith('/auth/v1/resend')) return send(res, 200, {});  // jako Supabase
         if (req.url.startsWith('/auth/v1/user')) {
           const t = (req.headers.authorization || '').split('.')[1]; const p = JSON.parse(Buffer.from(t || 'e30', 'base64url'));
           if (req.method === 'PUT' && d.password) {

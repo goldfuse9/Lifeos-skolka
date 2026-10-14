@@ -6,6 +6,7 @@ module.exports = async () => {
   // dnešní příchod a úraz z tabletu (jako učitelka)
   sqlJako('aaaaaaaa-0000-4000-8000-000000000002', 'ucitelka@test.cz', `insert into dochazka (dite_id, den, stav, prichod) values ('${EMA}', current_date, 'pritomen', '07:50');
     insert into urazy (skola_id, cislo, rok, dite_id, kdy, kde, co, osetreni, zapsal) values ('00000000-0000-4000-8000-000000000001', 0, extract(year from now())::int, '${EMA}', now(), 'zahrada', 'odřené koleno z tabletu', 'dezinfekce', 'aaaaaaaa-0000-4000-8000-000000000002');`);
+  sql(`update urazy set dny_absence = 3 where co = 'odřené koleno z tabletu'`);
   const p = await stranka();
   await prihlas(p, 'Ředitelna', 'reditelka@test.cz');
   const nav = await p.locator('nav[aria-label="Ředitelna"]').innerText();
@@ -43,6 +44,14 @@ module.exports = async () => {
   await p.click('nav button:has-text("Kniha úrazů")'); await p.waitForTimeout(500);
   kontrola('kniha úrazů ukazuje úraz z tabletu', (await p.locator('body').innerText()).includes('odřené koleno z tabletu'));
   // docházka
+  kontrola('úraz z tabletu: „Poslat rodičům“ nenabízí falešné odeslání', /Mají v aplikaci|Bez aplikace/.test(await p.locator('body').innerText()));
+  await p.locator('button:has-text("Vyplnit")').first().click(); await p.waitForTimeout(400);
+  for (const x of ['pohmoždění', 'noha', 'pád na rovině nebo z výšky', 'nepozornost, nepředvídatelná situace']) await p.locator(`[role=dialog] button:has-text("${x}")`).first().click();
+  const dl = p.waitForEvent('download', { timeout: 5000 }).catch(() => null);
+  await p.locator('[role=dialog] button:has-text("Stáhnout a označit jako odeslaný")').click();
+  const soubor = await dl; await p.waitForTimeout(1500);
+  kontrola('záznam o úrazu: stáhne se a neříká „odesláno ČŠI“', !!soubor && /pošlete ho ČŠI/.test((await p.locator('[role=status]').allTextContents()).join(' ')));
+  kontrola('záznam o úrazu uložen na server (datum a podrobnosti)', sql(`select (zaznam_odeslan is not null) || '|' || (zaznam->>'druh') from urazy where co = 'odřené koleno z tabletu'`) === 'true|pohmoždění');
   await p.screenshot({ path: require('./spolecne').VYSL + '/reditelna-urazy.png' });
   await p.click('nav button:has-text("Docházka")'); await p.waitForTimeout(500);
   await p.screenshot({ path: require('./spolecne').VYSL + '/reditelna-dochazka.png' });

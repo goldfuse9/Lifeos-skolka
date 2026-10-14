@@ -1294,7 +1294,7 @@ class Component extends DCLogic {
     p.catch(function (e) {
       if (before) { Object.assign(k, before); if (k.log && k.log.length) k.log.pop(); }
       self.setState({ undo: null });
-      self.showToast('Neuloženo — ' + SV.chyba(e) + '. Dítě je zpět v původním stavu, zkuste to znovu.');
+      self.showToast('Neuloženo — ' + SV.chyba(e).replace(/\.+$/, '') + '. Dítě je zpět v původním stavu, zkuste to znovu.');
     });
   }
 
@@ -1515,7 +1515,7 @@ class Component extends DCLogic {
     var badgeFor = function (k) {
       if (k.att === 'excused') return ['omluven', '#E5E7E4', '#4A4C50'];
       if (k.att === 'expected') return ['čekáme', '#E5E7E4', '#4A4C50'];
-      if (k.att === 'left') return ['odešel ' + k.left, '#E5E7E4', '#4A4C50'];
+      if (k.att === 'left') return [(k.female ? 'odešla ' : 'odešel ') + k.left, '#E5E7E4', '#4A4C50'];
       if (feverish(k)) return [self.fmt(k.temp.value) + ' °C', '#FAEBE4', '#9A3412'];
       if (k.unwell) return ['není mu dobře', '#E2F5F9', '#0B6F83'];
       if (lunchHit(k).length) return ['jiný oběd', '#F7F0DA', '#5C4300'];
@@ -1570,8 +1570,8 @@ class Component extends DCLogic {
     if (!log.length) log = [{ t: '—', title: s.att === 'excused' ? 'Omluveno rodiči' : 'Dnes bez záznamu', sub: s.excuse, hasSub: !!s.excuse, dotStyle: 'width: 8px; height: 8px; border-radius: 4px; margin-top: 6px; flex-shrink: 0; background: #CFCDC4' }];
 
     var stateLine = s.att === 'present' ? 'Ve třídě od ' + s.arrived
-      : s.att === 'expected' ? 'Ještě nedorazil'
-      : s.att === 'left' ? 'Odešel v ' + s.left
+      : s.att === 'expected' ? (s.female ? 'Ještě nedorazila' : 'Ještě nedorazil')
+      : s.att === 'left' ? (s.female ? 'Odešla v ' : 'Odešel v ') + s.left
       : 'Dnes doma — ' + s.excuse.split(' · ')[0];
     var arrive = function () {
       self.askAtt(s, s.att === 'left' ? 'zpet' : 'prichod', s.att === 'excused' ? 'Má omluvenku — přesto přišel' : '', function () {
@@ -1612,8 +1612,8 @@ class Component extends DCLogic {
       kids: kids.filter(function (k) { return filter === 'all' || k.att === filter; }).map(function (k) {
         var status, detail, sBg, sFg, next;
         if (k.att === 'present') { status = 've třídě'; detail = 'od ' + k.arrived; sBg = '#EDF4E4'; sFg = '#2F5212'; next = 'left'; }
-        else if (k.att === 'expected') { status = 'čekáme'; detail = k.ppv ? 'PPV · bez omluvenky' : 'ještě nedorazil'; sBg = k.ppv ? '#FAEBE4' : '#E5E7E4'; sFg = k.ppv ? '#9A3412' : '#3A3C40'; next = 'present'; }
-        else if (k.att === 'left') { status = 'odešel ' + k.left; detail = k.pickupToday ? k.pickupToday.who : k.usualPickup; sBg = '#E5E7E4'; sFg = '#3A3C40'; next = 'present'; }
+        else if (k.att === 'expected') { status = 'čekáme'; detail = k.ppv ? 'PPV · bez omluvenky' : k.female ? 'ještě nedorazila' : 'ještě nedorazil'; sBg = k.ppv ? '#FAEBE4' : '#E5E7E4'; sFg = k.ppv ? '#9A3412' : '#3A3C40'; next = 'present'; }
+        else if (k.att === 'left') { status = (k.female ? 'odešla ' : 'odešel ') + k.left; detail = k.pickupToday ? k.pickupToday.who : k.usualPickup; sBg = '#E5E7E4'; sFg = '#3A3C40'; next = 'present'; }
         else { status = 'omluven'; detail = k.excuse.split(' · ')[0]; sBg = '#F3F4F2'; sFg = '#5A5C60'; next = 'present'; }
         var away = k.att !== 'present';
         var dot = clsDot(k);

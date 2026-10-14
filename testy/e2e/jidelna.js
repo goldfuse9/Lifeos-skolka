@@ -30,6 +30,30 @@ module.exports = async () => {
   await p.locator('button:has-text("Dýňový krém")').first().click(); await p.waitForTimeout(400);
   await p.locator('[role=dialog] button:has-text("Vyprázdnit")').click(); await p.waitForTimeout(1800);
   kontrola('vyprázdněný chod rodič nevidí', rodicVidi(`select count(*) from jidelnicek_tyden('${po}', '${po}') where chod='pol';`) === '0');
+  // návrh příštího týdne se uloží (R8) a rodič ho nevidí
+  await p.click('button[aria-label="Další týden"], button:has-text("›")'); await p.waitForTimeout(400);
+  const dalsiPo = sql(`select to_char(date_trunc('week', '${den}'::date) + interval '7 days', 'YYYY-MM-DD')`);
+  await p.locator('button:has-text("+ Vybrat jídlo")').first().click(); await p.waitForTimeout(300);
+  await p.locator('[role=dialog] button:has-text("Ovesná kaše s banánem")').first().click();
+  await p.locator('[role=dialog] button:has-text("Vybrat")').last().click(); await p.waitForTimeout(1800);
+  kontrola('návrh příštího týdne uložen na server (nezveřejněný)', sql(`select x.nazev || '|' || j.zverejneno from jidelnicek j join jidla x on x.id=j.jidlo_id where j.skola_id='00000000-0000-4000-8000-000000000001' and j.den='${dalsiPo}' and j.chod='prs'`) === 'Ovesná kaše s banánem|false');
+  kontrola('rodič návrh nevidí', rodicVidi(`select count(*) from jidelnicek_tyden('${dalsiPo}', '${dalsiPo}');`) === '0');
+  const p2 = await stranka();
+  await prihlas(p2, 'Jídelna', 'reditelka@test.cz');
+  await p2.click('nav button:has-text("Jídelníček")'); await p2.waitForTimeout(400);
+  await p2.click('button[aria-label="Další týden"], button:has-text("›")'); await p2.waitForTimeout(400);
+  kontrola('návrh je vidět i na jiném počítači', (await p2.locator('body').innerText()).includes('Ovesná kaše s banánem'));
+  // dvě desky zároveň (R9): každá změní jiný chod, žádná změna se neztratí
+  await p.locator('button:has-text("+ Vybrat jídlo")').first().click(); await p.waitForTimeout(300);
+  await p.locator('[role=dialog] button:has-text("Ovocný talíř")').first().click();
+  await p.locator('[role=dialog] button:has-text("Vybrat")').last().click(); await p.waitForTimeout(1500);
+  await p2.locator('button:has-text("+ Vybrat jídlo")').nth(1).click(); await p2.waitForTimeout(300);
+  await p2.locator('[role=dialog] button:has-text("Bílý jogurt s jablkem")').first().click();
+  await p2.locator('[role=dialog] button:has-text("Vybrat")').last().click(); await p2.waitForTimeout(1800);
+  kontrola('dvě desky: obě změny zůstaly', +sql(`select count(*) from jidelnicek where skola_id='00000000-0000-4000-8000-000000000001' and den between '${dalsiPo}' and ('${dalsiPo}'::date + 4)`) >= 3);
+  await p2.click('button:has-text("Zveřejnit rodičům")'); await p2.waitForTimeout(1500);
+  t = await p2.locator('body').innerText();
+  kontrola('neúplný týden nejde zveřejnit (hláška)', /Nejdřív doplňte/.test(t) || rodicVidi(`select count(*) from jidelnicek_tyden('${dalsiPo}', ('${dalsiPo}'::date + 4));`) === '0');
   // diety
   await p.click('nav button:has-text("Diety a náhrady")'); await p.waitForTimeout(500);
   t = await p.locator('body').innerText();
