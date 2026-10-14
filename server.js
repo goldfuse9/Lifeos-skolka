@@ -58,6 +58,13 @@
     if (/Password should be/i.test(m)) return 'Heslo je moc slabé — použijte aspoň 8 znaků.';
     if (/rate limit/i.test(m)) return 'Moc pokusů za sebou — zkuste to za chvíli.';
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Server není dostupný — zkontrolujte připojení k internetu.';
+    if (/row-level security|permission denied/i.test(m)) return 'Na tuto akci nemáte oprávnění (nebo je přístup zablokovaný).';
+    if (/duplicate key|already exists/i.test(m)) return 'Takový záznam už existuje.';
+    if (/JWT expired|invalid JWT|Auth session missing/i.test(m)) return 'Přihlášení vypršelo — přihlaste se znovu.';
+    if (/violates foreign key/i.test(m)) return 'Záznam souvisí s jinými údaji a nejde takhle změnit.';
+    if (/violates check constraint|invalid input syntax/i.test(m)) return 'Některý údaj má nesprávný tvar.';
+    /* Technické hlášky v angličtině se uživateli neukazují doslova. */
+    if (m && /^[\x00-\x7F]*$/.test(m)) { try { console.warn('Server:', m); } catch (x) { /* nic */ } return 'Server školky odpověděl chybou. Zkuste to znovu, případně dejte vědět správci.'; }
     return m;
   }
   function ok(r) { if (r.error) throw r.error; return r.data; }
@@ -221,8 +228,37 @@
       } finally { prihlasuji = false; }
     },
     async zapomenuteHeslo(email) {
-      var r = await klient().auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: location.origin + location.pathname + '#prihlaseni' });
+      var r = await klient().auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: location.origin + location.pathname });
       if (r.error) throw r.error;
+    },
+    /* Odkaz „nové heslo“ z e-mailu: převezme dočasné přihlášení z adresy. */
+    async prevezmiObnovu(access, refresh) {
+      var r = await klient().auth.setSession({ access_token: access, refresh_token: refresh });
+      if (r.error) throw r.error;
+      return r.data.user ? r.data.user.email || '' : '';
+    },
+    async noveHeslo(heslo) {
+      if (!heslo || heslo.length < 8) throw new Error('Heslo musí mít aspoň 8 znaků.');
+      var r = await klient().auth.updateUser({ password: heslo });
+      if (r.error) throw r.error;
+      try { await klient().auth.signOut(); } catch (e) { /* nic */ }
+      return true;
+    },
+    /* Před otevřením desky: platí účet pořád? (blokace, změna třídy, role) */
+    async overUcet() {
+      var u = nactiUcet();
+      if (!u) return { ok: false, chyba: '' };
+      try {
+        var uid = mojeId();
+        if (!uid) { var s0 = await klient().auth.getSession(); uid = s0.data && s0.data.session ? s0.data.session.user.id : null; }
+        if (!uid) return { ok: false, chyba: 'Přihlášení vypršelo — přihlaste se znovu.' };
+        var p = await profil(uid);
+        p.email = u.email; ulozUcet(p);
+        return { ok: true };
+      } catch (e) {
+        if (/Failed to fetch|NetworkError|Load failed/i.test((e && e.message) || '')) return { ok: true, offline: true };
+        return { ok: false, chyba: chyba(e) };
+      }
     },
     async odhlas() {
       ulozUcet(null);

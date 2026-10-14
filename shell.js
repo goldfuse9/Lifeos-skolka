@@ -251,6 +251,11 @@ window.SkolkaUcet = {
     otevri(kam);
     return { ok: true };
   },
+  /* Ostrý provoz: nové heslo po odkazu z e-mailu. */
+  async zmenHeslo(heslo) {
+    if (!SRV()) return { ok: false, chyba: 'Jen v ostrém provozu.' };
+    try { await SRV().noveHeslo(heslo); return { ok: true }; } catch (e) { return { ok: false, chyba: SRV().chyba(e) }; }
+  },
   async zapomenuteHeslo(email) {
     if (!SRV()) return { ok: false, chyba: 'Heslo v zkušebním provozu obnoví ředitelka (Přístupy → Nové heslo).' };
     try { await SRV().zapomenuteHeslo(email); return { ok: true }; } catch (e) { return { ok: false, chyba: SRV().chyba(e) }; }
@@ -350,6 +355,16 @@ async function otevri(chtene, zHashe, vychozi) {
   if (!soubor || prepinam) return;
   prepinam = true;
   try {
+    /* Ostrý provoz: účet se ověří při každém otevření desky (blokace, nová třída). */
+    if (SRV() && klic !== 'prihlaseni' && nactiUcet()) {
+      const o = await SRV().overUcet();
+      if (!o.ok) {
+        window.SkolkaUcet.zEmailu = o.chyba ? { chyba: o.chyba } : null;
+        await SRV().odhlas();
+        prepinam = false;
+        return otevri('prihlaseni');
+      }
+    }
     chybaEl.hidden = true;
     nacitam.hidden = false;
     const t = await zdroj(soubor);
@@ -380,7 +395,10 @@ async function otevri(chtene, zHashe, vychozi) {
   } catch (e) {
     nacitam.hidden = true;
     chybaEl.hidden = false;
-    chybaEl.textContent = 'Obrazovku se nepodařilo otevřít.\n\n' + (SRV() ? SRV().chyba(e) + '\n\n' : '') + (e && e.stack ? e.stack : e);
+    try { console.error(e); } catch (x) { /* nic */ }
+    chybaEl.textContent = SRV()
+      ? 'Obrazovku se nepodařilo otevřít.\n\n' + SRV().chyba(e) + '\n\nObnovte stránku; když to nepomůže, odhlaste se a přihlaste znovu.'
+      : 'Obrazovku se nepodařilo otevřít.\n\n' + (e && e.stack ? e.stack : e);
   } finally {
     prepinam = false;
   }
@@ -403,18 +421,31 @@ window.addEventListener('hashchange', () => {
 
 /* Návrat z odkazu v e-mailu od Supabase (potvrzení adresy / obnova hesla).
    Adresa nese tokeny nebo chybu v # — přihlašovací obrazovka řekne, co dál. */
-(function () {
+async function zEmailu() {
   const h = location.hash || '';
   if (!/access_token=|error_description=|type=(signup|recovery)/.test(h)) return;
   const q = new URLSearchParams(h.slice(1));
-  window.SkolkaUcet.zEmailu = q.get('error_description')
-    ? { chyba: 'Odkaz z e-mailu už neplatí (' + q.get('error_description').replace(/\+/g, ' ') + '). Zvolte „Mám pozvánku“ a zadejte e-mail, heslo a kód znovu — pokud e-mail ještě není potvrzený, pošleme nový odkaz.' }
-    : { info: q.get('type') === 'recovery' ? 'Odkaz pro nové heslo funguje — přihlaste se a heslo si změňte.' : 'E-mail je potvrzený. Zadejte e-mail, heslo a kód z pozvánky a dokončete přihlášení.' , pozvanka: q.get('type') !== 'recovery' };
-  try { if (SRV()) SRV().odhlas(); } catch (e) { /* nic */ }
   history.replaceState(null, '', location.pathname + '#prihlaseni');
+  if (q.get('error_description')) {
+    window.SkolkaUcet.zEmailu = { chyba: 'Odkaz z e-mailu už neplatí (' + q.get('error_description').replace(/\+/g, ' ') + '). Pro nové heslo zvolte znovu „Zapomenuté heslo“; u pozvánky zadejte e-mail, heslo a kód znovu — pokud e-mail ještě není potvrzený, pošleme nový odkaz.' };
+  } else if (q.get('type') === 'recovery' && SRV()) {
+    try {
+      const email = await SRV().prevezmiObnovu(q.get('access_token'), q.get('refresh_token'));
+      window.SkolkaUcet.zEmailu = { noveHeslo: true, email, info: 'Zvolte si nové heslo.' };
+      return;
+    } catch (e) {
+      window.SkolkaUcet.zEmailu = { chyba: 'Odkaz pro nové heslo už neplatí. Zvolte znovu „Zapomenuté heslo“.' };
+    }
+  } else {
+    window.SkolkaUcet.zEmailu = { info: 'E-mail je potvrzený. Zadejte e-mail, heslo a kód z pozvánky a dokončete přihlášení.', pozvanka: true };
+  }
+  try { if (SRV()) await SRV().odhlas(); } catch (e) { /* nic */ }
+}
+(async () => {
+  try { await zEmailu(); } catch (e) { /* nic */ }
+  const zacatek = (location.hash || '').slice(1);
+  otevri(PODLE_JMENA[zacatek] ? zacatek : 'prihlaseni', true, !PODLE_JMENA[zacatek]);
 })();
-const zacatek = (location.hash || '').slice(1);
-otevri(PODLE_JMENA[zacatek] ? zacatek : 'prihlaseni', true, !PODLE_JMENA[zacatek]);
 
 if (navigator.storage && navigator.storage.persist) {
   navigator.storage.persist().catch(() => {});

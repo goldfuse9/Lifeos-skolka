@@ -53,6 +53,11 @@ http.createServer((req, res) => {
         if (req.url.startsWith('/auth/v1/logout') || req.url.startsWith('/auth/v1/recover')) { res.writeHead(204, cors); return res.end(); }
         if (req.url.startsWith('/auth/v1/user')) {
           const t = (req.headers.authorization || '').split('.')[1]; const p = JSON.parse(Buffer.from(t || 'e30', 'base64url'));
+          if (req.method === 'PUT' && d.password) {
+            if (String(d.password).length < 8) return send(res, 422, { msg: 'Password should be at least 8 characters.', error_code: 'weak_password' });
+            if (!/^[0-9a-f-]{36}$/.test(p.sub || '')) return send(res, 401, { msg: 'invalid JWT' });
+            PSQL(`update auth.users set heslo='${hash(d.password)}' where id='${p.sub}'`);
+          }
           return send(res, 200, { id: p.sub, email: p.email || '', aud: 'authenticated' });
         }
         res.writeHead(404, cors); return res.end('{}');
