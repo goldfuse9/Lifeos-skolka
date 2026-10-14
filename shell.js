@@ -353,6 +353,11 @@ async function otevri(chtene, zHashe, vychozi) {
     chybaEl.hidden = true;
     nacitam.hidden = false;
     const t = await zdroj(soubor);
+    if (klic === 'reditel' && SRV()) {
+      const d = new Date(), rok = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
+      const iso = (x) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+      window.__skolkaServerReditelna = await SRV().nactiReditelnu(rok + '-09-01', iso(d));
+    }
     if (klic === 'trida' && SRV()) {
       const u = nactiUcet();
       const deti = await SRV().nactiTridu(u.trida);

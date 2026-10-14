@@ -14,3 +14,5 @@ $P -d "$DB" -f lokalni/supabase-stub.sql >/dev/null 2>&1
 $P -d "$DB" -f ../supabase/setup.sql 2>&1 | grep -v "NOTICE\|^$" || true
 $P -d "$DB" -f data.sql 2>&1 | grep -v "NOTICE\|^$" || true
 echo "reset $DB: $($P -d "$DB" -tAc "select count(*) from skoly")|školky $($P -d "$DB" -tAc "select count(*) from deti")|děti $($P -d "$DB" -tAc "select count(*) from uzivatele")|účty"
+# PostgREST si načte nové schéma (jinak hlásí „Could not find the function … in the schema cache“)
+$P -d "$DB" -c "notify pgrst, 'reload schema'" >/dev/null 2>&1 || true

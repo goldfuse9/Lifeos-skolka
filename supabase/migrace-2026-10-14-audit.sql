@@ -337,3 +337,19 @@ create policy zpravy_cist on zpravy for select using (skola_id = moje_skola() an
 revoke execute on all functions in schema public from public, anon;
 grant execute on all functions in schema public to authenticated;
 revoke execute on function hlidej_pokusy_kodu(), nahodny_kod() from authenticated;
+
+-- B1/B4: ředitelna v ostrém provozu — měsíční souhrn docházky (Supabase vrací
+-- nejvýš 1000 řádků, celý rok docházky by se nevešel).
+create or replace function dochazka_souhrn(p_od date, p_do date)
+returns table (dite_id uuid, mesic text, pritomen int, omluven int, neomluven int)
+language sql stable security definer set search_path = public as $$
+  select x.dite_id, to_char(x.den, 'YYYY-MM'),
+         count(*) filter (where x.stav = 'pritomen')::int,
+         count(*) filter (where x.stav = 'omluven')::int,
+         count(*) filter (where x.stav = 'neomluven')::int
+  from dochazka x join deti d on d.id = x.dite_id
+  where coalesce(moje_role() in ('reditelka', 'zastupce', 'hospodarka'), false)
+    and d.skola_id = moje_skola() and x.den between p_od and p_do
+  group by x.dite_id, to_char(x.den, 'YYYY-MM')
+$$;
+grant execute on function dochazka_souhrn(date, date) to authenticated;

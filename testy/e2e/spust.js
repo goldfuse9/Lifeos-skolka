@@ -3,7 +3,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const { souhrn, DB } = require('./spolecne');
-const VSE = ['superadmin', 'pristupy', 'pozvanka-potvrzeni', 'tablet-rodic', 'uloziste'];
+const VSE = ['superadmin', 'pristupy', 'pozvanka-potvrzeni', 'tablet-rodic', 'uloziste', 'reditelna', 'zkusebni'];
 (async () => {
   const vyber = process.argv.slice(2).length ? process.argv.slice(2) : VSE;
   for (const n of vyber) {

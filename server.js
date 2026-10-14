@@ -315,6 +315,74 @@
     async pozviZamestnance(x) { return ok(await klient().rpc('pozvi_zamestnance', { p_jmeno: x.jmeno, p_email: x.email, p_role: x.role, p_trida: x.trida || null })); },
     async nastavUcetZamestnance(uid, aktivni) { return ok(await klient().rpc('nastav_ucet_zamestnance', { p_uzivatel: uid, p_aktivni: !!aktivni })); },
 
+    /* --------------------------------------------- ředitelna: data školky
+       Načte vše, co ředitelna v ostrém provozu ukazuje (kartotéka, třídy,
+       zaměstnanci, kniha úrazů, souhrn docházky, dnešek, zprávy). Rodná čísla
+       a další osobní údaje jen pro vedení (deti_osobni). */
+    async nactiReditelnu(od, doDne) {
+      var u = nactiUcet(), ved = u && (u.role === 'reditelka' || u.role === 'zastupce');
+      var prazdno = Promise.resolve({ data: [], error: null });
+      var r = await Promise.all([
+        klient().from('skoly').select('id, nazev, izo, red_izo, cast_skoly, kontakt').eq('id', u.skolaId).maybeSingle(),
+        klient().from('tridy').select('id, nazev, kod, barva, kapacita, provoz').order('nazev'),
+        klient().from('deti').select('id, trida_id, jmeno, prijmeni, datum_narozeni, pohlavi, obcanstvi, znalost_cj, spadovy, zahajeni, po_stupen, ivp, asistent, plpp_do, alergie, variabilni_symbol, ukonceno, znacka, zastupci(id, jmeno, telefon, email, poradi, uzivatel_id), poverene_osoby(id, jmeno, zmocneni_od, zruseno), souhlasy(druh, udelen, zmeneno)').order('prijmeni'),
+        ved ? klient().rpc('deti_osobni') : prazdno,
+        klient().from('uzivatele').select('id, jmeno, role, email, aktivni').neq('role', 'rodic').order('jmeno'),
+        klient().from('ucitel_trida').select('ucitel_id, trida_id'),
+        klient().from('urazy').select('id, cislo, rok, dite_id, kdy, kde, co, osetreni, svedek, komentar, zapsal, dny_absence, zaznam_odeslan').order('kdy', { ascending: false }).limit(500),
+        klient().rpc('dochazka_souhrn', { p_od: od, p_do: doDne }),
+        klient().from('dochazka').select('dite_id, stav, prichod, odchod').eq('den', dnes()),
+        klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100)
+      ]);
+      var D = r.map(ok);
+      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9] };
+    },
+    /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
+    async ulozDite(id, radek, zastupci, poverene, souhlasy) {
+      if (!id) {
+        var nove = ok(await klient().from('deti').insert(Object.assign({ skola_id: nactiUcet().skolaId }, radek)).select('id').single());
+        id = nove.id;
+      } else if (radek && Object.keys(radek).length) {
+        ok(await klient().from('deti').update(radek).eq('id', id));
+      }
+      var stavajici = ok(await klient().from('zastupci').select('id, uzivatel_id, poradi').eq('dite_id', id));
+      for (var i = 0; i < (zastupci || []).length; i++) {
+        var z = zastupci[i], byl = stavajici.filter(function (x) { return x.poradi === z.poradi; })[0];
+        if (z.jmeno) {
+          var data = { jmeno: z.jmeno, telefon: z.telefon || null, email: z.email || null };
+          if (byl) ok(await klient().from('zastupci').update(data).eq('id', byl.id));
+          else ok(await klient().from('zastupci').insert(Object.assign({ dite_id: id, poradi: z.poradi }, data)));
+        } else if (byl && !byl.uzivatel_id) {
+          ok(await klient().from('zastupci').delete().eq('id', byl.id));
+        }
+      }
+      if (poverene) {
+        var pov = ok(await klient().from('poverene_osoby').select('id, jmeno').eq('dite_id', id).is('zruseno', null));
+        var jmena = poverene.map(function (p) { return p.jmeno; });
+        for (var j = 0; j < pov.length; j++) if (jmena.indexOf(pov[j].jmeno) === -1) ok(await klient().from('poverene_osoby').update({ zruseno: dnes() }).eq('id', pov[j].id));
+        var mame = pov.map(function (p) { return p.jmeno; });
+        var pridat = poverene.filter(function (p) { return mame.indexOf(p.jmeno) === -1; }).map(function (p) { return { dite_id: id, jmeno: p.jmeno, zmocneni_od: p.od || dnes() }; });
+        if (pridat.length) ok(await klient().from('poverene_osoby').insert(pridat));
+      }
+      if (souhlasy && souhlasy.length) {
+        ok(await klient().from('souhlasy').upsert(souhlasy.map(function (x) { return { dite_id: id, druh: x.druh, udelen: !!x.udelen, zmeneno: new Date().toISOString(), zmenil: nactiUcet().id }; })));
+      }
+      return id;
+    },
+    async ulozTridu(id, radek) {
+      if (id) { ok(await klient().from('tridy').update(radek).eq('id', id)); return id; }
+      return ok(await klient().from('tridy').insert(Object.assign({ skola_id: nactiUcet().skolaId }, radek)).select('id').single()).id;
+    },
+    async ulozTridyUcitele(ucitel, bylo, ted) {
+      var pryc = bylo.filter(function (x) { return ted.indexOf(x) === -1; }), nove = ted.filter(function (x) { return bylo.indexOf(x) === -1; });
+      if (pryc.length) ok(await klient().from('ucitel_trida').delete().eq('ucitel_id', ucitel).in('trida_id', pryc));
+      if (nove.length) ok(await klient().from('ucitel_trida').insert(nove.map(function (t) { return { ucitel_id: ucitel, trida_id: t }; })));
+    },
+    async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
+    async posliZpravu(komu, predmet, text) {
+      return ok(await klient().from('zpravy').insert({ skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet, text: text, odeslal: nactiUcet().id }).select('id, odeslano').single());
+    },
+
     /* --------------------------------------------- ředitelna: rodiče v LifeOS */
     async detiSkoly() {
       var r = ok(await klient().from('deti').select('id, jmeno, prijmeni, trida_id, tridy(nazev), zastupci(id, jmeno, uzivatel_id, poradi)').is('ukonceno', null).order('prijmeni'));

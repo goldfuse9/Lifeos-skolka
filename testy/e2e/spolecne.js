@@ -18,11 +18,12 @@ const sql = (q) => execSync(`psql -h ${PGH} -p ${PGP} -U postgres -d ${DB} -tAq`
 const sqlJako = (uid, email, q) => sql(`set role authenticated;\nselect set_config('request.jwt.claim.sub','${uid}',false), set_config('request.jwt.claims','{"sub":"${uid}","email":"${email || ''}"}',false) \\g /dev/null\n${q}`);
 
 let prohlizec = null;
-async function stranka(rozmer = { width: 1440, height: 900 }) {
+async function stranka(rozmer = { width: 1440, height: 900 }, zkusebni = false) {
   prohlizec = prohlizec || await chromium.launch({ executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium' });
   const ctx = await prohlizec.newContext({ viewport: rozmer, serviceWorkers: 'block' });
   // config.js → lokální proxy (NIKDY skutečný Supabase projekt)
-  await ctx.route('**/config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: `window.SKOLKA_SERVER = { url: 'http://localhost:${PROXY}', key: 'lokalni-test' };` }));
+  // zkušební provoz = bez serveru (ukázková data v prohlížeči)
+  await ctx.route('**/config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: zkusebni ? '/* zkušební provoz */' : `window.SKOLKA_SERVER = { url: 'http://localhost:${PROXY}', key: 'lokalni-test' };` }));
   await ctx.route('**/realtime/**', (r) => r.abort());
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   const p = await ctx.newPage();
