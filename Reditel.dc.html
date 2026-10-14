@@ -275,15 +275,15 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 </sc-for>
               </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 6px">
+            <sc-if value="{{t.lokalni}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Úvazek <span style="text-transform: none; letter-spacing: 0; font-weight: 600">{{t.ppc}}</span></span>
               <div style="display: flex; flex-wrap: wrap; gap: 6px">
                 <sc-for list="{{t.uvazky}}" as="u" hint-placeholder-count="4">
                   <button type="button" onClick="{{u.pick}}" aria-pressed="{{u.on}}" style="{{u.style}}">{{u.label}}</button>
                 </sc-for>
               </div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #EEF0ED">
+            </div></sc-if>
+            <sc-if value="{{t.lokalni}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #EEF0ED">
               <button type="button" onClick="{{t.toggleAbsent}}" aria-pressed="{{t.absent}}" style="{{t.absentStyle}}">{{t.absentLabel}}</button>
               <sc-if value="{{t.absent}}" hint-placeholder-val="{{false}}">
                 <span style="font-size: 12px; font-weight: 700; color: #5A5C60">Zastoupí:</span>
@@ -293,7 +293,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                   </sc-for>
                 </div>
               </sc-if>
-            </div>
+            </div></sc-if>
           </div>
         </sc-for>
         </div>
@@ -2902,7 +2902,7 @@ class Component extends DCLogic {
     var SRVON = !!(SU && SU.server && SU.server());
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
-    var SRV_SKRYT = ['zapis', 'platby', 'web', 'ucitele', 'porady', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
+    var SRV_SKRYT = ['zapis', 'platby', 'web', 'porady', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
     var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -2972,7 +2972,7 @@ class Component extends DCLogic {
     var PAGES = {
       prehled: [todayLabel, 'Přehled', '', null],
       deti: ['Kartotéka podle školní matriky', 'Kartotéka dětí', '+ Přidat dítě', function () { self.setState({ dlg: 'dite', df: { cls: self.classes[0] ? self.classes[0].id : '', start: self.iso(today) } }); }],
-      ucitele: ['Pedagogové a další pracovníci', 'Učitelé', '+ Přidat učitele', function () { self.setState({ dlg: 'ucitel', df: { role: 'Učitelka', classes: [] } }); }],
+      ucitele: ['Pedagogové a další pracovníci', 'Učitelé', this.srv ? '+ Pozvat zaměstnance' : '+ Přidat učitele', function () { if (self.srv) { self.setState({ page: 'pristupy' }); return; } self.setState({ dlg: 'ucitel', df: { role: 'Učitelka', classes: [] } }); }],
       tridy: ['Školní rok ' + this.syStart + '/' + (this.syStart + 1), 'Třídy', '+ Nová třída', function () { self.setState({ dlg: 'trida', df: { color: '#3BA55C', capacity: '24' } }); }],
       matrika: ['Předávání individuálních údajů · vyhl. 364/2005 Sb.', 'Matrika MŠMT', '', null],
       urazy: ['Evidence úrazů dětí · vyhl. 64/2005 Sb.', 'Kniha úrazů', '', null],
@@ -3248,8 +3248,8 @@ class Component extends DCLogic {
     var AV = ['#F6C6D8', '#C9E4F5', '#E4ECCB', '#FBE2B5', '#D9D2F4', '#C8EBD9'];
     var teachers = this.teachers.map(function (t, i) {
       return {
-        name: t.name, role: t.role, contact: t.email + (t.phone ? ' · ' + t.phone : ''), initials: initials(t.name), invited: !!t.invited,
-        av: self.avatar(t, 48), canEdit: canEdit, edit: function () { self.setState({ dlg: 'profil', df: { pid: t.id, name: t.name, email: t.email, phone: t.phone || '', role: t.role, photo: t.photo || '', look: self.look(t) } }); },
+        name: t.name, role: t.role, contact: t.email + (!self.srv && t.phone ? ' · ' + t.phone : ''), initials: initials(t.name), invited: !!t.invited, lokalni: !self.srv,
+        av: self.avatar(t, 48), canEdit: canEdit && !self.srv, edit: function () { self.setState({ dlg: 'profil', df: { pid: t.id, name: t.name, email: t.email, phone: t.phone || '', role: t.role, photo: t.photo || '', look: self.look(t) } }); },
         ppc: t.role === 'Učitelka' || t.role === 'Zástupkyně' ? '· přímá práce ' + Math.round(31 * t.uvazek) + ' h týdně' : t.role === 'Ředitelka' ? '· vedení školy' : '',
         uvazky: [[1, '1,0'], [0.75, '0,75'], [0.5, '0,5'], [0.25, '0,25']].map(function (u) { var on = t.uvazek === u[0]; return { label: u[1], on: on, style: chip(on, true), pick: function () { if (on) return; t.uvazek = u[0]; self.log('Úvazek ' + t.name + ': ' + u[1]); self.forceUpdate(); } }; }),
         absent: !!t.absent,
