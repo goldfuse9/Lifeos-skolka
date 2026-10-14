@@ -393,6 +393,84 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     </div>
   </sc-if>
 
+  <!-- ============================================================ ZPRÁVY
+       Komunikace s rodiči a s vedením. Vlevo konverzace (nové nahoře),
+       vpravo otevřená konverzace s odpovědí, nebo nová zpráva. -->
+  <sc-if value="{{tab.isZpravy}}" hint-placeholder-val="{{false}}">
+    <div style="flex-grow: 1; min-height: 0; display: flex; gap: 20px">
+      <aside aria-label="Konverzace" style="width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0">
+        <button type="button" onClick="{{zp.novaZprava}}" style="min-height: 52px; border-radius: 26px; border: 0; background: #17181A; color: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; flex-shrink: 0">Nová zpráva</button>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{zp.seznam}}" as="v" hint-placeholder-count="4">
+            <button type="button" onClick="{{v.pick}}" aria-pressed="{{v.on}}" style="{{v.style}}">
+              <span style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 15px; font-weight: 700; flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{v.titulek}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap">{{v.kdy}}</span></span>
+              <span style="font-size: 13px; font-weight: 600; color: #3A3C40">{{v.komu}}</span>
+              <span style="font-size: 13px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{v.posledni}}</span>
+              <sc-if value="{{v.maNove}}" hint-placeholder-val="{{false}}"><span style="align-self: flex-start; padding: 2px 10px; border-radius: 10px; background: #F7DCC6; color: #8A4513; font-size: 12px; font-weight: 700">{{v.noveText}}</span></sc-if>
+            </button>
+          </sc-for>
+          <sc-if value="{{zp.prazdno}}" hint-placeholder-val="{{false}}">
+            <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 14px; color: #5A5C60">{{zp.prazdnoText}}</div>
+          </sc-if>
+        </div>
+      </aside>
+
+      <section aria-label="{{zp.panelNazev}}" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 26px; padding: 20px 22px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+        <sc-if value="{{zp.jeNova}}" hint-placeholder-val="{{false}}">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700">Nová zpráva</h2>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="font-size: 15px; font-weight: 700">Komu</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{zp.adresati}}" as="c" hint-placeholder-count="3">
+                <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{zp.vyberDite}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{zp.deti}}" as="c" hint-placeholder-count="6">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <textarea id="zprava-nova" rows="6" placeholder="Text zprávy" value="{{zp.text}}" onInput="{{zp.onText}}" onChange="{{zp.onText}}" style="border-radius: 18px; border: 1px solid #E5E7E4; padding: 14px 16px; font-size: 16px; line-height: 22px; resize: none; color: #17181A"></textarea>
+          <div style="display: flex; align-items: center; gap: 14px">
+            <span style="font-size: 14px; color: #5A5C60; flex-grow: 1">{{zp.novaPata}}</span>
+            <button type="button" onClick="{{zp.odeslat}}" aria-disabled="{{zp.nejde}}" style="{{zp.odeslatStyle}}">Odeslat</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{zp.jeVlakno}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 700">{{zp.vl.titulek}}</h2>
+            <span style="font-size: 14px; color: #5A5C60">{{zp.vl.komu}}</span>
+          </div>
+          <div id="zpravy-vlakno" style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{zp.vl.zpravy}}" as="m" hint-placeholder-count="3">
+              <div style="{{m.obal}}">
+                <span style="font-size: 12px; font-weight: 700; color: #5A5C60">{{m.kdo}} · {{m.kdy}}</span>
+                <div style="{{m.bublina}}">{{m.text}}</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{zp.vl.maPotvrzeni}}" hint-placeholder-val="{{false}}">
+              <div style="padding: 10px 14px; border-radius: 14px; background: #EAF4EC; font-size: 13px; line-height: 19px; color: #24502E"><b style="font-weight: 700">{{zp.vl.potvrzeniNadpis}}</b> {{zp.vl.potvrzeni}}</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{zp.vl.lzeOdpovedet}}" hint-placeholder-val="{{true}}">
+            <div style="display: flex; gap: 10px; align-items: flex-end">
+              <textarea id="zprava-odpoved" rows="2" placeholder="{{zp.vl.odpovedPlaceholder}}" value="{{zp.odpoved}}" onInput="{{zp.onOdpoved}}" onChange="{{zp.onOdpoved}}" style="flex-grow: 1; border-radius: 18px; border: 1px solid #E5E7E4; padding: 12px 16px; font-size: 16px; line-height: 22px; resize: none; color: #17181A"></textarea>
+              <button type="button" onClick="{{zp.odpovedet}}" aria-disabled="{{zp.nejdeOdpoved}}" style="{{zp.odpovedStyle}}">Odeslat</button>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{zp.nic}}" hint-placeholder-val="{{true}}">
+          <div style="margin: auto; text-align: center; color: #5A5C60; font-size: 15px">Vyberte konverzaci vlevo nebo napište novou zprávu.</div>
+        </sc-if>
+      </section>
+    </div>
+  </sc-if>
+
   <!-- ============================================================ FOTKY
        Alba zakládají učitelky. Do alba se nahrává rovnou z tabletu
        (fotoaparát nebo galerie). Rodiče album uvidí, až ho učitelka
@@ -1258,6 +1336,8 @@ class Component extends DCLogic {
       this.srvOmluvy = SRVT.omluvy || [];
       this.srvJidla = SRVT.jidla || null;
       this.srvDen = SRVT.den;
+      this.srvZpravy = { zpravy: [], precteni: [] };
+      this.zpPotv = {};
     }
   }
 
@@ -1272,10 +1352,27 @@ class Component extends DCLogic {
         .then(function (r) { self.srvOmluvy = r[1]; self.setState({}); })
         .catch(function () { /* další pokus při příští změně */ });
     });
+    this.nactiZpravy();
+    this._stopZpr = window.SkolkaServer.sledujZpravy(function () { self.nactiZpravy(); });
+  }
+
+  /* Zprávy ze serveru; otevřená konverzace se rovnou označí jako přečtená. */
+  nactiZpravy() {
+    var self = this, SV = window.SkolkaServer;
+    return SV.zpravy().then(function (d) {
+      self.srvZpravy = d;
+      var v = self.zpVlakna().filter(function (x) { return x.klic === self.state.zpVyber; })[0];
+      if (v && v.nove.length && self.state.tab === 'zpravy') return SV.prectiZpravy(v.nove).then(function () { return self.nactiZpravy(); });
+      self.setState({});
+    }).catch(function () { /* další pokus při příští změně */ });
+  }
+  zpVlakna() {
+    return this.srv ? window.SkolkaServer.vlakna(this.srvZpravy, function (m) { return m.od_role !== 'ucitelka'; }) : [];
   }
 
   componentWillUnmount() {
     if (this._stopSrv) this._stopSrv();
+    if (this._stopZpr) this._stopZpr();
     clearInterval(this._hlidejDen);
   }
 
@@ -1403,6 +1500,120 @@ class Component extends DCLogic {
 
   addLog(k, entry) {
     k.log.push(entry);
+  }
+
+  /* ---------------------------------------------------------- zprávy */
+  zpravyView() {
+    var self = this, st = this.state, SV = window.SkolkaServer, me = this.ucet ? this.ucet.id : '';
+    var vlakna = this.zpVlakna();
+    var trida = this.classes[0] || { id: '', name: '' };
+    var komuText = function (k) {
+      if (k === 'vse') return 'Celá školka';
+      if (k === 'zamestnanci') return 'Zaměstnanci';
+      if (/^trida:/.test(k)) { var c = self.classes.filter(function (x) { return 'trida:' + x.id === k; })[0]; return 'Rodiče třídy ' + (c ? c.name : ''); }
+      if (/^dite:/.test(k)) { var d = self.byId[k.slice(5)]; return 'Rodiče · ' + (d ? d.name : 'dítě z jiné třídy'); }
+      if (k === 'vedeni:' + me) return 'Vedení školky';
+      return 'Vedení';
+    };
+    var kdy = function (iso) {
+      var d = new Date(iso), dnes = new Date();
+      var hm = d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+      return d.toDateString() === dnes.toDateString() ? hm : d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + hm;
+    };
+    var kdo = function (m) { return m.odeslal === me ? 'Vy' : (m.od_jmeno || 'Školka') + (m.od_role === 'rodic' ? ' (rodič)' : ''); };
+    /* Kam jde odpověď: do stejného kanálu; na hromadnou zprávu vedení odpovídá učitelka vedení. */
+    var odpovedKomu = function (v) {
+      if (!v.hromadna) return v.kanal;
+      if (/^trida:/.test(v.kanal) && v.koren.od_role === 'ucitelka') return v.kanal;
+      return 'vedeni:' + me;
+    };
+    var ted = vlakna.filter(function (v) { return v.klic === st.zpVyber; })[0] || null;
+    var noveCelkem = vlakna.reduce(function (a, v) { return a + v.nove.length; }, 0);
+    var otevri = function (v) {
+      self.setState({ zpVyber: v.klic, zpNova: false, zpOdpoved: '' });
+      if (v.nove.length) SV.prectiZpravy(v.nove).then(function () { return self.nactiZpravy(); }).catch(function () { /* nic */ });
+      if (v.mojeKoren && !self.zpPotv[v.koren.id]) {
+        self.zpPotv[v.koren.id] = { nacita: true, list: [] };
+        SV.potvrzeniZprav([v.koren.id]).then(function (r) { self.zpPotv[v.koren.id] = { list: r || [] }; self.setState({}); }).catch(function () { delete self.zpPotv[v.koren.id]; });
+      }
+      setTimeout(function () { var el = document.getElementById('zpravy-vlakno'); if (el) el.scrollTop = el.scrollHeight; }, 30);
+    };
+    var chip = function (on) { return 'min-height: 44px; padding: 0 16px; border-radius: 22px; border: ' + (on ? '0' : '1px solid #E5E7E4') + '; background: ' + (on ? '#17181A' : '#FFFFFF') + '; color: ' + (on ? '#FFFFFF' : '#17181A') + '; font-size: 15px; font-weight: 600; cursor: pointer'; };
+    var tlacitko = function (lze) { return 'min-height: 52px; padding: 0 26px; border-radius: 26px; border: 0; font-size: 16px; font-weight: 700; cursor: ' + (lze ? 'pointer' : 'default') + '; background: ' + (lze ? '#17181A' : '#E5E7E4') + '; color: ' + (lze ? '#FFFFFF' : '#8A8C90'); };
+    var odesli = function (komu, text, odpovedNa, hotovo) {
+      if (self._zpOdesila) return;
+      self._zpOdesila = true;
+      SV.posliZpravu(komu, '', text, odpovedNa).then(function (m) {
+        self._zpOdesila = false;
+        self.srvZpravy.zpravy = [m].concat(self.srvZpravy.zpravy);
+        hotovo(m);
+        self.nactiZpravy();
+      }).catch(function (e) { self._zpOdesila = false; self.showToast('Zpráva neodešla: ' + SV.chyba(e)); });
+    };
+
+    var seznam = vlakna.map(function (v) {
+      var on = !st.zpNova && st.zpVyber === v.klic, last = v.zpravy[v.zpravy.length - 1];
+      return { titulek: v.koren.predmet, komu: komuText(v.kanal), kdy: kdy(v.posledni), posledni: (last.odeslal === me ? 'Vy: ' : '') + last.text, on: on,
+        maNove: !!v.nove.length, noveText: v.nove.length === 1 ? 'Nová' : 'Nové ' + v.nove.length, pick: function () { otevri(v); },
+        style: 'border: 0; text-align: left; cursor: pointer; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; color: #17181A; background: ' + (on ? '#DCE6F2' : '#FFFFFF') + (v.nove.length ? '; box-shadow: inset 4px 0 0 #E8A06A' : '') };
+    });
+
+    var zp = { seznam: seznam, prazdno: !vlakna.length, prazdnoText: 'Zatím žádné zprávy. Rodiče vám můžou psát z LifeOS, vy jim tady.', noveCelkem: noveCelkem,
+      novaZprava: function () { self.setState({ zpNova: true, zpVyber: null, zpKomu: st.zpKomu || 'trida', zpText: st.zpText || '' }); },
+      jeNova: !!st.zpNova, jeVlakno: !st.zpNova && !!ted, nic: !st.zpNova && !ted, panelNazev: st.zpNova ? 'Nová zpráva' : 'Konverzace' };
+
+    if (st.zpNova) {
+      var komuVolba = st.zpKomu || 'trida';
+      var A = [['trida', 'Rodiče třídy ' + trida.name], ['dite', 'Rodiče jednoho dítěte'], ['vedeni', 'Vedení školky']];
+      zp.adresati = A.map(function (a) { return { label: a[1], on: komuVolba === a[0], style: chip(komuVolba === a[0]), pick: function () { self.setState({ zpKomu: a[0] }); } }; });
+      zp.vyberDite = komuVolba === 'dite';
+      zp.deti = this.kids.map(function (k) { var on = st.zpDite === k.id; return { label: k.name, on: on, style: chip(on), pick: function () { self.setState({ zpDite: k.id }); } }; });
+      var cil = komuVolba === 'trida' ? 'trida:' + trida.id : komuVolba === 'vedeni' ? 'vedeni:' + me : st.zpDite && self.byId[st.zpDite] ? 'dite:' + st.zpDite : '';
+      var text = st.zpText || '';
+      zp.text = text;
+      zp.onText = function (e) { self.setState({ zpText: e.target.value }); };
+      zp.nejde = !cil || !text.trim();
+      zp.odeslatStyle = tlacitko(!zp.nejde);
+      zp.novaPata = !cil ? 'Vyberte dítě' : komuVolba === 'trida' ? 'Uvidí všichni rodiče třídy v LifeOS' : komuVolba === 'vedeni' ? 'Uvidí jen vedení školky' : 'Uvidí jen rodiče ' + self.byId[st.zpDite].name + ' a vedení';
+      zp.odeslat = function () {
+        if (zp.nejde) return;
+        odesli(cil, text.trim(), null, function (m) { self.setState({ zpNova: false, zpText: '', zpVyber: m.id + '|' + m.komu }); self.showToast('Zpráva odeslána'); });
+      };
+    }
+
+    if (ted) {
+      var potv = this.zpPotv[ted.koren.id];
+      var potvrdili = potv && potv.list ? potv.list.filter(function (p) { return p.potvrzeno; }) : [];
+      var precetli = potv && potv.list ? potv.list.filter(function (p) { return !p.potvrzeno; }) : [];
+      var jmena = function (l) { return l.map(function (p) { return p.jmeno + (p.dite ? ' (' + p.dite.split(' ')[0] + ')' : ''); }).join(', '); };
+      var komuOdp = odpovedKomu(ted);
+      var odp = st.zpOdpoved || '';
+      zp.vl = { titulek: ted.koren.predmet, komu: komuText(ted.kanal) + (ted.citace ? ' · odpověď na zprávu pro: ' + komuText(ted.koren.komu) : ''),
+        maPotvrzeni: ted.mojeKoren && !!(potvrdili.length || precetli.length),
+        potvrzeniNadpis: potvrdili.length ? 'Potvrdili:' : 'Přečetli:',
+        potvrzeni: potvrdili.length ? jmena(potvrdili) + (precetli.length ? ' · přečetli: ' + jmena(precetli) : '') : jmena(precetli),
+        lzeOdpovedet: true,
+        odpovedPlaceholder: komuOdp === 'vedeni:' + me && ted.kanal !== komuOdp ? 'Odpovědět vedení' : /^dite:/.test(komuOdp) ? 'Odpovědět rodičům' : /^trida:/.test(komuOdp) ? 'Odpovědět rodičům třídy' : 'Odpovědět' };
+      var zobraz = ted.citace ? [ted.koren].concat(ted.zpravy) : ted.zpravy;
+      zp.vl.zpravy = zobraz.map(function (m) {
+        var moje = m.odeslal === me;
+        return { kdo: kdo(m), kdy: kdy(m.odeslano), text: m.text,
+          obal: 'display: flex; flex-direction: column; gap: 4px; max-width: 78%; align-self: ' + (moje ? 'flex-end; align-items: flex-end' : 'flex-start'),
+          bublina: 'padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 21px; white-space: pre-wrap; background: ' + (moje ? '#DCE6F2' : '#F3F4F2') + '; color: #17181A' };
+      });
+      zp.odpoved = odp;
+      zp.onOdpoved = function (e) { self.setState({ zpOdpoved: e.target.value }); };
+      zp.nejdeOdpoved = !odp.trim();
+      zp.odpovedStyle = tlacitko(!zp.nejdeOdpoved);
+      zp.odpovedet = function () {
+        if (zp.nejdeOdpoved) return;
+        odesli(komuOdp, odp.trim(), ted.koren.id, function (m) {
+          self.setState({ zpOdpoved: '', zpVyber: ted.koren.id + '|' + m.komu });
+          setTimeout(function () { var el = document.getElementById('zpravy-vlakno'); if (el) el.scrollTop = el.scrollHeight; }, 30);
+        });
+      };
+    }
+    return zp;
   }
 
   renderVals() {
@@ -1982,9 +2193,10 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- záložky */
     /* Ostrý provoz: Fotky, Akce a Schůzky zatím na server napojené nejsou → nezobrazují se. */
-    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return !self.srv || ['fotky', 'akce', 'schuzky'].indexOf(x[0]) === -1; });
+    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['zpravy', 'Zprávy'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return self.srv ? ['fotky', 'akce', 'schuzky'].indexOf(x[0]) === -1 : x[0] !== 'zpravy'; });
+    var zp = this.zpravyView();
     if (self.srv && ['fotky', 'akce', 'schuzky'].indexOf(st.tab) !== -1) st.tab = 'trida';
-    var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '' };
+    var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '', zpravy: zp.noveCelkem ? String(zp.noveCelkem) : '' };
     var tabs = TABS.map(function (t) {
       var on = st.tab === t[0];
       return { label: t[1], on: on, hasBadge: !!tabBadge[t[0]], badge: tabBadge[t[0]] || '',
@@ -1992,7 +2204,7 @@ class Component extends DCLogic {
         pick: function () { self.setState({ tab: t[0], undo: null, move: t[0] === 'trida' ? self.state.move : false, albumId: t[0] === 'fotky' ? self.state.albumId : null }); },
         style: 'height: 44px; padding: 0 13px; border-radius: 22px; border: 0; font-size: 15px; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; white-space: nowrap; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '700' : '500') };
     });
-    var tab = { isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
+    var tab = { isZpravy: st.tab === 'zpravy', isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
 
     /* -------------------------------------------------- přesun dětí */
     var movePicked = st.movePick.map(function (id) { return self.byId[id]; }).filter(Boolean);
@@ -2385,7 +2597,7 @@ class Component extends DCLogic {
     return {
       dateLabel: dateLabel, counts: counts, health: health, lunch: lunch, pickups: pickups,
       kids: tiles, sel: sel, doch: doch, sheet: sheet, tep: tep, sym: sym, uraz: uraz, note: note, urgencies: urgencies,
-      view: view, tabs: tabs, tab: tab, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(44), meName: this.me, meRole: this.ucet ? this.ucet.role.charAt(0).toUpperCase() + this.ucet.role.slice(1) : 'Učitelka · ' + ((CL.filter(function (c) { return self.me.indexOf(c.teacher.replace('.', '')) === 0; })[0] || clsById[home]).name),
+      view: view, tabs: tabs, tab: tab, zp: zp, move: move, gridHint: gridHint, kn: kn, meAv: this.meAvatar(44), meName: this.me, meRole: this.ucet ? this.ucet.role.charAt(0).toUpperCase() + this.ucet.role.slice(1) : 'Učitelka · ' + ((CL.filter(function (c) { return self.me.indexOf(c.teacher.replace('.', '')) === 0; })[0] || clsById[home]).name),
       attAsk: (function () {
         var A = st.attAsk, K = A ? self.byId[A.id] : null;
         var T = { prichod: ['Zapsat příchod?', 'Zapsat příchod'], odchod: ['Zapsat odchod?', 'Zapsat odchod'], zpet: ['Zpět ve třídě?', 'Ano, je zpět'] };

@@ -486,8 +486,65 @@
       if (nove.length) ok(await klient().from('ucitel_trida').insert(nove.map(function (t) { return { ucitel_id: ucitel, trida_id: t }; })));
     },
     async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
-    async posliZpravu(komu, predmet, text) {
-      return ok(await klient().from('zpravy').insert({ skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet, text: text, odeslal: nactiUcet().id }).select('id, odeslano').single());
+    async posliZpravu(komu, predmet, text, odpovedNa) {
+      var radek = { skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet || '', text: text, odeslal: nactiUcet().id };
+      if (odpovedNa) radek.odpoved_na = odpovedNa;
+      return ok(await klient().from('zpravy').insert(radek).select('id, komu, predmet, text, odeslal, odeslano, odpoved_na, od_jmeno, od_role').single());
+    },
+
+    /* --------------------------------------------- zprávy (tablet, ředitelna)
+       Vše, co účet smí číst (RLS), + co už přečetl. Kanály viz migrace 2026-10-14b. */
+    async zpravy() {
+      var r = await Promise.all([
+        klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano, odpoved_na, od_jmeno, od_role').order('odeslano', { ascending: false }).limit(400),
+        klient().from('zpravy_precteni').select('zprava_id, precteno, potvrzeno').eq('uzivatel_id', nactiUcet().id)
+      ]);
+      return { zpravy: ok(r[0]), precteni: ok(r[1]) };
+    },
+    async prectiZpravy(ids, potvrdit) {
+      if (!ids || !ids.length) return 0;
+      return ok(await klient().rpc('precti_zpravy', { p_ids: ids, p_potvrdit: !!potvrdit }));
+    },
+    /* Konverzace pro tablet a ředitelnu. Konverzace = první zpráva + odpovědi
+       v jednom kanálu; odpovědi rodičů na hromadnou zprávu jsou každá zvlášť
+       (soukromý kanál dítěte), první zpráva je u nich citovaná nahoře.
+       zajima(m): zda nepřečtená zpráva m patří do počtu „nové“. */
+    vlakna(d, zajima) {
+      var ja = (nactiUcet() || {}).id, prec = {}, byId = {}, V = {};
+      (d.precteni || []).forEach(function (p) { prec[p.zprava_id] = p; });
+      (d.zpravy || []).forEach(function (m) { byId[m.id] = m; });
+      var hromadny = function (k) { return k === 'vse' || k === 'zamestnanci' || /^trida:/.test(k); };
+      (d.zpravy || []).forEach(function (m) {
+        var koren = (m.odpoved_na && byId[m.odpoved_na]) || m;
+        var klic = koren.id + '|' + m.komu;
+        var v = V[klic] || (V[klic] = { klic: klic, koren: koren, kanal: m.komu, hromadna: hromadny(m.komu), zpravy: [], nove: [], posledni: '' });
+        v.zpravy.push(m);
+        if (m.odeslano > v.posledni) v.posledni = m.odeslano;
+        if (m.odeslal !== ja && !prec[m.id] && (!zajima || zajima(m))) v.nove.push(m.id);
+      });
+      return Object.keys(V).map(function (k) {
+        var v = V[k];
+        v.zpravy.sort(function (a, b) { return a.odeslano < b.odeslano ? -1 : 1; });
+        v.citace = v.zpravy.indexOf(v.koren) === -1;
+        v.mojeKoren = v.koren.odeslal === ja;
+        v.potvrzeno = !!(prec[v.koren.id] && prec[v.koren.id].potvrzeno);
+        return v;
+      }).sort(function (a, b) { return (b.nove.length ? 1 : 0) - (a.nove.length ? 1 : 0) || (a.posledni < b.posledni ? 1 : -1); });
+    },
+    /* Změna zpráv (realtime) + záloha každou minutu a po návratu do okna. */
+    sledujZpravy(priZmene) {
+      var t = null, kanal = klient().channel('zpravy-' + ((nactiUcet() || {}).id || 'x'));
+      var hned = function () { clearTimeout(t); t = setTimeout(priZmene, 300); };
+      kanal.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'zpravy' }, hned);
+      try { kanal.subscribe(); } catch (e) { /* bez realtime — interval níže */ }
+      var iv = setInterval(hned, 60000);
+      var vid = function () { if (document.visibilityState === 'visible') hned(); };
+      document.addEventListener('visibilitychange', vid);
+      return function () { clearInterval(iv); clearTimeout(t); document.removeEventListener('visibilitychange', vid); try { klient().removeChannel(kanal); } catch (e) { /* nic */ } };
+    },
+    async potvrzeniZprav(ids) {
+      if (!ids || !ids.length) return [];
+      return ok(await klient().rpc('potvrzeni_zprav', { p_ids: ids }));
     },
 
     /* --------------------------------------------- ředitelna: rodiče v LifeOS */

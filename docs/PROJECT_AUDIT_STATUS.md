@@ -49,6 +49,15 @@ LIFEOS_DIR=…/lifeos/mobile testy/spust-vse.sh   # s LifeOS jinde než výchoz�
 | Migrace `2026-10-14-audit` na DB ze staré verze (před auditem) i opakovaně | bez chyb (ověřil regresní agent) |
 | Nezávislý regresní audit (agent R) | všechny původní kritické/vysoké nálezy ověřeny jako opravené; 18 nových (R1–R18) → opraveny kromě níže uvedených |
 
+### Doplněk 14. 10. 2026 večer — zprávy jako komunikační kanál
+
+Rodič (LifeOS) ↔ učitelka (tablet, záložka Zprávy) ↔ vedení (ředitelna, Zprávy).
+Migrace `supabase/migrace-2026-10-14b-zpravy.sql`: vlákna (`odpoved_na`),
+odesílatel doplněný databází, kanál `vedeni:<uid>`, přečtení/potvrzení
+(`zpravy_precteni`, `precti_zpravy`, `potvrzeni_zprav`). Odpověď rodiče na zprávu
+celé třídě vidí jen školka. Testy po doplňku: bezpečnost **156/156**, E2E **141/141**
+(nový `e2e/zpravy.js`), finance 11/11, LifeOS integrace **8/8**, LifeOS Jest 115 PASS.
+
 ## 4. Inventář modulů a stav funkcí
 
 Stavy: OVĚŘENO (test prošel), OPRAVENO (oprava + test), NEOVĚŘENO, BLOKOVÁNO, CHYBÍ, SELHÁVÁ.
@@ -145,7 +154,7 @@ Stavy: OVĚŘENO (test prošel), OPRAVENO (oprava + test), NEOVĚŘENO, BLOKOVÁ
 ## 7. Další krok
 
 1. Sloučit PR školky (větev `audit`) a PR LifeOS (větev `audit-skolka` → `faze-1-mobil`).
-2. V Supabase spustit `supabase/migrace-2026-10-14-audit.sql` (jde spustit opakovaně).
+2. V Supabase spustit `supabase/migrace-2026-10-14-audit.sql` a pak `supabase/migrace-2026-10-14b-zpravy.sql` (obě jdou spustit opakovaně).
 3. V Supabase zvážit CAPTCHA / limit anonymních registrací (Z2).
 4. Další vývoj: napojit skryté stránky (Z1) — po jedné, se stejným vzorem (model ze serveru, srvSync, test v `testy/e2e`).
 
