@@ -404,7 +404,7 @@ async function otevri(chtene, zHashe, vychozi) {
   }
 }
 
-document.addEventListener('click', (e) => {
+document.addEventListener('click', (e) => { // zachycení: odkaz na desku vždy přes aplikaci
   const a = e.target.closest && e.target.closest('a[href]');
   if (!a) return;
   const href = a.getAttribute('href') || '';
@@ -412,7 +412,7 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   const klic = DESKY[href.replace(/^\.?\//, '')];
   if (klic) otevri(klic);
-});
+}, true);
 
 window.addEventListener('hashchange', () => {
   const klic = (location.hash || '').slice(1);
