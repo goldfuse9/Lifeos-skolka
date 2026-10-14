@@ -672,6 +672,47 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <button type="button" onClick="{{msg.send}}" aria-disabled="{{msg.cantSend}}" style="{{msg.sendStyle}}">{{msg.sendLabel}}</button>
           </div>
         </section>
+        <sc-if value="{{msg.srv}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Konverzace" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0">
+          <sc-if value="{{msg.seznam}}" hint-placeholder-val="{{true}}">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 800">Konverzace</h2>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px">
+              <sc-for list="{{msg.vlakna}}" as="v" hint-placeholder-count="3">
+                <button type="button" onClick="{{v.pick}}" style="{{v.style}}">
+                  <span style="display: flex; gap: 10px; align-items: baseline"><span style="font-size: 16px; font-weight: 800; flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{v.titulek}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap">{{v.kdy}}</span></span>
+                  <span style="font-size: 13px; font-weight: 700; color: #3A3C40">{{v.komu}}</span>
+                  <span style="font-size: 14px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{v.posledni}}</span>
+                  <sc-if value="{{v.maNove}}" hint-placeholder-val="{{false}}"><span style="align-self: flex-start; padding: 2px 10px; border-radius: 10px; background: #F7DCC6; color: #8A4513; font-size: 12px; font-weight: 800">{{v.noveText}}</span></sc-if>
+                </button>
+              </sc-for>
+              <sc-if value="{{msg.prazdno}}" hint-placeholder-val="{{false}}">
+                <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; font-size: 14px; color: #5A5C60">Zatím žádné zprávy. Odpovědi rodičů a zprávy učitelek se objeví tady.</div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{msg.otevreno}}" hint-placeholder-val="{{false}}">
+            <div style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; align-items: flex-start; gap: 12px">
+                <button type="button" onClick="{{msg.vl.zpet}}" aria-label="Zpět na konverzace" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">← Zpět</button>
+                <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><h2 style="margin: 0; font-size: 18px; font-weight: 800">{{msg.vl.titulek}}</h2><span style="font-size: 13px; color: #5A5C60">{{msg.vl.komu}}</span></div>
+              </div>
+              <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px">
+                <sc-for list="{{msg.vl.zpravy}}" as="m" hint-placeholder-count="2">
+                  <div style="{{m.obal}}"><span style="font-size: 12px; font-weight: 700; color: #5A5C60">{{m.kdo}} · {{m.kdy}}</span><div style="{{m.bublina}}">{{m.text}}</div></div>
+                </sc-for>
+                <sc-if value="{{msg.vl.maPotvrzeni}}" hint-placeholder-val="{{false}}">
+                  <div style="padding: 10px 14px; border-radius: 14px; background: #EDF4E4; font-size: 13px; line-height: 19px; color: #2F5212">{{msg.vl.potvrzeni}}</div>
+                </sc-if>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: flex-end">
+                <textarea id="zprava-odpoved" rows="2" placeholder="{{msg.vl.placeholder}}" value="{{msg.vl.odpoved}}" onInput="{{msg.vl.onOdpoved}}" onChange="{{msg.vl.onOdpoved}}" style="flex-grow: 1; border-radius: 14px; border: 1px solid #E5E7E4; padding: 12px 14px; font-size: 16px; font-weight: 500; color: #17181A; resize: none"></textarea>
+                <button type="button" onClick="{{msg.vl.odeslat}}" aria-disabled="{{msg.vl.nejde}}" style="{{msg.vl.odeslatStyle}}">Odeslat</button>
+              </div>
+            </div>
+          </sc-if>
+        </section>
+        </sc-if>
+        <sc-if value="{{msg.ukazka}}" hint-placeholder-val="{{true}}">
         <section aria-label="Odeslané zprávy" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
           <h2 style="margin: 0; font-size: 18px; font-weight: 800">Odeslané</h2>
           <sc-for list="{{msg.sent}}" as="m" hint-placeholder-count="3">
@@ -682,6 +723,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             </div>
           </sc-for>
         </section>
+        </sc-if>
       </div>
     </sc-if>
 
@@ -1560,6 +1602,35 @@ class Component extends DCLogic {
     var SRVR = typeof window !== 'undefined' ? window.__skolkaServerReditelna : null;
     this.srv = !!(this.ucet && this.ucet.server && SRVR && window.SkolkaServer);
     if (this.srv) this.zeServeru(SRVR);
+    this.srvZp = { zpravy: [], precteni: [] }; this.zpPotv = {};
+  }
+
+  /* Zprávy (ostrý provoz): konverzace s rodiči a učitelkami, živě. */
+  componentDidMount() {
+    var self = this;
+    if (!this.srv) return;
+    this.nactiZpravy();
+    this._stopZpr = window.SkolkaServer.sledujZpravy(function () { self.nactiZpravy(); });
+  }
+  componentWillUnmount() { if (this._stopZpr) this._stopZpr(); }
+  nactiZpravy() {
+    var self = this, SV = window.SkolkaServer;
+    return SV.zpravy().then(function (d) {
+      self.srvZp = d;
+      var v = self.zpVlakna().filter(function (x) { return x.klic === self.state.zpVyber; })[0];
+      if (v && v.nove.length && self.state.page === 'zpravy') return SV.prectiZpravy(v.nove).then(function () { return self.nactiZpravy(); });
+      self.setState({});
+    }).catch(function () { /* další pokus při příští změně */ });
+  }
+  /* Pro vedení je „nové“: zpráva učitelky vedení a odpověď rodiče na zprávu vedení. */
+  zpVlakna() {
+    if (!this.srv) return [];
+    var byId = {}, VED = ['reditelka', 'zastupce', 'hospodarka'];
+    this.srvZp.zpravy.forEach(function (m) { byId[m.id] = m; });
+    return window.SkolkaServer.vlakna(this.srvZp, function (m) {
+      var koren = m.odpoved_na ? byId[m.odpoved_na] : null;
+      return /^vedeni:/.test(m.komu) || (m.od_role === 'rodic' && !!koren && VED.indexOf(koren.od_role) !== -1);
+    });
   }
 
   /* ================================================================ SERVER
@@ -1578,7 +1649,7 @@ class Component extends DCLogic {
     this.teachers = (D.zamestnanci || []).filter(function (z) { return z.aktivni !== false && (z.role === 'ucitelka' || z.role === 'zastupce'); }).map(function (z) {
       return { id: z.id, name: z.jmeno, role: ROLE_N[z.role] || z.role, email: z.email || '', classes: ut[z.id] || [], uvazek: 1, absent: false, sub: null, phone: '', photo: '', look: null };
     });
-    var jmenoUc = {}; (D.zamestnanci || []).forEach(function (z) { jmenoUc[z.id] = z.jmeno; });
+    var jmenoUc = this.jmenoUc = {}; (D.zamestnanci || []).forEach(function (z) { jmenoUc[z.id] = z.jmeno; });
     var me = this.ucet || {};
     this.users = { reditelka: { name: me.jmeno || '', role: 'ředitelka', initials: '', bg: '#E4ECCB' }, hospodarka: { name: me.jmeno || '', role: 'hospodářka', initials: '', bg: '#C9E4F5', id: 'hosp' } };
     this.audit = [];
@@ -1699,7 +1770,7 @@ class Component extends DCLogic {
         catch (e) { chyby.push('úraz č. ' + ur.no + ': ' + SV.chyba(e)); }
       }
       for (var m = 0; m < this.messages.length; m++) {
-        var msg = this.messages[m]; if (msg.id || !msg.komu || msg.chyba) continue;
+        var msg = this.messages[m]; if (msg.id || !msg.komu || msg.chyba || msg.odesilam) continue;
         poslano++;
         try { var r = await SV.posliZpravu(msg.komu, msg.title, msg.text); msg.id = r.id; }
         catch (e) { msg.chyba = true; chyby.push('zpráva „' + msg.title + '“: ' + SV.chyba(e)); }
@@ -2864,11 +2935,12 @@ class Component extends DCLogic {
     var webMissing = this.webChecks().filter(function (c) { return !c.ok; }).length;
     var docTodo = this.docs ? this.docs.filter(function (d) { return d.required && !d.approved; }).length : 0;
     /* Menu po skupinách: děti → školka → rodiče a veřejnost → peníze → povinná evidence → nastavení. */
+    var zpVl = this.zpVlakna(), zpNove = zpVl.reduce(function (a, v) { return a + v.nove.length; }, 0);
     var NAV0 = [
       ['prehled', 'Přehled', ''],
       ['#', 'Děti'], ['deti', 'Kartotéka dětí', kids.length], ['zapis', 'Zápis', ''], ['dochazka', 'Docházka', neoml.length || ''],
       ['#', 'Školka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''], ['jidelna', 'Školní jídelna', ''],
-      ['#', 'Rodiče a veřejnost'], ['lifeos', 'Rodiče v LifeOS', ''], ['zpravy', 'Zprávy rodičům', ''], ['web', 'Webové stránky', webMissing || ''],
+      ['#', 'Rodiče a veřejnost'], ['lifeos', 'Rodiče v LifeOS', ''], ['zpravy', this.srv ? 'Zprávy' : 'Zprávy rodičům', zpNove || ''], ['web', 'Webové stránky', webMissing || ''],
       ['#', 'Peníze'], ['platby', 'Platby', unpaidPrev.length || ''],
       ['#', 'Povinná evidence'], ['matrika', 'Matrika MŠMT', matErr.length ? matErr.length : ''], ['urazy', 'Kniha úrazů', urazPending.length ? urazPending.length : ''], ['dokumenty', 'Dokumenty', docTodo || ''], ['archiv', 'Archiv', ''],
       ['#', 'Školka a účet'], ['nastaveni', 'Nastavení školky', ''], ['pristupy', 'Přístupy', '']
@@ -2881,7 +2953,7 @@ class Component extends DCLogic {
     var nav = NAV.map(function (n) {
       if (n[0] === '#') return { isHead: true, isItem: false, label: n[1], count: '', hasCount: false, current: 'false', countStyle: '', style: '', pick: function () {} };
       var on = st.page === n[0];
-      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web'].indexOf(n[0]) !== -1 && n[2] !== '';
+      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web', 'zpravy'].indexOf(n[0]) !== -1 && n[2] !== '';
       return {
         isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
@@ -2907,7 +2979,7 @@ class Component extends DCLogic {
       zapis: ['Přijímací řízení na školní rok ' + this.zapis.year + '/' + (this.zapis.year + 1) + ' · zápis 2.–16. 5.', 'Zápis', '+ Nová žádost', function () { self.setState({ dlg: 'zadost', df: { spad: 'A', sib: 'N' } }); }],
       dochazka: ['Měsíční přehled z tabletů tříd', 'Docházka', '', null],
       platby: ['Úplata za předškolní vzdělávání a stravné', 'Platby', '', null],
-      zpravy: ['Hromadné zprávy do aplikace a e-mailem', 'Zprávy rodičům', '', null],
+      zpravy: this.srv ? ['Rodiče v LifeOS a učitelky na tabletech', 'Zprávy', '', null] : ['Hromadné zprávy do aplikace a e-mailem', 'Zprávy rodičům', '', null],
       porady: ['Záznamy z pedagogických rad a provozních porad', 'Porady', '+ Nový zápis', function () { self.setState({ dlg: 'porada', df: { date: self.iso(today), typ: 'Pedagogická rada' } }); }],
       archiv: ['Spisová služba a kontrola přístupu', 'Archiv', '', null],
       web: ['Skládají se z údajů v ředitelně — kontakty, třídy, zápis, platby', 'Webové stránky', '', null],
@@ -3588,13 +3660,15 @@ class Component extends DCLogic {
         if (!mOk) return;
         var komu = toSel[0] === 'all' ? 'vse' : /^kid:/.test(toSel[0]) ? 'dite:' + toSel[0].slice(4) : 'trida:' + toSel[0];
         if (self.srv) {
-          var m0 = { title: st.msgTitle.trim(), text: st.msgText.trim(), to: toSel[1], komu: komu, at: self.cz(self.today), by: ME.name, read: 0, total: viaApp.length, app: viaApp.length, mail: 0, odesilam: true };
-          self.messages.unshift(m0);
-          self.setState({ msgTitle: '', msgText: '', msgTo: kidTo ? 'all' : st.msgTo });
-          window.SkolkaServer.posliZpravu(komu, m0.title, m0.text).then(function (r) {
-            m0.id = r.id; m0.odesilam = false;
+          if (self._zpOdesila) return;
+          self._zpOdesila = true;
+          window.SkolkaServer.posliZpravu(komu, st.msgTitle.trim(), st.msgText.trim()).then(function (r) {
+            self._zpOdesila = false;
+            self.srvZp.zpravy = [r].concat(self.srvZp.zpravy);
+            self.setState({ msgTitle: '', msgText: '', msgTo: kidTo ? 'all' : st.msgTo, zpVyber: r.id + '|' + r.komu });
             self.showToast('Odesláno do aplikace LifeOS' + (viaApp.length ? ' — ' + (viaApp.length === 1 ? '1 rodina' : viaApp.length + ' rodin') : '') + (noCont.length ? ' · ' + noCont.length + ' bez aplikace' : ''));
-          }).catch(function (e) { m0.chyba = true; m0.odesilam = false; self.showToast('Zprávu se nepodařilo odeslat: ' + window.SkolkaServer.chyba(e)); });
+            self.nactiZpravy();
+          }).catch(function (e) { self._zpOdesila = false; self.showToast('Zprávu se nepodařilo odeslat: ' + window.SkolkaServer.chyba(e)); });
           return;
         }
         self.messages.unshift({ title: st.msgTitle.trim(), text: st.msgText.trim(), to: toSel[1], komu: komu, at: self.cz(self.today), by: ME.name, read: 0, total: viaApp.length + viaMail.length, app: viaApp.length, mail: viaMail.length });
@@ -3609,6 +3683,68 @@ class Component extends DCLogic {
         return { title: m.title, text: m.text, meta: m.to + ' · ' + m.at + ' · ' + m.by, read: 'v aplikaci přečetlo ' + Math.min(m.read, app) + ' z ' + app + (mail ? ' · e-mailem ' + mail : ''), barStyle: 'display: block; height: 100%; width: ' + pc + '%; background: #7FB23A' };
       })
     };
+
+    /* Ostrý provoz: místo „Odeslané“ konverzace (rodiče, učitelky), nové nahoře. */
+    msg.srv = !!this.srv; msg.ukazka = !this.srv;
+    if (this.srv) {
+      var SVZ = window.SkolkaServer, jaId = this.ucet ? this.ucet.id : '';
+      var zkomu = function (k) {
+        if (k === 'vse') return 'Celá školka';
+        if (k === 'zamestnanci') return 'Zaměstnanci';
+        if (/^trida:/.test(k)) { var c = CL.filter(function (x) { return 'trida:' + x.id === k; })[0]; return 'Rodiče třídy ' + (c ? c.name : ''); }
+        if (/^dite:/.test(k)) { var d = self.kids.filter(function (x) { return 'dite:' + x.id === k; })[0]; return 'Rodiče · ' + (d ? d.first + ' ' + d.last : 'dítě'); }
+        if (/^vedeni:/.test(k)) return (self.jmenoUc && self.jmenoUc[k.slice(7)] || 'Zaměstnanec') + ' → vedení';
+        return k;
+      };
+      var zkdy = function (iso) { var d = new Date(iso); return self.cz(d) + ' ' + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); };
+      var zted = zpVl.filter(function (v) { return v.klic === st.zpVyber; })[0] || null;
+      msg.vlakna = zpVl.map(function (v) {
+        var last = v.zpravy[v.zpravy.length - 1];
+        return { titulek: v.koren.predmet, komu: zkomu(v.kanal), kdy: zkdy(v.posledni), posledni: (last.odeslal === jaId ? 'Vy: ' : (last.od_jmeno ? last.od_jmeno + ': ' : '')) + last.text,
+          maNove: !!v.nove.length, noveText: v.nove.length === 1 ? 'Nová' : 'Nové ' + v.nove.length,
+          style: 'border: 0; text-align: left; cursor: pointer; background: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; color: #17181A' + (v.nove.length ? '; box-shadow: inset 4px 0 0 #E8A06A' : ''),
+          pick: function () {
+            self.setState({ zpVyber: v.klic, zpOdpoved: '' });
+            if (v.nove.length) SVZ.prectiZpravy(v.nove).then(function () { return self.nactiZpravy(); }).catch(function () { /* nic */ });
+            if (v.mojeKoren && !self.zpPotv[v.koren.id]) {
+              self.zpPotv[v.koren.id] = { list: [] };
+              SVZ.potvrzeniZprav([v.koren.id]).then(function (r) { self.zpPotv[v.koren.id] = { list: r || [] }; self.setState({}); }).catch(function () { delete self.zpPotv[v.koren.id]; });
+            }
+          } };
+      });
+      msg.prazdno = !zpVl.length;
+      msg.seznam = !zted; msg.otevreno = !!zted;
+      if (zted) {
+        var pl = (this.zpPotv[zted.koren.id] || {}).list || [];
+        var jm = function (l) { return l.map(function (p) { return p.jmeno + (p.dite ? ' (' + p.dite.split(' ')[0] + ')' : ''); }).join(', '); };
+        var potv = pl.filter(function (p) { return p.potvrzeno; }), prec = pl.filter(function (p) { return !p.potvrzeno; });
+        var odp = st.zpOdpoved || '';
+        var zobraz = zted.citace ? [zted.koren].concat(zted.zpravy) : zted.zpravy;
+        msg.vl = { titulek: zted.koren.predmet, komu: zkomu(zted.kanal) + (zted.citace ? ' · odpověď na zprávu pro: ' + zkomu(zted.koren.komu) : ''),
+          zpet: function () { self.setState({ zpVyber: null }); },
+          zpravy: zobraz.map(function (m) {
+            var moje = m.odeslal === jaId;
+            return { kdo: moje ? 'Vy' : (m.od_jmeno || 'Školka') + (m.od_role === 'rodic' ? ' (rodič)' : m.od_role === 'ucitelka' ? ' (učitelka)' : ''), kdy: zkdy(m.odeslano), text: m.text,
+              obal: 'display: flex; flex-direction: column; gap: 4px; max-width: 80%; align-self: ' + (moje ? 'flex-end; align-items: flex-end' : 'flex-start'),
+              bublina: 'padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 21px; white-space: pre-wrap; color: #17181A; background: ' + (moje ? '#E4ECCB' : '#F3F4F2') };
+          }),
+          maPotvrzeni: zted.mojeKoren && !!pl.length,
+          potvrzeni: (potv.length ? 'Potvrdili: ' + jm(potv) : '') + (potv.length && prec.length ? ' · ' : '') + (prec.length ? 'Přečetli: ' + jm(prec) : ''),
+          odpoved: odp, onOdpoved: function (e) { self.setState({ zpOdpoved: e.target.value }); },
+          nejde: !odp.trim(), odeslatStyle: bigBtn(!!odp.trim()).replace('flex-grow: 2; ', '') + '; padding: 0 24px; flex-shrink: 0',
+          placeholder: /^vedeni:/.test(zted.kanal) ? 'Odpovědět učitelce' : /^dite:/.test(zted.kanal) ? 'Odpovědět rodičům' : 'Doplnit zprávu pro: ' + zkomu(zted.kanal),
+          odeslat: function () {
+            if (!odp.trim() || self._zpOdesila) return;
+            self._zpOdesila = true;
+            SVZ.posliZpravu(zted.kanal, '', odp.trim(), zted.koren.id).then(function (r) {
+              self._zpOdesila = false;
+              self.srvZp.zpravy = [r].concat(self.srvZp.zpravy);
+              self.setState({ zpOdpoved: '', zpVyber: zted.koren.id + '|' + r.komu });
+              self.nactiZpravy();
+            }).catch(function (e) { self._zpOdesila = false; self.showToast('Zpráva neodešla: ' + SVZ.chyba(e)); });
+          } };
+      }
+    }
 
     /* -------------------------------------------------- porady */
     /* Porady po školních letech (září–srpen); starší roky jsou archiv. */

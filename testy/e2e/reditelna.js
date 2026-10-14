@@ -57,8 +57,8 @@ module.exports = async () => {
   await p.screenshot({ path: require('./spolecne').VYSL + '/reditelna-dochazka.png' });
   kontrola('docházka: data ze serveru, ne ukázková', !(await p.locator('body').innerText()).includes('Jonáš Procházka'));
   // zpráva rodičům Emy
-  await p.click('nav button:has-text("Zprávy rodičům")'); await p.waitForTimeout(500);
-  await p.click('button:has-text("Sluníčka")');
+  await p.click('nav button:has-text("Zprávy")'); await p.waitForTimeout(500);
+  await p.click('section[aria-label="Nová zpráva"] button:has-text("Sluníčka")');
   await p.locator('input, textarea').filter({ hasNot: p.locator('[aria-label="Hledat dítě"]') }).nth(0).fill('Výlet');
   await p.locator('textarea').first().fill('Zítra jdeme na výlet.');
   await p.click('button:has-text("Poslat rodičům")'); await p.waitForTimeout(1500);

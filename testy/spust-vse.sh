@@ -23,7 +23,7 @@ if [ -d "$LIFEOS/node_modules" ]; then
   echo "######## LifeOS ↔ server (Jest integrační test)"
   ./reset.sh "$DB" >/dev/null
   KOD=$(TEST_DB=$DB node -e "console.log(require('./e2e/spolecne').sqlJako('aaaaaaaa-0000-4000-8000-000000000001','reditelka@test.cz',\"select vytvor_kod_rodice('00000000-0000-4000-8000-000000000101');\"))")
-  OUT=$(cd "$LIFEOS" && SKOLKA_TEST_URL=http://localhost:$PX SKOLKA_TEST_KOD=$KOD npx jest skolkaserver 2>&1); echo "$OUT" | grep -E "Tests:|✕"
+  OUT=$(cd "$LIFEOS" && SKOLKA_TEST_URL=http://localhost:$PX SKOLKA_TEST_KOD=$KOD SKOLKA_TEST_PSQL="psql -h ${PGHOST_TEST:-/home/claude/.pgtest} -p ${PGPORT_TEST:-5499} -U postgres -d $DB -qAt" npx jest skolkaserver 2>&1); echo "$OUT" | grep -E "Tests:|✕"
   echo "$OUT" | grep -q "Tests:.*failed" && L=1
 else
   echo "######## LifeOS přeskočen (nastavte LIFEOS_DIR na …/lifeos/mobile s node_modules)"

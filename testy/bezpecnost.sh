@@ -179,5 +179,50 @@ t "uloz_chody: návrh rodič nevidí" 0 $RODA "" "reset role; set local role aut
 select uloz_chody(jsonb_build_array(jsonb_build_object('den', (date_trunc('week', current_date)::date + 7)::text, 'chod', 'obed', 'nazev', 'Návrh X', 'zverejnit', false)));
 select set_config('request.jwt.claim.sub','$RODA',true) \\g /dev/null
 select count(*) from jidelnicek_tyden(date_trunc('week', current_date)::date + 7, date_trunc('week', current_date)::date + 11) where nazev='Návrh X';"
+echo "== zprávy: kanál rodič–učitelka–vedení"
+INS() { echo "with x as (insert into zpravy (komu, predmet, text$3) values ('$1', '', '$2'$4) returning 1) select count(*) from x;"; }
+t "rodič napíše do kanálu svého dítěte" 1 $RODA "" "$(INS dite:$EMA 'Dobrý den')"
+t "rodič nenapíše do kanálu cizího dítěte" ERR $RODA "" "$(INS dite:$OLI 'x')"
+t "rodič nenapíše celé třídě" ERR $RODA "" "$(INS trida:$SLUN 'x')"
+t "rodič nenapíše celé školce" ERR $RODA "" "$(INS vse 'x')"
+t "rodič nenapíše vedení jako zaměstnanec" ERR $RODA "" "$(INS vedeni:$RODA 'x')"
+t "rodič nepodvrhne odesílatele ani jméno" "$RODA|Jana Testová|rodic" $RODA "" "insert into zpravy (komu, predmet, text, odeslal, od_jmeno, od_role) values ('dite:$EMA', '', 'x', '$RA', 'Ředitelka', 'reditelka'); select odeslal || '|' || od_jmeno || '|' || od_role from zpravy where komu='dite:$EMA';"
+t "předmět se doplní z textu" "Prosím o zavolání" $RODA "" "insert into zpravy (komu, predmet, text) values ('dite:$EMA', '', 'Prosím o zavolání'); select predmet from zpravy where komu='dite:$EMA';"
+t "prázdná zpráva neprojde" ERR $RODA "" "$(INS dite:$EMA '   ')"
+t "učitelka napíše rodičům své třídy" 1 $UA ucitelka@test.cz "$(INS trida:$SLUN 'Zítra výlet')"
+t "učitelka nenapíše rodičům cizí třídy" ERR $UA ucitelka@test.cz "$(INS trida:$BER 'x')"
+t "učitelka nenapíše rodičům dítěte cizí třídy" ERR $UA ucitelka@test.cz "$(INS dite:$TOB 'x')"
+t "učitelka napíše rodičům dítěte své třídy" 1 $UA ucitelka@test.cz "$(INS dite:$OLI 'x')"
+t "učitelka napíše vedení" 1 $UA ucitelka@test.cz "$(INS vedeni:$UA 'Potřebuji volno')"
+t "učitelka nepíše za jinou učitelku" ERR $UA ucitelka@test.cz "$(INS vedeni:$U2A 'x')"
+t "učitelka nenapíše celé školce" ERR $UA ucitelka@test.cz "$(INS vse 'x')"
+t "kuchařka nenapíše rodičům" ERR $KA kucharka@test.cz "$(INS dite:$EMA 'x')"
+VED="reset role; select set_config('request.jwt.claim.sub','$UA',true) \\g /dev/null
+insert into zpravy (komu, predmet, text) values ('vedeni:$UA', '', 'Soukromé vedení'); set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+t "jiná učitelka nečte zprávu kolegyně vedení" 0 $U2A ucitelka2@test.cz "${VED//\$ME/$U2A} select count(*) from zpravy where komu like 'vedeni:%';"
+t "rodič nečte zprávy vedení" 0 $RODA "" "${VED//\$ME/$RODA} select count(*) from zpravy where komu like 'vedeni:%';"
+t "ředitelka čte zprávu učitelky vedení" 1 $RA reditelka@test.cz "${VED//\$ME/$RA} select count(*) from zpravy where komu like 'vedeni:%';"
+t "ředitelka B nenapíše učitelce A" ERR $RB reditelka.b@test.cz "$(INS vedeni:$UA 'x')"
+t "ředitelka nenapíše vedení:<rodič>" ERR $RA reditelka@test.cz "$(INS vedeni:$RODA 'x')"
+KOR="reset role; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+insert into zpravy (id, komu, predmet, text) values ('99999999-0000-4000-8000-000000000001', 'vse', 'Besídka', 'Ve čtvrtek'), ('99999999-0000-4000-8000-000000000002', 'trida:$BER', 'Berušky', 'x'); set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+t "rodič odpoví na zprávu celé školce (předmět z vlákna)" "Besídka" $RODA "" "${KOR//\$ME/$RODA} insert into zpravy (komu, predmet, text, odpoved_na) values ('dite:$EMA', '', 'Přijdeme', '99999999-0000-4000-8000-000000000001'); select predmet from zpravy where odpoved_na is not null;"
+t "rodič neodpoví na zprávu, kterou nevidí" ERR $RODA "" "${KOR//\$ME/$RODA} insert into zpravy (komu, predmet, text, odpoved_na) values ('dite:$EMA', '', 'x', '99999999-0000-4000-8000-000000000002');"
+t "odpověď na odpověď patří do stejného vlákna" 2 $RODA "" "${KOR//\$ME/$RODA} insert into zpravy (id, komu, predmet, text, odpoved_na) values ('99999999-0000-4000-8000-000000000003', 'dite:$EMA', '', 'a', '99999999-0000-4000-8000-000000000001'); insert into zpravy (komu, predmet, text, odpoved_na) values ('dite:$EMA', '', 'b', '99999999-0000-4000-8000-000000000003'); select count(*) from zpravy where odpoved_na='99999999-0000-4000-8000-000000000001';"
+t "odpověď rodiče Emy jiný rodič nevidí" 0 $ROD2A "" "${KOR//\$ME/$RODA} insert into zpravy (komu, predmet, text, odpoved_na) values ('dite:$EMA', '', 'Přijdeme', '99999999-0000-4000-8000-000000000001'); select set_config('request.jwt.claim.sub','$ROD2A',true) \\g /dev/null
+select count(*) from zpravy where odpoved_na is not null;"
+t "zprávu nejde upravit" ERR $RA reditelka@test.cz "${KOR//\$ME/$RA} update zpravy set text='změna';"
+t "zprávu nejde smazat" ERR $RA reditelka@test.cz "${KOR//\$ME/$RA} delete from zpravy;"
+t "rodič potvrdí zprávu celé školce" 1 $RODA "" "${KOR//\$ME/$RODA} select precti_zpravy(array['99999999-0000-4000-8000-000000000001']::uuid[], true);"
+t "rodič nepotvrdí zprávu, kterou nevidí" 0 $RODA "" "${KOR//\$ME/$RODA} select precti_zpravy(array['99999999-0000-4000-8000-000000000002']::uuid[], true);"
+t "do přečtení nejde zapsat přímo" ERR $RODA "" "${KOR//\$ME/$RODA} insert into zpravy_precteni (zprava_id, uzivatel_id) values ('99999999-0000-4000-8000-000000000001', '$RODA');"
+t "rodič nevidí, kdo další zprávu potvrdil" 0 $ROD2A "" "${KOR//\$ME/$RODA} select precti_zpravy(array['99999999-0000-4000-8000-000000000001']::uuid[], true); select set_config('request.jwt.claim.sub','$ROD2A',true) \\g /dev/null
+select count(*) from zpravy_precteni; select count(*) from potvrzeni_zprav(array['99999999-0000-4000-8000-000000000001']::uuid[]);"
+t "ředitelka vidí, kdo potvrdil" "Jana Testová|Ema Testová" $RA reditelka@test.cz "${KOR//\$ME/$RODA} select precti_zpravy(array['99999999-0000-4000-8000-000000000001']::uuid[], true); select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+select jmeno || '|' || dite from potvrzeni_zprav(array['99999999-0000-4000-8000-000000000001']::uuid[]) where potvrzeno is not null;"
+t "učitelka Berušek nevidí potvrzení rodiče ze Sluníček" 0 $U2A ucitelka2@test.cz "${KOR//\$ME/$RODA} select precti_zpravy(array['99999999-0000-4000-8000-000000000001']::uuid[], true); select set_config('request.jwt.claim.sub','$U2A',true) \\g /dev/null
+select count(*) from potvrzeni_zprav(array['99999999-0000-4000-8000-000000000001']::uuid[]);"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
