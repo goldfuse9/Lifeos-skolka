@@ -117,6 +117,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </div>
         <div style="font-size: 13px; color: #4A4330">Náhradní oběd · ostatní děti v pořádku</div>
       </sc-if>
+      <sc-if value="{{lunch.nic}}" hint-placeholder-val="{{false}}">
+        <div style="font-size: 17px; font-weight: 700">Jídelníček není zveřejněný</div>
+        <div style="font-size: 13px; color: #8A4513">Alergie dnes zkontrolujte s kuchyní</div>
+      </sc-if>
       <sc-if value="{{lunch.none}}" hint-placeholder-val="{{false}}">
         <div style="font-size: 17px; font-weight: 700">V pořádku pro všechny</div>
         <div style="font-size: 13px; color: #5A5C60">Nikdo z přítomných nemá alergii na dnešní oběd</div>
@@ -1247,16 +1251,21 @@ class Component extends DCLogic {
       this.kids = SRVT.deti; this.byId = {};
       var by = this.byId;
       this.kids.forEach(function (k) { by[k.id] = k; });
-      this.albums = []; this.events = []; this.meetings = {}; this.konz = {}; this.kniha[SRVT.id] = [];
+      this.albums = []; this.events = []; this.meetings = {}; this.konz = {}; this.kniha[SRVT.id] = SRVT.kniha || [];
       this.state.viewCls = SRVT.id;
       this.state.picked = this.kids[0] ? this.kids[0].id : null;
       this.srvOmluvy = SRVT.omluvy || [];
+      this.srvJidla = SRVT.jidla || null;
+      this.srvDen = SRVT.den;
     }
   }
 
   componentDidMount() {
     var self = this;
     if (!this.srv) return;
+    /* Tablet zapnutý přes půlnoc: nový den = načíst znovu (jinak by se včerejší
+       stav zapisoval do dneška). */
+    this._hlidejDen = setInterval(function () { if (new Date().toDateString() !== self.srvDen) location.reload(); }, 60000);
     this._stopSrv = window.SkolkaServer.sleduj(this.state.viewCls, function () {
       Promise.all([window.SkolkaServer.obnovDen(self.kids), window.SkolkaServer.omluvy(self.kids)])
         .then(function (r) { self.srvOmluvy = r[1]; self.setState({}); })
@@ -1266,9 +1275,29 @@ class Component extends DCLogic {
 
   componentWillUnmount() {
     if (this._stopSrv) this._stopSrv();
+    clearInterval(this._hlidejDen);
   }
 
   /* Ostrý provoz: změnu pošle na server; když se nepovede, řekne to. */
+  /* Docházka na server: nejdřív si zapamatuje řádek ze serveru (kvůli Vrátit),
+     při chybě vrátí dítě do předchozího stavu, aby tablet neukazoval neuložené. */
+  srvDoch(k, before, co, undoId) {
+    var self = this, SV = window.SkolkaServer;
+    if (!this.srv) return;
+    var p = SV.dochazkaDnes(k.id).then(function (prev) {
+      var u = self.state.undo;
+      if (u && u.id === undoId) u.srvPrev = prev;
+      k.wasExcused = !!(prev && prev.stav === 'omluven');
+      if (k.wasExcused && k.att === 'present' && prev.strava_prihlasena === false) self.showToast(k.name + ' přišel(a) i přes omluvenku — oběd byl odhlášený, dejte vědět kuchyni.');
+      return SV.dochazka(k);
+    });
+    p.catch(function (e) {
+      if (before) { Object.assign(k, before); if (k.log && k.log.length) k.log.pop(); }
+      self.setState({ undo: null });
+      self.showToast('Neuloženo — ' + SV.chyba(e) + '. Dítě je zpět v původním stavu, zkuste to znovu.');
+    });
+  }
+
   srvSend(p, co) {
     var self = this;
     if (!this.srv || !p) return;
@@ -1427,7 +1456,8 @@ class Component extends DCLogic {
     };
 
     /* Oběd bere z jídelny (zveřejněný jídelníček); bez něj zůstane ukázkový. */
-    var menu = this.menu, JD = (this.store().jidelna || {}).dny || {};
+    var menu = this.menu, JD = this.srv ? {} : (this.store().jidelna || {}).dny || {};
+    if (this.srv) menu = this.srvJidla || { name: 'jídelníček na dnes není zveřejněný', allergens: [], nic: true };
     for (var di0 = 0; di0 < 3; di0++) {
       var dd0 = new Date(); dd0.setDate(dd0.getDate() + di0);
       var m0 = JD[this.iso(dd0)];
@@ -1466,7 +1496,7 @@ class Component extends DCLogic {
       return { name: k.name, symRef: '#z-' + k.sym, pick: pick(k.id), what: 'bez ' + lunchHit(k).map(function (a) { return ({ 'mléko': 'mléka', 'lepek': 'lepku', 'vejce': 'vajec', 'ryby': 'ryb', 'arašídy': 'arašídů', 'ořechy': 'ořechů', 'celer': 'celeru', 'sója': 'sóji', 'sezam': 'sezamu' })[a] || a; }).join(', ') };
     });
     var lunch = {
-      has: lItems.length > 0, none: lItems.length === 0, items: lItems, menu: menu.name,
+      has: lItems.length > 0, none: lItems.length === 0 && !menu.nic, nic: !!menu.nic, items: lItems, menu: menu.name,
       cardStyle: 'border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 96px; box-sizing: border-box; background: #FFFFFF',
       kickerStyle: 'font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ' + (lItems.length ? '#8A6D1F' : '#5A5C60')
     };
@@ -1526,6 +1556,7 @@ class Component extends DCLogic {
     if (s.allergies.length) fact('Alergie', s.allergies.join(', '), '#F7F0DA', '#5C4300');
     if (s.att !== 'excused') {
       if (hit.length) fact('Oběd', 'náhrada — dnes obsahuje ' + hit.join(', '), '#F7F0DA', '#5C4300');
+      else if (self.srv && !self.srvJidla) fact('Oběd', 'jídelníček na dnes není zveřejněný — zeptejte se v kuchyni', '#F7F0DA', '#5C4300');
       else fact('Oběd', 'v pořádku', '#EDF4E4', '#2F5212');
     }
     if (s.pickupToday) fact('Vyzvedává', s.pickupToday.who + ' · ' + s.pickupToday.when + ' (' + s.pickupToday.note + ')', '#EEF4FB', '#33465C');
@@ -1544,10 +1575,11 @@ class Component extends DCLogic {
       : 'Dnes doma — ' + s.excuse.split(' · ')[0];
     var arrive = function () {
       self.askAtt(s, s.att === 'left' ? 'zpet' : 'prichod', s.att === 'excused' ? 'Má omluvenku — přesto přišel' : '', function () {
+        var beforeA = { att: s.att, arrived: s.arrived, left: s.left };
         s.att = 'present'; s.arrived = self.now(); s.left = null;
         self.addLog(s, { t: s.arrived, type: 'dochazka', title: 'Příchod', sub: '' });
         self.showToast(s.name + ' — příchod zapsán');
-        if (self.srv) self.srvSend(window.SkolkaServer.dochazka(s), 'příchod');
+        if (self.srv) self.srvDoch(s, beforeA, 'příchod');
       });
     };
     var sel = {
@@ -1574,7 +1606,7 @@ class Component extends DCLogic {
         var k = self.byId[u.id];
         Object.assign(k, u.before);
         k.log.pop();
-        if (self.srv) self.srvSend(window.SkolkaServer.dochazka(k), 'vrácení');
+        if (self.srv) self.srvSend(window.SkolkaServer.dochazka(k, u.srvPrev), 'vrácení');
         self.setState({ undo: null });
       },
       kids: kids.filter(function (k) { return filter === 'all' || k.att === filter; }).map(function (k) {
@@ -1611,8 +1643,9 @@ class Component extends DCLogic {
               self.addLog(k, { t: t, type: 'dochazka', title: 'Odchod', sub: 'Vyzvedává ' + (k.pickupToday ? k.pickupToday.who : k.usualPickup) });
               label = k.name + ' odchod';
             }
-            if (self.srv) self.srvSend(window.SkolkaServer.dochazka(k), 'docházka');
-            self.setState({ undo: { id: k.id, before: before, label: label } });
+            var uid = k.id + ':' + Date.now();
+            self.setState({ undo: { id: k.id, before: before, label: label, uid: uid } });
+            if (self.srv) self.srvDoch(k, before, 'docházka', k.id);
         }
         return tile;
       })
@@ -1928,6 +1961,14 @@ class Component extends DCLogic {
       save: function () {
         if (!knOk || knClean) return;
         var entry = { date: todayIso, theme: knF.theme.trim(), acts: knF.acts.slice(), safety: knF.safety.slice(), by: self.me, present: counts.present, absent: counts.excused + counts.expected };
+        if (self.srv) {
+          window.SkolkaServer.zapisKnihy(home, entry).then(function () {
+            self.kniha[home] = [entry].concat(knList.filter(function (e) { return e.date !== todayIso; }));
+            self.setState({ kn: null });
+            self.showToast('Zapsáno do třídní knihy');
+          }).catch(function (e) { self.showToast('Třídní kniha se neuložila: ' + window.SkolkaServer.chyba(e)); });
+          return;
+        }
         self.kniha[home] = [entry].concat(knList.filter(function (e) { return e.date !== todayIso; }));
         self.store().kniha[home] = self.kniha[home];
         self.setState({ kn: null });
@@ -1939,7 +1980,9 @@ class Component extends DCLogic {
     };
 
     /* -------------------------------------------------- záložky */
-    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']];
+    /* Ostrý provoz: Fotky, Akce a Schůzky zatím na server napojené nejsou → nezobrazují se. */
+    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return !self.srv || ['fotky', 'akce', 'schuzky'].indexOf(x[0]) === -1; });
+    if (self.srv && ['fotky', 'akce', 'schuzky'].indexOf(st.tab) !== -1) st.tab = 'trida';
     var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '' };
     var tabs = TABS.map(function (t) {
       var on = st.tab === t[0];

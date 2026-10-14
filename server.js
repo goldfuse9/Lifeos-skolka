@@ -235,6 +235,23 @@
       var den = deti.length ? await denTridy(deti.map(function (d) { return d.id; })) : { doch: {}, vyz: {}, ud: {} };
       return deti.map(function (d, i) { return diteProDesku(d, i, den.doch[d.id], den.vyz[d.id], den.ud[d.id], tridaId); });
     },
+    /* Třídní kniha (povinná dokumentace) — posledních 30 zápisů třídy. */
+    async kniha(tridaId) {
+      var r = ok(await klient().from('tridni_kniha').select('den, tema, cinnosti, pouceni, pritomno, chybelo, uzivatele(jmeno)').eq('trida_id', tridaId).order('den', { ascending: false }).limit(30));
+      return r.map(function (e) { return { date: e.den, theme: e.tema, acts: e.cinnosti || [], safety: e.pouceni || [], by: e.uzivatele ? e.uzivatele.jmeno : '', present: e.pritomno || 0, absent: e.chybelo || 0 }; });
+    },
+    async zapisKnihy(tridaId, e) {
+      ok(await klient().from('tridni_kniha').upsert({ trida_id: tridaId, den: e.date, tema: e.theme, cinnosti: e.acts, pouceni: e.safety, pritomno: e.present, chybelo: e.absent, zapsal: nactiUcet().id }, { onConflict: 'trida_id,den' }));
+    },
+    /* Dnešní jídla třídy (zveřejněný jídelníček) — alergeny jako názvy. */
+    async jidlaDnes() {
+      var A = [null, 'lepek', 'korýši', 'vejce', 'ryby', 'arašídy', 'sója', 'mléko', 'ořechy', 'celer', 'hořčice', 'sezam', 'siřičitany', 'vlčí bob', 'měkkýši'];
+      var r = ok(await klient().rpc('jidelnicek_tyden', { p_od: dnes(), p_do: dnes() }));
+      if (!r.length) return null;
+      var obed = r.filter(function (x) { return x.chod === 'obed'; })[0], al = {};
+      r.forEach(function (x) { if (x.chod !== 'nap') (x.alergeny || []).forEach(function (n) { if (A[n]) al[A[n]] = true; }); });
+      return { name: obed ? obed.nazev.split(',')[0] : r[0].nazev.split(',')[0], allergens: Object.keys(al), chody: r.map(function (x) { return x.chod + ': ' + x.nazev; }) };
+    },
     /* Znovu načte dnešek a přepíše ho do dětí desky (po změně od rodiče). */
     async obnovDen(kids) {
       if (!kids.length) return;
@@ -251,13 +268,26 @@
       return ok(await klient().rpc('potvrd_omluvenku', { p_dite: k.id, p_od: od, p_do: doDne }));
     },
     /* Docházka dítěte podle stavu na desce. */
-    async dochazka(k) {
+    async dochazka(k, puvodni) {
+      /* Vrácení: obnoví přesně předchozí řádek (např. omluvenku od rodiče). */
+      if (puvodni !== undefined) {
+        if (puvodni === null) return ok(await klient().from('dochazka').delete().eq('dite_id', k.id).eq('den', dnes()));
+        return ok(await klient().from('dochazka').upsert(puvodni, { onConflict: 'dite_id,den' }));
+      }
       if (k.att === 'expected') return ok(await klient().from('dochazka').delete().eq('dite_id', k.id).eq('den', dnes()));
       if (k.att === 'excused') return null;
-      return ok(await klient().from('dochazka').upsert({
+      var radek = {
         dite_id: k.id, den: dnes(), stav: 'pritomen', prichod: cas(k.arrived), odchod: k.att === 'left' ? cas(k.left) : null,
         vyzvedl: k.att === 'left' ? (k.pickupToday ? k.pickupToday.who : k.usualPickup || null) : null
-      }, { onConflict: 'dite_id,den' }));
+      };
+      /* Omluvené dítě přesto přišlo: omluvenka a její potvrzení neplatí. Oběd
+         zůstane, jak ho kuchyně objednala (strava_prihlasena se nemění). */
+      if (k.excuse || k.wasExcused) { radek.omluvenka = null; radek.omluva_potvrzena = null; radek.omluvu_potvrdil = null; }
+      return ok(await klient().from('dochazka').upsert(radek, { onConflict: 'dite_id,den' }));
+    },
+    /* Řádek docházky dítěte dnes (pro vrácení akce). */
+    async dochazkaDnes(diteId) {
+      return ok(await klient().from('dochazka').select('dite_id, den, stav, prichod, odchod, vyzvedl, omluvenka, trida_dnes, strava_prihlasena, omluva_zadana, omluva_potvrzena, omluvu_potvrdil').eq('dite_id', diteId).eq('den', dnes()).maybeSingle());
     },
     /* Zápis pro rodiče: { druh, titulek, hodnota, text, osetreni, cas } */
     async zapis(k, z, kdo) {
