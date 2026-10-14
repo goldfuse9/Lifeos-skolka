@@ -1,126 +1,152 @@
 # LifeOS + Školka — stav auditu a dokončování
 
-Průběžně aktualizovaný dokument (pro pokračování po přerušení). Poslední aktualizace: 14. 10. 2026.
+Průběžně aktualizovaný dokument (pro pokračování po přerušení). Poslední aktualizace: 14. 10. 2026 — **audit dokončen, čeká na sloučení PR a nasazení migrace**.
 
-## Systém
+## 1. Systém
 
 | Část | Repozitář / soubor | Běží |
 | --- | --- | --- |
-| LifeOS (rodiče, mobil) | `goldfuse9/lifeos`, větev `faze-1-mobil`, `mobile/` (Expo SDK 57) | iPhone/Android přes `npx expo run:*` |
+| LifeOS (rodiče, mobil) | `goldfuse9/lifeos`, větev `faze-1-mobil` (+ PR z `audit-skolka`), `mobile/` | iPhone/Android přes `npx expo run:*` |
 | Správa LifeOS (superadmin) | `goldfuse9/Lifeos-skolka` `Admin.dc.html` | Netlify, `#admin` |
 | Ředitelna | `Reditel.dc.html` | `#reditel` |
 | Tablet třídy | `Trida.dc.html` | `#trida` |
 | Jídelna | `Jidelna.dc.html` | `#jidelna` |
 | Přihlášení | `Prihlaseni.dc.html` + `shell.js` | `#prihlaseni` |
 | Napojení na server | `server.js` + `config.js` + `vendor/supabase-2.115.0.js` | Supabase `jokprqoifzjojbpozefh` (Frankfurt) |
-| Databáze | `supabase/setup.sql` (= schema + pilot + všechny migrace), `supabase/migrace-*.sql` | Supabase |
+| Databáze | `supabase/setup.sql` (= vše), migrace `supabase/migrace-*.sql` | Supabase |
 | Finance (server) | `server/finance` (Python, FastAPI) | zatím nenasazeno |
-| **Testovací režim** | `testy/` (viz níže) | lokálně / v kontejneru |
+| Testovací režim | `testy/` | lokálně / v kontejneru |
 
-## Testovací režim (`testy/`)
+## 2. Testovací režim — jak spustit
 
-Lokální náhrada Supabase: PostgreSQL 16 + PostgREST 12 + mini-proxy (`/rest/v1`, `/auth/v1`: anonymní účty, e-mail+heslo, potvrzování e-mailu pro `…@potvrdit.test`). **Nikdy se nepřipojuje ke skutečnému projektu** — testy přesměrují `config.js` na lokální proxy.
+Lokální náhrada Supabase (PostgreSQL 16 + PostgREST 12 + mini-proxy pro `/auth/v1`). **Nikdy se nepřipojuje ke skutečnému projektu** — testy přesměrují `config.js` na lokální proxy. Data jsou smyšlená.
 
 ```bash
-testy/lokalni/stack.sh [db] [port PostgREST] [port proxy] [port webu]   # spustí (výchozí skolka_lokal 3001 3002 8767)
-testy/reset.sh [db]                                                      # obnoví výchozí smyšlená data
-testy/spust-vse.sh                                                       # celý cyklus: bezpečnost + E2E + LifeOS
+testy/lokalni/stack.sh                 # spustí databázi, PostgREST, proxy a web (skolka_lokal, porty 3001/3002/8767)
+testy/reset.sh                         # obnoví výchozí testovací data (dvě školky, všechny role)
+testy/spust-vse.sh                     # celý testovací cyklus (bezpečnost DB + E2E + finance + LifeOS)
+LIFEOS_DIR=…/lifeos/mobile testy/spust-vse.sh   # s LifeOS jinde než výchozí cesta
 ```
 
-- `testy/data.sql` — dvě smyšlené školky (A Sluníčko, B Dejvice), všechny role (ředitelka, zástupkyně, učitelky, hospodářka, kuchařka, rodiče, superadmin, účet bez školky). Lokálně projde libovolné heslo.
-- `testy/bezpecnost.sh` — 107 testů oprávnění přímo v DB pod skutečnými identitami (oddělení školek, citlivé sloupce, IDOR, blokace, kódy, zprávy, autor zápisu).
-- `testy/e2e/` — Playwright: `superadmin`, `pristupy`, `pozvanka-potvrzeni`, `tablet-rodic` (průřez tablet ↔ rodič ↔ ředitelna ↔ jídelna).
-- LifeOS: `SKOLKA_TEST_URL=http://localhost:3002 SKOLKA_TEST_KOD=<kód> npx jest skolkaserver` (dělá `spust-vse.sh` sám, pokud najde LifeOS s `node_modules`; cesta `LIFEOS_DIR`).
-- Více instancí současně (pro paralelní agenty): každá vlastní DB a porty, např. `stack.sh skolka_b 3021 3022 8821`.
+- Aplikace v testovacím režimu ručně: `http://localhost:8767/index.html` s `config.js` mířícím na `http://localhost:3002` (testy to dělají samy přes `testy/e2e/spolecne.js → stranka()`).
+- Testovací účty (`testy/data.sql`, lokálně projde libovolné heslo): `reditelka@test.cz`, `zastupce@test.cz`, `ucitelka@test.cz` (Sluníčka), `ucitelka2@test.cz` (Berušky), `hospodarka@test.cz`, `kucharka@test.cz`, školka B: `reditelka.b@test.cz`, `ucitelka.b@test.cz`; superadmin `roman@lifeos.cz`; rodiče jsou anonymní účty (kód vydá ředitelka). E-maily `…@potvrdit.test` vyžadují potvrzení (jako výchozí Supabase).
+- Zkušební provoz bez serveru (ukázková data v prohlížeči) funguje dál — test `e2e/zkusebni.js`.
 
-### Výsledky (14. 10. 2026, po opravách DB)
+### Jak spustit testovací agenty znovu
+1. `git worktree add /home/claude/skolka-audit HEAD` (zmrazená kopie pro agenty).
+2. Každý agent dostane vlastní instanci: `testy/lokalni/stack.sh skolka_X 30X1 30X2 88X1` a `testy/reset.sh skolka_X` (žádné střety).
+3. Zadání agentů A–F a regresního agenta R jsou v hlavičkách zpráv `docs/audit-2026-10-14/agent-*.md` (role, rozsah, výstup). Agent smí jen testovat, kód nemění; výstup do `…/scratchpad/audit/<X>.md`.
+
+## 3. Výsledky automatických testů (14. 10. 2026, po všech opravách)
 
 | Sada | Výsledek |
 | --- | --- |
-| `bezpecnost.sh` | **107/107 PASS** (před opravou 70/106) |
-| E2E | **43/43 PASS** |
-| LifeOS ↔ server (Jest integrace) | **5/5 PASS** |
-| LifeOS typecheck / lint / Jest (agent A) | 0 chyb / 0 varování / 113 PASS, 1 skip (integrace bez URL) |
+| `testy/bezpecnost.sh` — oprávnění v DB pod skutečnými identitami | **123/123 PASS** (před auditem 70/106) |
+| `testy/e2e/*` — Playwright: superadmin, přístupy, pozvánka s potvrzením, tablet↔rodič↔ředitelna, úložiště prohlížeče, ředitelna, jídelna, tablet, účet, zkušební provoz | **114/114 PASS** |
+| Finance API (pytest nad PostgreSQL) | **11/11 PASS** |
+| LifeOS ↔ server (Jest integrace) | **6/6 PASS** |
+| LifeOS typecheck / lint / Jest | 0 chyb / 0 varování / 113 PASS, 2 skip (integrace bez URL) |
+| Migrace `2026-10-14-audit` na DB ze staré verze (před auditem) i opakovaně | bez chyb (ověřil regresní agent) |
+| Nezávislý regresní audit (agent R) | všechny původní kritické/vysoké nálezy ověřeny jako opravené; 18 nových (R1–R18) → opraveny kromě níže uvedených |
 
-## Audit agenty (14. 10. 2026)
+## 4. Inventář modulů a stav funkcí
 
-Šest nezávislých agentů souběžně, každý na vlastní kopii dat, jen audit (kód neměnili). Úplné zprávy: `docs/audit-2026-10-14/agent-*.md`.
-A = LifeOS, B = Ředitelna, C = Jídelna, D = Tablet, E = Supabase/backend, F = nezávislé QA a bezpečnost.
+Stavy: OVĚŘENO (test prošel), OPRAVENO (oprava + test), NEOVĚŘENO, BLOKOVÁNO, CHYBÍ, SELHÁVÁ.
 
-## Sjednocené nálezy a stav
+### Přihlášení a účty
+| Funkce | Stav |
+| --- | --- |
+| Přihlášení e-mail+heslo do Ředitelny/Třídy/Jídelny/#admin podle role | OVĚŘENO |
+| Pozvánky (superadmin → ředitelka, ředitelka → zaměstnanci), registrace s kódem, potvrzení e-mailu | OVĚŘENO / OPRAVENO (smyčka „potvrďte e-mail“) |
+| Zapomenuté heslo → formulář Nové heslo | OPRAVENO |
+| Blokace účtu/školky — při přihlášení, při obnovení stránky, během práce | OPRAVENO |
+| Dvě záložky s různými účty | OPRAVENO |
+| Data v prohlížeči po odhlášení (ostrý provoz) | OPRAVENO (nic v localStorage) |
+| Skutečný e-mail ze Supabase (doručení, šablony) | NEOVĚŘENO (jen proti živému projektu) |
 
-Stavy: OPRAVENO (oprava + test), V ŘEŠENÍ, CHYBÍ, NEOVĚŘENO, BLOKOVÁNO.
+### Správa LifeOS (superadmin)
+| Funkce | Stav |
+| --- | --- |
+| Školky, stav, tarif, předplatné, poznámka, ředitelky, pozvánky | OVĚŘENO |
+| Superadmin nevidí data dětí | OVĚŘENO |
 
-### 1. Bezpečnost a ochrana dat (priorita 1)
+### Ředitelna (ostrý provoz)
+| Funkce | Stav |
+| --- | --- |
+| Přehled (dnes ve školce, PPV, kniha úrazů, obsazenost, úkoly) | OPRAVENO (ze serveru) |
+| Kartotéka: čtení, úprava, nové dítě, zástupci, pověřené osoby, souhlasy, import | OPRAVENO (ze serveru) |
+| Rodná čísla a osobní údaje jen vedení | OPRAVENO |
+| Docházka (měsíční souhrn, dnešek z tabletů) | OPRAVENO |
+| Třídy, přiřazení učitelek | OPRAVENO |
+| Kniha úrazů (z tabletu, číslování DB, záznam pro ČŠI ke stažení) | OPRAVENO |
+| Zprávy rodičům (do aplikace, podle adresáta) | OPRAVENO |
+| Rodiče v LifeOS (kódy), Přístupy | OVĚŘENO |
+| Zápis, Platby, Matrika MŠMT, Dokumenty, Web, Porady, Archiv, Nastavení, Učitelé | CHYBÍ v ostrém provozu (skryté; ve zkušebním provozu fungují nad ukázkovými daty) |
+| Odeslání záznamu o úrazu ČŠI / e-maily rodičům | CHYBÍ (ručně; aplikace to říká) |
 
-| # | Nález (zdroj) | Stav |
+### Jídelna (ostrý provoz)
+| Funkce | Stav |
+| --- | --- |
+| Jídelníček ze serveru, návrh i zveřejnění po chodech, změny po zveřejnění, vyprázdnění | OPRAVENO |
+| Počty obědů podle tříd + odhlášky z omluvenek | OPRAVENO |
+| Diety (děti s alergií ze serveru, doložení lékaře) | OPRAVENO |
+| Náhrady po dnech; vypnutí náhrad je skryje, nesmaže | OPRAVENO |
+| Katalog jídel a surovin (na serveru, JSON) | OPRAVENO |
+| Kuchařky (ZP, hygiena), sklad, platby stravného | CHYBÍ v ostrém provozu (skryté) |
+| Pestrost týdne u jídel ze serveru (kategorie) | SELHÁVÁ drobně (R17 — počítá jen jídla z katalogu) |
+
+### Tablet třídy (ostrý provoz)
+| Funkce | Stav |
+| --- | --- |
+| Příchod/odchod/vyzvednutí, omluvenky a potvrzení, události, úraz | OVĚŘENO |
+| Oběd a alergie z dnešního jídelníčku | OPRAVENO |
+| „Přesto přišel“, Vrátit, výpadek sítě, půlnoc | OPRAVENO |
+| Třídní kniha | OPRAVENO (na serveru) |
+| Fotky, Akce, Schůzky | CHYBÍ v ostrém provozu (skryté) |
+| Pověřené osoby na tabletu; přepínání tříd; zástupkyně bez třídy | CHYBÍ (D7, D11) |
+| Tablet bez sítě (offline režim) | CHYBÍ |
+
+### LifeOS — karta Školka
+| Funkce | Stav |
+| --- | --- |
+| Propojení kódem, stažení dat, omluvenka, vyzvednutí, přečtení, úprava údajů | OVĚŘENO (integrace) |
+| Relace: žádné tiché nové účty, jedna obnova tokenu | OPRAVENO |
+| Zápisy až po přijetí školkou (offline nic falešného) | OPRAVENO (logika; UI na zařízení NEOVĚŘENO) |
+| Zablokovaná školka / zrušené propojení — data se nepřepíšou | OPRAVENO |
+| Odpojit / Odebrat kartu / Smazat vše ruší propojení i token | OPRAVENO |
+| Oznámení bez zdravotních podrobností | OPRAVENO (na zařízení NEOVĚŘENO) |
+| Rodič s dětmi ve dvou školkách | CHYBÍ (zatím odmítnuto srozumitelnou hláškou) |
+| Build iOS/Android, šifrování SQLCipher, SecureStore, push | NEOVĚŘENO (v kontejneru nejde) |
+
+### Databáze a backend
+| Oblast | Stav |
+| --- | --- |
+| RLS všech 38+ tabulek, oddělení školek, citlivé sloupce, IDOR přes RPC | OVĚŘENO (123 testů) |
+| Bezpečnostní nálezy E1–E19, F1–F12, C10–C11, D4, D9, R5–R7, R10 | OPRAVENO |
+| Finanční API — blokace | OPRAVENO |
+| Storage, Edge Functions | v projektu nejsou (fotky alb nemají úložiště) |
+
+## 5. Zbývající problémy a proč nejsou vyřešené
+
+| # | Problém | Proč |
 | --- | --- | --- |
-| S1 | Kuchařka přes pohled `deti_jidelna` mění alergie a maže děti — obchází RLS (E1) | OPRAVENO (migrace 10-14, test) |
-| S2 | Pozvánku přijme anonymní účet bez e-mailu (E2, F3) | OPRAVENO |
-| S3 | `diety`, `jidlo_suroviny`, `nahrady` bez kontroly školky — kuchyně cizí školky čte/mění diety a alergeny (E3, F1, F2, C10, C11) | OPRAVENO |
-| S4 | Třídní kniha čitelná/zapisovatelná vedením libovolné školky (E4, F4) | OPRAVENO |
-| S5 | Rodné číslo, adresa, pojišťovna, očkování čitelné učitelkou, hospodářkou (E5, F5) | OPRAVENO (práva po sloupcích, `deti_osobni()` pro vedení a rodiče) |
-| S6 | Ředitelka přímým UPDATE mění role, id účtu, blokuje spoluředitelku (E7) | OPRAVENO |
-| S7 | Vazby napříč školkami: učitelka cizí školky do třídy, přesun dítěte „na dnes“ do cizí třídy, úraz do cizí knihy (E8, F6, F7, D4) | OPRAVENO |
-| S8 | Rodič omlouvá zpětně a přepisuje „neomluven“ (E9) | OPRAVENO |
-| S9 | Podvržení autora zápisu (`zapsal`) u událostí a úrazů (D9, F12) | OPRAVENO (trigger + zásada) |
-| S10 | Adresné zprávy čte celá školka vč. rodičů a kuchařky (F8, A9) | OPRAVENO (`smi_zpravu`: vse / zamestnanci / trida:… / dite:…) |
-| S11 | Kódy rodičů bez limitu pokusů; 7. znak jen 16 možností (E15, F11) | OPRAVENO (10 pokusů / 15 min, plně náhodné bajty) |
-| S12 | Rodič s dětmi ve dvou školkách vidí účet/jídelníček jiné školky (E14, A3, A4) | OPRAVENO dočasně: druhou školku na stejný účet nejde spárovat (srozumitelná hláška); plná podpora více školek = CHYBÍ |
-| S13 | Anon role má výchozí granty Supabase (E18); funkce bez `search_path` (E17) | OPRAVENO |
-| S14 | Smazání dítěte smaže finanční záznamy; účet rodiče/učitelky nejde smazat (E11, E12) | OPRAVENO (dítě se ukončuje, FK `set null`/`restrict`) |
-| S15 | Účetní pohyb na dítě padá na RLS konta (E6, F10) | OPRAVENO |
-| S16 | **Data v prohlížeči (localStorage) nejsou oddělená podle účtu/školky a po odhlášení zůstávají** — vč. rodných čísel; ředitelka B vidí data A na sdíleném počítači (B2, C12, F9) | V ŘEŠENÍ (další krok) |
-| S17 | Dvě záložky s různými účty sdílejí relaci (F7b) | V ŘEŠENÍ |
-| S18 | Finanční API (Python) ignoruje blokaci školky/účtu (E13) | V ŘEŠENÍ (nenasazeno) |
-| S19 | LifeOS: při selhání obnovy tokenu tiše založí nový anonymní účet (až 12×), odpojí děti (A1, A2) | V ŘEŠENÍ |
-| S20 | LifeOS: oznámení ukazují zdravotní detail na zamčené obrazovce (A) | V ŘEŠENÍ |
-| S21 | `moje_dite`/`trida_dnes` používají `current_date` serveru (UTC v Supabase) (D14) | V ŘEŠENÍ |
+| Z1 | Nenapojené stránky (zápis, platby, matrika, dokumenty, web, porady, archiv, nastavení; jídelna: kuchařky, sklad; tablet: fotky, akce, schůzky) jsou v ostrém provozu skryté | Rozsah — každá potřebuje vlastní datový model a návrh rozhraní; skrytí brání falešným datům a „uložení“ jen do prohlížeče |
+| Z2 | Limit pokusů o kód rodiče jde obejít novými anonymními účty (R4) | Globální limit potřebuje nastavení Supabase (CAPTCHA / limit anonymních registrací) nebo Edge Function → **BLOKOVÁNO: rozhodnutí a nastavení v Supabase** |
+| Z3 | Rodič s dětmi ve dvou školkách | Vyžaduje změnu modelu (škola podle dítěte místo účtu) |
+| Z4 | Omluvené dítě, které přesto přišlo, má oběd odhlášený | Záměr: kuchyně už oběd neobjedná; tablet učitelku upozorní |
+| Z5 | Stejný chod upravený ve dvou deskách současně — vyhraje poslední | Různé chody se už nepřepisují (R9); úplné zamykání by bylo nad rámec |
+| Z6 | Živý Supabase z testovacího prostředí nedostupný | Migraci a chování proti živé DB ověří uživatel podle návodu v PR |
+| Z7 | Push na iPhone | Chybí placený Apple Developer účet |
 
-### 2. Ukázková data místo skutečných v ostrém provozu (priorita 2–3)
+## 6. Kde jsou zprávy agentů
 
-| # | Nález | Stav |
-| --- | --- | --- |
-| U1 | Ředitelna: 15 z 17 stránek v ostrém provozu ukazuje ukázkovou školku (62 smyšlených dětí, úrazy, dlužníci, IZO) a formuláře hlásí „uloženo/odesláno“, ale ukládají jen do prohlížeče (B1, B3, B5, B7) | V ŘEŠENÍ |
-| U2 | Ředitelna nevidí úrazy a docházku z tabletu (B4, D10) | V ŘEŠENÍ |
-| U3 | Jídelna nenačítá jídelníček ze serveru; „Zveřejnit“ přepíše skutečné menu ukázkovým (C1); počty obědů z kódu, odhlášky od rodičů se nepromítnou, kuchařka nečte docházku (C2); diety smyšlených dětí (C3); změna alergenů po zveřejnění se nepošle (C4, C5) | V ŘEŠENÍ |
-| U4 | Tablet: oběd a varování k alergiím z ukázkového menu (D1); třídní kniha/fotky/akce/schůzky se neukládají, přesto „odesláno rodičům“ (D2) | V ŘEŠENÍ |
-| U5 | Kniha úrazů: číslo počítal klient, souběh = ztracený úraz (D3, E10) | OPRAVENO (číslo přiděluje DB, tablet ukáže číslo ze serveru) |
+`docs/audit-2026-10-14/agent-A.md` (LifeOS), `agent-B.md` (Ředitelna), `agent-C.md` (Jídelna), `agent-D.md` (Tablet), `agent-E.md` (Supabase/backend), `agent-F.md` (nezávislé QA, zpráva zkrácená bezpečnostním filtrem u F9+), `agent-R-regrese.md` (nezávislý regresní audit po opravách).
 
-### 3. Funkční chyby a chybové stavy
+## 7. Další krok
 
-| # | Nález | Stav |
-| --- | --- | --- |
-| F-1 | Tablet: „Vrátit“ příchod omluveného dítěte nechá v DB „přítomen“ (D5); omluvené dítě přesto přišlo → oběd zůstane odhlášený (D6) | V ŘEŠENÍ |
-| F-2 | Tablet hlásí úspěch před potvrzením serveru, při výpadku se zápis ztratí; bez sítě se neotevře (D8, F16) | V ŘEŠENÍ |
-| F-3 | Tablet přes půlnoc zapíše do nového dne (D12) | V ŘEŠENÍ |
-| F-4 | Zapomenuté heslo: chybí obrazovka pro nastavení nového hesla (F15) | V ŘEŠENÍ |
-| F-5 | Zablokovaná učitelka vidí děti do obnovení; technické chyby DB anglicky se stack trace (F13, D8) | V ŘEŠENÍ |
-| F-6 | LifeOS: omluvenka/vyzvednutí offline ukáže „omluveno“, ale na server neodejde; chybí fronta zápisů (A5) | V ŘEŠENÍ |
-| F-7 | LifeOS: zablokovaná školka → synchronizace tiše smaže data karty (A6); synchronizace přepíše ručně zadaný účet (A7); odpojení nezruší propojení na serveru (A8); „Poslat školce verzi z LifeOS“ smaže alergie, když jsou v LifeOS prázdné (A17) | V ŘEŠENÍ |
-| F-8 | Jídelna: náhrada jednoho dne se objeví i jinde (C7); vypnutí náhrad je na serveru smaže natrvalo (C8); každé zveřejnění zdvojí suroviny (C15); validace dne/alergenu (C16) | V ŘEŠENÍ |
-| F-9 | Pověřené osoby se na tabletu neukazují (D7); jedna třída na účet, zástupkyně bez třídy (D11) | CHYBÍ |
+1. Sloučit PR školky (větev `audit`) a PR LifeOS (větev `audit-skolka` → `faze-1-mobil`).
+2. V Supabase spustit `supabase/migrace-2026-10-14-audit.sql` (jde spustit opakovaně).
+3. V Supabase zvážit CAPTCHA / limit anonymních registrací (Z2).
+4. Další vývoj: napojit skryté stránky (Z1) — po jedné, se stejným vzorem (model ze serveru, srvSync, test v `testy/e2e`).
 
-### Vyřešeno dříve (13. 10.)
-
-Superadmin a pozvánky; Přístupy v ostrém provozu; NULL-bypass oprávnění u účtu bez role; stav/předplatné školky jen superadmin; poznámka správce skrytá; prázdná třída na tabletu; přihlášení po potvrzení e-mailu (PR #22, #23).
-
-## Změněné soubory (větev `audit`)
-
-- `testy/**` — testovací režim
-- `supabase/migrace-2026-10-14-audit.sql` (nová), `supabase/setup.sql` (+ migrace)
-- `server.js` (číslo úrazu ze serveru), `Trida.dc.html` (číslo úrazu), `sw.js` (v32)
-- `docs/audit-2026-10-14/agent-*.md`, tento dokument
-
-## Další krok
-
-1. S16/S17 — oddělit data prohlížeče podle účtu a školky, mazat při odhlášení; v ostrém provozu nenačítat ukázková data.
-2. U1–U4 — v ostrém provozu: nenapojené stránky zřetelně označit a zakázat jejich „ukládání“; napojit Kartotéku, Třídy, Docházku, Knihu úrazů, Zprávy (Ředitelna), jídelníček a počty obědů (Jídelna), oběd a alergie (Tablet).
-3. F-1…F-8 podle priorit, LifeOS (S19, S20, F-6, F-7).
-
-Pokračování po přerušení: přečíst tento soubor, `git status` v `/home/claude/lifeos-skolka` (větev `audit`), `testy/spust-vse.sh`, pokračovat prvním bodem „Další krok“.
-
-## Externí blokace
-
-- Živý Supabase z testovacího prostředí nedostupný → migrace a chování proti živé DB ověří uživatel (návod v PR). Rozdíly emulace: anonymní uživatel má v ostrém Supabase `email: ""`, realtime se lokálně netestuje.
-- Push notifikace na iPhone: chybí placený Apple Developer účet; build iOS/Android nejde v kontejneru ověřit.
+Pokračování po přerušení: přečíst tento soubor, `git status` v repozitáři, `testy/spust-vse.sh`.
