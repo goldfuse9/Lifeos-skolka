@@ -158,5 +158,9 @@ t "kuchařka nečte zprávu pro rodinu" 0 $KA kucharka@test.cz "$ZPR select coun
 t "ředitelka čte všechny zprávy" 4 $RA reditelka@test.cz "$ZPR select count(*) from zpravy;"
 echo "== autor zápisu"
 t "učitelka nepodvrhne autora události" $UA $UA ucitelka@test.cz "insert into udalosti_ditete (skola_id, dite_id, druh, titulek, zapsal, zapsal_jmeno) values ('$A','$EMA','info','x','$RA','Ředitelka'); select zapsal from udalosti_ditete where titulek='x';"
+echo "== odpojení rodiče"
+t "rodič odpojí své dítě (server zapomene propojení)" 0 $RODA "" "select odpoj_rodice('$EMA'); select count(*) from deti;"
+t "po odpojení rodič nemá účet ve školce" 0 $RODA "" "select odpoj_rodice('$EMA'); reset role; select count(*) from uzivatele where id='$RODA';"
+t "cizí rodič neodpojí cizí dítě" 1 $ROD2A "" "select odpoj_rodice('$EMA'); reset role; select count(*) from zastupci where dite_id='$EMA' and uzivatel_id='$RODA';"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

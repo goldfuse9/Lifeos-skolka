@@ -18,7 +18,7 @@ $PG -d "${DB}_fin" -f lokalni/supabase-stub.sql >/dev/null 2>&1; $PG -d "${DB}_f
 (cd ../server && TEST_DATABASE_URL="postgresql://postgres@/${DB}_fin?host=${PGHOST_TEST:-/home/claude/.pgtest}&port=${PGPORT_TEST:-5499}" python3 -m pytest -q tests 2>&1 | tail -1) | tee /tmp/skolka-fin.out
 grep -q "passed" /tmp/skolka-fin.out && ! grep -q "failed\|error" /tmp/skolka-fin.out || F=1
 L=0
-LIFEOS=${LIFEOS_DIR:-/home/claude/lifeos-a/mobile}
+LIFEOS=${LIFEOS_DIR:-/home/claude/lifeos-sv2/mobile}
 if [ -d "$LIFEOS/node_modules" ]; then
   echo "######## LifeOS ↔ server (Jest integrační test)"
   ./reset.sh "$DB" >/dev/null

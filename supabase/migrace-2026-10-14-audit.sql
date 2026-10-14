@@ -496,3 +496,17 @@ begin
   end if;
 end $function$;
 grant execute on function dnes_praha() to authenticated;
+
+-- A8: rodič odpojí dítě v telefonu (Odpojit / Odebrat kartu / Smazat vše) —
+-- zruší se i propojení na serveru; bez dalších dětí zmizí i účet rodiče ve školce.
+create or replace function odpoj_rodice(p_dite uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Nejste přihlášeni.'; end if;
+  update zastupci set uzivatel_id = null where dite_id = p_dite and uzivatel_id = auth.uid();
+  delete from zastupci where dite_id = p_dite and uzivatel_id is null and poradi = 9 and telefon is null and email is null;
+  if not exists (select 1 from zastupci where uzivatel_id = auth.uid()) then
+    delete from uzivatele where id = auth.uid() and role = 'rodic';
+  end if;
+end $$;
+grant execute on function odpoj_rodice(uuid) to authenticated;
