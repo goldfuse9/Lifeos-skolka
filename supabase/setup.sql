@@ -1679,3 +1679,44 @@ language sql stable security definer set search_path = public as $$
   order by d.jmeno
 $$;
 grant execute on function zverejni_jidelnicek(jsonb, date, date), jidelnicek_tyden(date, date), jidelnicek_kuchyne(date, date), obedy_den(date), deti_diety() to authenticated;
+
+-- D14: „dnes“ podle Prahy (Supabase běží v UTC — mezi půlnocí a 2:00 by byl včerejšek)
+create or replace function dnes_praha() returns date language sql stable set search_path = public as
+  $$ select (now() at time zone 'Europe/Prague')::date $$;
+alter table poverene_osoby alter column zmocneni_od set default (now() at time zone 'Europe/Prague')::date;
+alter table predpisy alter column vystaveno set default (now() at time zone 'Europe/Prague')::date;
+create or replace function moje_dite(d uuid) returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce(case moje_role()
+    when 'reditelka' then exists (select 1 from deti where id = d and skola_id = moje_skola())
+    when 'zastupce' then exists (select 1 from deti where id = d and skola_id = moje_skola())
+    when 'hospodarka' then exists (select 1 from deti where id = d and skola_id = moje_skola())
+    when 'ucitelka' then exists (
+      select 1 from deti x join ucitel_trida ut on ut.trida_id = x.trida_id
+      where x.id = d and ut.ucitel_id = auth.uid()
+      union
+      select 1 from dochazka y join ucitel_trida ut on ut.trida_id = y.trida_dnes
+      where y.dite_id = d and y.den = dnes_praha() and ut.ucitel_id = auth.uid())
+    when 'rodic' then exists (select 1 from zastupci z where z.dite_id = d and z.uzivatel_id = auth.uid())
+  end, false) $$;
+CREATE OR REPLACE FUNCTION public.uprav_udaje_rodicem(p_dite uuid, p_alergie text DEFAULT NULL::text, p_telefon text DEFAULT NULL::text, p_email text DEFAULT NULL::text, p_poverene text[] DEFAULT NULL::text[])
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+begin
+  if not (moje_role() = 'rodic' and moje_dite(p_dite)) then raise exception 'Údaje tohoto dítěte měnit nemůžete.'; end if;
+  if p_alergie is not null then update deti set alergie = nullif(trim(p_alergie), '') where id = p_dite; end if;
+  if p_telefon is not null or p_email is not null then
+    update zastupci set telefon = coalesce(nullif(trim(p_telefon), ''), telefon), email = coalesce(nullif(trim(p_email), ''), email)
+     where dite_id = p_dite and uzivatel_id = auth.uid();
+  end if;
+  if p_poverene is not null then
+    update poverene_osoby set zruseno = dnes_praha()
+     where dite_id = p_dite and zruseno is null and not (jmeno = any(p_poverene));
+    insert into poverene_osoby (dite_id, jmeno)
+      select p_dite, x from unnest(p_poverene) x
+      where trim(x) <> '' and not exists (select 1 from poverene_osoby o where o.dite_id = p_dite and o.jmeno = x and o.zruseno is null);
+  end if;
+end $function$;
+grant execute on function dnes_praha() to authenticated;
