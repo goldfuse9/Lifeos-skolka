@@ -244,11 +244,10 @@
     },
     /* Kniha úrazů (číslo za rok průběžně). */
     async uraz(k, x) {
+      /* Číslo v knize přiděluje databáze (souběžné zápisy, učitelka nevidí úrazy jiných tříd). */
       var u = nactiUcet(), rok = new Date().getFullYear();
-      var posl = ok(await klient().from('urazy').select('cislo').eq('skola_id', u.skolaId).eq('rok', rok).order('cislo', { ascending: false }).limit(1));
-      var cislo = (posl[0] ? posl[0].cislo : 0) + 1;
-      ok(await klient().from('urazy').insert({ skola_id: u.skolaId, cislo: cislo, rok: rok, dite_id: k.id, kdy: new Date().toISOString(), kde: x.kde || null, co: x.co, osetreni: x.osetreni || null, svedek: x.svedek || null, komentar: x.komentar || null, zapsal: u.id }));
-      return cislo;
+      var r = ok(await klient().from('urazy').insert({ skola_id: u.skolaId, cislo: 0, rok: rok, dite_id: k.id, kdy: new Date().toISOString(), kde: x.kde || null, co: x.co, osetreni: x.osetreni || null, svedek: x.svedek || null, komentar: x.komentar || null, zapsal: u.id }).select('cislo').single());
+      return r.cislo;
     },
     /* Živé změny dnešní docházky a vyzvedávání (omluvenky od rodičů). */
     sleduj(tridaId, priZmene) {

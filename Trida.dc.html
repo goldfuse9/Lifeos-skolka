@@ -1843,7 +1843,11 @@ class Component extends DCLogic {
         if (kind === 'symptomy') self.srvSend(SV.zapis(k, { cas: t, druh: 'info', titulek: hasMood ? SYM_MOODS[f.mood].title : 'Není mu dobře', hodnota: symTv ? self.fmt(symTv) + ' °C' : null, text: symParts.slice(hasMood ? 1 : 0).join(' · ') + (urg === 'call' ? ' · voláme vám' : '') }, self.me), 'příznaky');
         if (kind === 'uraz') {
           self.srvSend(SV.zapis(k, { cas: t, druh: 'uraz', titulek: f.what, hodnota: areaLabel, text: [f.place ? PLACE[f.place] : '', (f.text || '').trim()].filter(Boolean).join(' · '), osetreni: care || 'bez ošetření' }, self.me), 'úraz');
-          self.srvSend(SV.uraz(k, { co: f.what + ' — ' + areaLabel, kde: f.place ? PLACE[f.place].replace(/^(ve|na|v) /, '') : '', osetreni: care, svedek: f.witness && f.witness !== 'Nikdo další' ? f.witness : '', komentar: (f.text || '').trim() }), 'kniha úrazů');
+          var mistni = 'kniha úrazů č. ' + self.urazNo;
+          var pu = SV.uraz(k, { co: f.what + ' — ' + areaLabel, kde: f.place ? PLACE[f.place].replace(/^(ve|na|v) /, '') : '', osetreni: care, svedek: f.witness && f.witness !== 'Nikdo další' ? f.witness : '', komentar: (f.text || '').trim() });
+          self.srvSend(pu, 'kniha úrazů');
+          /* číslo v knize přidělí server — přepíše se v záznamu dne */
+          if (pu) pu.then(function (c) { (k.log || []).forEach(function (l) { if (l.type === 'uraz' && l.sub && l.sub.indexOf(mistni) !== -1) l.sub = l.sub.replace(mistni, 'kniha úrazů č. ' + c); }); self.urazNo = Math.max(self.urazNo, c); self.forceUpdate(); }).catch(function () {});
         }
         if (kind === 'poznamka') self.srvSend(SV.zapis(k, { cas: t, druh: 'info', titulek: 'Poznámka', text: summary }, self.me), 'poznámka');
       }

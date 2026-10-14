@@ -11,12 +11,13 @@ RA=aaaaaaaa-0000-4000-8000-000000000001; UA=aaaaaaaa-0000-4000-8000-000000000002
 ZA=aaaaaaaa-0000-4000-8000-000000000004; U2A=aaaaaaaa-0000-4000-8000-000000000005; HA=aaaaaaaa-0000-4000-8000-000000000006
 KA=aaaaaaaa-0000-4000-8000-000000000007; ROD2A=aaaaaaaa-0000-4000-8000-000000000008
 RB=bbbbbbbb-0000-4000-8000-000000000001; UB=bbbbbbbb-0000-4000-8000-000000000002; RODB=bbbbbbbb-0000-4000-8000-000000000003
-SA=aaaaaaaa-0000-4000-8000-0000000000aa; NO=cccccccc-0000-4000-8000-0000000000cc
+SA=aaaaaaaa-0000-4000-8000-0000000000aa; NO=cccccccc-0000-4000-8000-0000000000cc; AN=dddddddd-0000-4000-8000-0000000000dd
+BER=00000000-0000-4000-8000-000000000012
 OK=0; KO=0
 # t "popis" očekávání uid email "SQL"   (očekávání ERR = musí skončit chybou)
 t() {
   local name="$1" exp="$2" uid="$3" mail="$4" q="$5" out r
-  out=$(printf "begin;\nset local role authenticated;\nselect set_config('request.jwt.claim.sub','%s',true), set_config('request.jwt.claims','{\"sub\":\"%s\",\"email\":\"%s\",\"role\":\"authenticated\"}',true) \\\\g /dev/null\n%s\nrollback;\n" "$uid" "$uid" "$mail" "$q" | $P 2>&1 | grep -v '^CONTEXT\|^$\|^LINE\|^ *\^\|^HINT\|^DETAIL' | tail -1)
+  out=$(printf "begin;\nset local role authenticated;\nselect set_config('request.jwt.claim.sub','%s',true), set_config('request.jwt.claims','{\"sub\":\"%s\",\"email\":\"%s\",\"role\":\"authenticated\"}',true) \\\\g /dev/null\n%s\nrollback;\n" "$uid" "$uid" "$mail" "$q" | $P 2>&1 | grep -v '^CONTEXT\|^$\|^LINE\|^ *\^\|^HINT\|^DETAIL\|^PL/pgSQL\|^SQL statement\|^ ' | tail -1)
   if [[ "$exp" == ERR ]]; then [[ "$out" == *ERROR* ]] && r=PASS || r=FAIL; else [[ "$out" == "$exp" ]] && r=PASS || r=FAIL; fi
   [[ $r == PASS ]] && OK=$((OK+1)) || KO=$((KO+1))
   echo "$r  $name  →  $out"
@@ -39,7 +40,7 @@ t "učitelka B nezapíše docházku dítěti A" ERR $UB ucitelka.b@test.cz "inse
 echo "== učitelka (jen své třídy)"
 t "učitelka Sluníček vidí 2 děti" 2 $UA ucitelka@test.cz "select count(*) from deti;"
 t "učitelka Sluníček nevidí Tobiáše (Berušky)" 0 $UA ucitelka@test.cz "select count(*) from deti where id='$TOB';"
-t "učitelka nevidí rodná čísla" ERR $UA ucitelka@test.cz "select rodne_cislo from deti limit 1;"
+t "učitelka nevidí rodná čísla" ERR $UB ucitelka.b@test.cz "select rodne_cislo from deti where id='$ADAM';"
 t "učitelka nevidí platby" 0 $UA ucitelka@test.cz "select count(*) from platby;"
 t "učitelka nezapíše docházku dítěti cizí třídy" ERR $UA ucitelka@test.cz "insert into dochazka (dite_id, den, stav) values ('$TOB', current_date, 'pritomen');"
 t "učitelka nezvě zaměstnance" ERR $UA ucitelka@test.cz "select pozvi_zamestnance('X','x@x.cz','ucitelka','$SLUN');"
@@ -57,7 +58,9 @@ t "rodič nezapíše docházku napřímo" ERR $RODA "" "insert into dochazka (di
 t "rodič nevidí účty zaměstnanců" 0 $RODA "" "select count(*) from uzivatele where role<>'rodic';"
 t "rodič nevolá zamestnanci_skoly" ERR $RODA "" "select count(*) from zamestnanci_skoly();"
 echo "== jídelna / hospodářka"
-t "kuchařka nevidí rodná čísla" ERR $KA kucharka@test.cz "select rodne_cislo from deti limit 1;"
+t "kuchařka nevidí rodná čísla" ERR $KA kucharka@test.cz "select rodne_cislo from deti;"
+t "ředitelka čte rodné číslo přes deti_osobni" 220120/0000 $RA reditelka@test.cz "select rodne_cislo from deti_osobni('$TOB');"
+t "učitelka nečte deti_osobni" 0 $UA ucitelka@test.cz "select count(*) from deti_osobni();"
 t "kuchařka nevidí zákonné zástupce" 0 $KA kucharka@test.cz "select count(*) from zastupci;"
 t "kuchařka zveřejní jídelníček" 0 $KA kucharka@test.cz "select zverejni_jidelnicek('[]');"
 t "učitelka nezveřejní jídelníček" ERR $UA ucitelka@test.cz "select zverejni_jidelnicek('[]');"
@@ -95,10 +98,65 @@ t "bez role: nezmění alergie" ERR $NO bezrole@test.cz "select uprav_udaje_rodi
 t "bez role: nezveřejní jídelníček" ERR $NO bezrole@test.cz "select zverejni_jidelnicek('[]');"
 t "bez role: nepřepne náhrady" ERR $NO bezrole@test.cz "select nastav_nahrady(false);"
 t "bez role: nepotvrdí omluvenku" ERR $NO bezrole@test.cz "select potvrd_omluvenku('$EMA', current_date, current_date);"
-t "bez role: neuplatní neplatný kód" ERR $NO bezrole@test.cz "select * from uplatni_kod('neplatny', 'X');"
+t "bez role: neplatný kód nic nespáruje" 0 $NO bezrole@test.cz "select count(*) from uplatni_kod('neplatny', 'X');"
 echo "== anonymní klíč bez přihlášení"
 anon "anon nečte děti" "select count(*) from deti;"
 anon "anon nevolá admin_skoly" "select count(*) from admin_skoly();"
 anon "anon neomluví dítě" "select omluv_dite('$EMA', current_date, current_date, 'x');"
+JB="reset role; insert into jidla (id, skola_id, nazev, druh) values ('00000000-0000-4000-8000-0000000ed002','$B','Oběd B','obed'); insert into suroviny (id, skola_id, nazev, alergeny) values ('00000000-0000-4000-8000-0000000ec002','$B','Mouka B','{1}'); insert into jidlo_suroviny values ('00000000-0000-4000-8000-0000000ed002','00000000-0000-4000-8000-0000000ec002'); insert into nahrady values ('00000000-0000-4000-8000-0000000ed002',1,'Bez lepku B'); set local role authenticated;"
+echo "== E1 pohled deti_jidelna"
+t "kuchařka nezmění alergie přes deti_jidelna" ERR $KA kucharka@test.cz "update deti_jidelna set alergie=null where id='$TOB';"
+t "kuchařka nesmaže dítě přes deti_jidelna" ERR $KA kucharka@test.cz "delete from deti_jidelna where id='$OLI';"
+echo "== E2 pozvánka a účet bez e-mailu"
+t "anonymní účet (JWT bez e-mailu) nepřijme pozvánku ředitelky" ERR $AN "" "reset role; insert into auth.users (id, is_anonymous) values ('$AN', true); insert into pozvanky (kod, skola_id, email, jmeno, role) values ('RRRRSSSS','$B','r2.b@test.cz','R2','reditelka'); set local role authenticated; select set_config('request.jwt.claims','{\"sub\":\"$AN\",\"role\":\"authenticated\",\"is_anonymous\":true}',true) \\g /dev/null
+select * from prijmi_pozvanku('RRRR-SSSS');"
+echo "== E3 jídelna napříč školkami"
+t "kuchařka A nečte diety dítěte B" 0 $KA kucharka@test.cz "reset role; insert into diety values ('$ADAM', true, 'anafylaxe B'); set local role authenticated; select count(*) from diety where dite_id='$ADAM';"
+t "kuchařka A nezmění dietu dítěte B" 0 $KA kucharka@test.cz "reset role; insert into diety values ('$ADAM', true, 'anafylaxe B'); set local role authenticated; with u as (update diety set poznamka='x' where dite_id='$ADAM' returning 1) select count(*) from u;"
+t "kuchařka A nesmaže alergeny jídla B" 0 $KA kucharka@test.cz "$JB with d as (delete from jidlo_suroviny where jidlo_id='00000000-0000-4000-8000-0000000ed002' returning 1) select count(*) from d;"
+t "kuchařka A nesmaže náhrady jídla B" 0 $KA kucharka@test.cz "$JB with d as (delete from nahrady where jidlo_id='00000000-0000-4000-8000-0000000ed002' returning 1) select count(*) from d;"
+t "účet bez role nečte náhrady žádné školky" 0 $NO bezrole@test.cz "$JB select count(*) from nahrady;"
+echo "== E4 třídní kniha"
+t "ředitelka A nečte třídní knihu B" 0 $RA reditelka@test.cz "reset role; insert into tridni_kniha (trida_id, den, tema, cinnosti) values ('$ZAB', current_date, 'B', '{b}'); set local role authenticated; select count(*) from tridni_kniha where trida_id='$ZAB';"
+t "ředitelka A nezapíše do třídní knihy B" ERR $RA reditelka@test.cz "insert into tridni_kniha (trida_id, den, tema, cinnosti) values ('$ZAB', current_date+1, 'x', '{x}');"
+echo "== E5 citlivé sloupce"
+t "hospodářka nevidí rodná čísla" ERR $HA hospodarka@test.cz "select rodne_cislo from deti limit 1;"
+t "učitelka nevidí adresy" ERR $UA ucitelka@test.cz "select adresa from deti limit 1;"
+echo "== E6 účetní kniha"
+t "hospodářka zapíše předpis do konta dítěte" 1 $HA hospodarka@test.cz "with i as (insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'dite:$EMA', 'vynosy:skolkovne', 100, 'x') returning 1) select count(*) from i;"
+t "hospodářka A nepřipíše pohyb dítěti B" ERR $HA hospodarka@test.cz "insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'banka', 'dite:$ADAM', 100, 'x');"
+echo "== E7 účty zaměstnanců"
+t "ředitelka nedegraduje spoluředitelku" ERR $RA reditelka@test.cz "reset role; insert into auth.users(id,email) values ('aaaaaaaa-0000-4000-8000-0000000000f2','r2@test.cz'); insert into uzivatele (id, skola_id, jmeno, role) values ('aaaaaaaa-0000-4000-8000-0000000000f2','$A','R2','reditelka'); set local role authenticated; with u as (update uzivatele set role='ucitelka', aktivni=false where id='aaaaaaaa-0000-4000-8000-0000000000f2' returning 1) select 1/count(*) from u;"
+t "ředitelka nezmění id účtu (převod na jiného uživatele)" ERR $RA reditelka@test.cz "with u as (update uzivatele set id='aaaaaaaa-0000-4000-8000-0000000000aa' where id='$HA' returning 1) select 1/count(*) from u;"
+t "ředitelka neudělá z rodiče učitelku" ERR $RA reditelka@test.cz "with u as (update uzivatele set role='ucitelka' where id='$RODA' returning 1) select 1/count(*) from u;"
+echo "== E8 vazby napříč školkami"
+t "ředitelka B nepřiřadí učitelku A do své třídy" ERR $RB reditelka.b@test.cz "insert into ucitel_trida values ('$UA', '$ZAB');"
+t "ředitelka A nepřesune dítě do třídy B" ERR $RA reditelka@test.cz "with u as (update deti set trida_id='$ZAB' where id='$EMA' returning 1) select 1/count(*) from u;"
+t "ředitelka A nepřesune dítě na den do třídy B" ERR $RA reditelka@test.cz "insert into dochazka (dite_id, den, stav, trida_dnes) values ('$EMA', current_date+40, 'pritomen', '$ZAB');"
+t "učitelka nezapíše úraz do knihy cizí školky" ERR $UA ucitelka@test.cz "insert into urazy (skola_id, cislo, rok, dite_id, kdy, co, zapsal) values ('$B', 999, 2026, '$EMA', now(), 'x', '$UA');"
+echo "== E9 omluvenky"
+t "rodič neomluví zpětně neomluvenou absenci" ERR $ROD2A "" "reset role; insert into dochazka (dite_id, den, stav) values ('$OLI', current_date-7, 'neomluven') on conflict do nothing; set local role authenticated; select count(*) from omluv_dite('$OLI', current_date-7, current_date-7, 'x');"
+echo "== E10 číslování úrazů"
+t "učitelka Sluníček zapíše úraz, i když Berušky mají vyšší číslo" 1 $UA ucitelka@test.cz "reset role; delete from urazy where skola_id='$A'; insert into urazy (skola_id, cislo, rok, dite_id, kdy, co, zapsal) values ('$A', 1, extract(year from now())::int, '$EMA', now(), 'a', '$UA'), ('$A', 2, extract(year from now())::int, '$TOB', now(), 'b', '$U2A'); set local role authenticated; with i as (insert into urazy (skola_id, cislo, rok, dite_id, kdy, co, zapsal) values ('$A', (select coalesce(max(cislo),0)+1 from urazy where skola_id='$A' and rok=extract(year from now())::int), extract(year from now())::int, '$EMA', now(), 'c', '$UA') returning 1) select count(*) from i;"
+echo "== E12 mazání dítěte"
+t "ředitelka nesmaže dítě (finanční záznamy)" ERR $RA reditelka@test.cz "with d as (delete from deti where id='$OLI' returning 1) select 1/count(*) from d;"
+echo "== E14 kód cizí školky"
+t "rodič školky A neuplatní kód školky B" ERR $RODA "" "reset role; insert into parovaci_kody (kod, skola_id, dite_id, plati_do) values ('CCCCDDDD','$B','$ADAM', now()+interval '1 day'); set local role authenticated; select dite_id from uplatni_kod('CCCC-DDDD','X');"
+echo "== kódy rodičů: limit pokusů"
+POKUSY=$(for i in $(seq 10); do printf "select count(*) from nahled_kodu('ZZZZ-ZZZZ'); "; done)
+t "10 chybných pokusů → 11. zablokován" ERR $NO bezrole@test.cz "$POKUSY select count(*) from nahled_kodu('ZZZZ-ZZZZ');"
+t "9 chybných pokusů → 10. ještě projde" 0 $NO bezrole@test.cz "$(for i in $(seq 9); do printf "select count(*) from nahled_kodu('ZZZZ-ZZZZ'); "; done) select count(*) from nahled_kodu('ZZZZ-ZZZZ');"
+t "neplatný kód vrací prázdno (ne výjimku)" 0 $NO bezrole@test.cz "select count(*) from uplatni_kod('ZZZZ-ZZZZ', 'X');"
+t "kód má 8 znaků z 32 možností" 8 $RA reditelka@test.cz "reset role; select length(nahodny_kod());"
+echo "== zprávy podle adresáta"
+ZPR="reset role; insert into zpravy (skola_id, komu, predmet, text) values ('$A','dite:$OLI','Dluh','x'), ('$A','trida:$BER','Berušky','x'), ('$A','zamestnanci','Porada','x'); set local role authenticated;"
+t "rodič Emy nečte zprávu pro Olivera" 0 $RODA "" "$ZPR select count(*) from zpravy where komu='dite:$OLI';"
+t "rodič Olivera čte zprávu pro Olivera" 1 $ROD2A "" "$ZPR select count(*) from zpravy where komu='dite:$OLI';"
+t "rodič nečte zprávu pro zaměstnance" 0 $RODA "" "$ZPR select count(*) from zpravy where komu='zamestnanci';"
+t "rodič Emy nečte zprávu pro Berušky" 0 $RODA "" "$ZPR select count(*) from zpravy where komu like 'trida:%';"
+t "kuchařka nečte zprávu pro rodinu" 0 $KA kucharka@test.cz "$ZPR select count(*) from zpravy where komu like 'dite:%';"
+t "ředitelka čte všechny zprávy" 4 $RA reditelka@test.cz "$ZPR select count(*) from zpravy;"
+echo "== autor zápisu"
+t "učitelka nepodvrhne autora události" $UA $UA ucitelka@test.cz "insert into udalosti_ditete (skola_id, dite_id, druh, titulek, zapsal, zapsal_jmeno) values ('$A','$EMA','info','x','$RA','Ředitelka'); select zapsal from udalosti_ditete where titulek='x';"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
