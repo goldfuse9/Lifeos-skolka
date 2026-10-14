@@ -1,0 +1,31 @@
+// Pozvánka při zapnutém potvrzování e-mailu (výchozí Supabase): smyčka „potvrďte e-mail“ nesmí nastat.
+const { URL, sql, sqlJako, stranka, konec, kontrola } = require('./spolecne');
+module.exports = async () => {
+  const s = Date.now().toString(36), mail = 'c.' + s + '@potvrdit.test';
+  const kod = sqlJako('aaaaaaaa-0000-4000-8000-000000000001', 'reditelka@test.cz', `select pozvi_zamestnance('Klára E2E', '${mail}', 'ucitelka', '00000000-0000-4000-8000-000000000011');`);
+  const p = await stranka({ width: 1194, height: 834 });
+  const msg = async () => (await p.locator('[role=status], [role=alert]').allTextContents()).join(' / ');
+  await p.goto(URL + '#prihlaseni'); await p.waitForTimeout(1200);
+  await p.click('button:has-text("Mám pozvánku")');
+  await p.fill('#prihlaseni-email', mail); await p.fill('#prihlaseni-heslo', 'heslo12345'); await p.fill('#prihlaseni-kod', kod);
+  await p.click('section[aria-label="Přihlášení"] >> button:has-text("Vytvořit")'); await p.waitForTimeout(1800);
+  kontrola('registrace → „potvrďte e-mail“', /Poslali jsme vám e-mail/.test(await msg()));
+  await p.click('section[aria-label="Přihlášení"] >> button:has-text("Vytvořit")'); await p.waitForTimeout(1800);
+  kontrola('bez potvrzení → „ještě není potvrzený“', /není potvrzený/.test(await msg()));
+  sql(`update auth.users set potvrzeno=true where email='${mail}'`);
+  await p.click('section[aria-label="Přihlášení"] >> button:has-text("Vytvořit")'); await p.waitForTimeout(3000);
+  kontrola('po potvrzení se dokončí a otevře tablet', (await p.evaluate(() => location.hash)) === '#trida', await msg());
+  const q = await stranka();
+  await q.goto(URL + '#prihlaseni'); await q.waitForTimeout(1200);
+  await q.click('button:has-text("Mám pozvánku")');
+  await q.fill('#prihlaseni-email', mail); await q.fill('#prihlaseni-heslo', 'jineheslo99'); await q.fill('#prihlaseni-kod', kod);
+  await q.click('section[aria-label="Přihlášení"] >> button:has-text("Vytvořit")'); await q.waitForTimeout(1800);
+  kontrola('existující účet + špatné heslo → srozumitelná hláška', /heslo nesedí/.test((await q.locator('[role=alert]').allTextContents()).join()));
+  const z = await stranka();
+  await z.goto(URL + '#access_token=x&type=signup&refresh_token=y'); await z.waitForTimeout(1500);
+  kontrola('návrat z e-mailu → „Mám pozvánku“', (await z.locator('h1').textContent()) === 'Mám pozvánku');
+  const z2 = await stranka();
+  await z2.goto(URL + '#error=access_denied&error_description=Email+link+is+invalid+or+has+expired'); await z2.waitForTimeout(1500);
+  kontrola('propadlý odkaz → hláška', /neplatí/.test((await z2.locator('[role=alert]').allTextContents()).join()));
+  await konec();
+};
