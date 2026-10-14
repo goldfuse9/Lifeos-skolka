@@ -103,3 +103,14 @@ def test_cely_tok(svet):
         db._q("delete from ucetni_pohyby")
     zust = db._q("select coalesce(sum(castka), 0) s from ucetni_pohyby where md = 'banka' and skola_id = %s", (svet["skola"],))[0]["s"]
     assert zust == D("2750.00")
+
+
+def test_blokace(svet):
+    """Zablokovaný účet ani účet zablokované školky finance nevidí (audit E13)."""
+    c, H, db = svet["c"], svet["H"], svet["db"]
+    assert c.get("/finance/dluznici", headers=H).status_code == 200
+    db._q("update uzivatele set aktivni = false where role = 'hospodarka' and skola_id = %s", (svet["skola"],))
+    assert c.get("/finance/dluznici", headers=H).status_code == 403
+    db._q("update uzivatele set aktivni = true where role = 'hospodarka' and skola_id = %s", (svet["skola"],))
+    db._q("update skoly set stav = 'blokovana' where id = %s", (svet["skola"],))
+    assert c.get("/finance/dluznici", headers=H).status_code == 403

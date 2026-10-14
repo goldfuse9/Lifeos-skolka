@@ -23,6 +23,15 @@
 
 'use strict';
 
+/* Úložiště desek — výchozí je localStorage; shell.js ho v ostrém provozu
+   nahradí pamětí stránky (data skutečných dětí v prohlížeči nezůstávají). */
+window.SkolkaUloziste = window.SkolkaUloziste || {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* plné nebo zakázané */ } },
+  remove(k) { try { localStorage.removeItem(k); } catch (e) { /* nic */ } },
+  vycisti() {},
+};
+
 class DCLogic {
   constructor(props) {
     this.props = props || {};

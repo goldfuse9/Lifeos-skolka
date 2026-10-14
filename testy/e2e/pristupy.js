@@ -1,0 +1,35 @@
+// Ředitelna → Přístupy (ostrý provoz): pozvánka učitelky, registrace, tablet, blokace.
+const { URL, sql, stranka, konec, prihlas, hlaska, kontrola } = require('./spolecne');
+module.exports = async () => {
+  const s = Date.now().toString(36), mail = 'uc.' + s + '@test.cz';
+  const r = await stranka();
+  await prihlas(r, 'Ředitelna', 'reditelka.b@test.cz');
+  await r.click('nav button:has-text("Přístupy")'); await r.waitForTimeout(1500);
+  const seznam = await r.locator('section[aria-label="Přístupy"]').innerText();
+  kontrola('Přístupy ukazují účty školky B', seznam.includes('ucitelka.b@test.cz') && !seznam.includes('reditelka@test.cz'));
+  await r.click('button:has-text("+ Nový přístup")');
+  await r.fill('#pr-jmeno', 'Petra E2E'); await r.fill('#pr-email', mail);
+  await r.click('[role=dialog][aria-label="Nový přístup"] button:has-text("Vytvořit přístup")'); await r.waitForTimeout(800);
+  kontrola('učitelka bez třídy odmítnuta', /třídu/.test(await r.locator('[role=dialog] [role=alert]').textContent().catch(() => '')));
+  await r.click('[role=dialog][aria-label="Nový přístup"] button:has-text("Žabky")');
+  await r.click('[role=dialog][aria-label="Nový přístup"] button:has-text("Vytvořit přístup")'); await r.waitForTimeout(1500);
+  const kod = (await r.locator('[role=dialog][aria-label="Heslo"] span').nth(3).textContent()).trim();
+  kontrola('pozvánka vytvořena', /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(kod), kod);
+  await r.click('[role=dialog][aria-label="Heslo"] button:has-text("Hotovo")'); await r.waitForTimeout(1200);
+  const u = await stranka({ width: 1194, height: 834 });
+  await u.goto(URL + '#prihlaseni'); await u.waitForTimeout(1200);
+  await u.click('[aria-label="Kam se přihlásit"] button:has-text("Třída")');
+  await u.click('button:has-text("Mám pozvánku")');
+  await u.fill('#prihlaseni-email', mail); await u.fill('#prihlaseni-heslo', 'heslo12345'); await u.fill('#prihlaseni-kod', kod);
+  await u.click('section[aria-label="Přihlášení"] >> button:has-text("Vytvořit")'); await u.waitForTimeout(3000);
+  kontrola('učitelka v tabletu své třídy', (await u.evaluate(() => location.hash)) === '#trida', await hlaska(u));
+  kontrola('učitelka vidí jen Adama (Žabky)', (await u.locator('body').innerText()).includes('Adam') && !(await u.locator('body').innerText()).includes('Ema'));
+  await r.click('nav button:has-text("Přehled")').catch(() => {}); await r.click('nav button:has-text("Přístupy")'); await r.waitForTimeout(1500);
+  await r.locator('section[aria-label="Přístupy"] div[style*="grid-template-columns"]', { hasText: mail }).locator('button:has-text("Zablokovat")').click(); await r.waitForTimeout(1500);
+  kontrola('blokace uložena', sql(`select aktivni from uzivatele where email='${mail}'`) === 'f');
+  const u2 = await stranka({ width: 1194, height: 834 });
+  await prihlas(u2, 'Třída', mail);
+  kontrola('zablokovaná učitelka se nepřihlásí', /zablokovaný/.test(await hlaska(u2)));
+  kontrola('bez chyb JS', [r, u, u2].every((p) => !p.chyby.length), [r, u, u2].flatMap((p) => p.chyby).join('; '));
+  await konec();
+};

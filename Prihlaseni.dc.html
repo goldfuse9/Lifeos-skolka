@@ -127,7 +127,8 @@ class Component extends DCLogic {
     this.chtel = chtel;
     var ob = chtel || (A.posledniOblast && A.posledniOblast()) || 'reditel';
     var ZE = A.zEmailu || null; if (ZE) A.zEmailu = null;
-    this.state = { oblast: ob === 'admin' && chtel !== 'admin' ? 'reditel' : ob, email: '', heslo: '', kod: '', ukazHeslo: false, chyba: ZE && ZE.chyba || '', info: ZE && ZE.info || '', busy: false, pozvanka: !!(ZE && ZE.pozvanka) };
+    this._email0 = ZE && ZE.email ? ZE.email : '';
+    this.state = { oblast: ob === 'admin' && chtel !== 'admin' ? 'reditel' : ob, email: this._email0 || '', heslo: '', kod: '', ukazHeslo: false, chyba: ZE && ZE.chyba || '', info: ZE && ZE.info || '', noveHeslo: !!(ZE && ZE.noveHeslo), busy: false, pozvanka: !!(ZE && ZE.pozvanka) };
   }
 
   api() {
@@ -140,6 +141,15 @@ class Component extends DCLogic {
   login() {
     var self = this, st = this.state;
     if (st.busy) return;
+    if (st.noveHeslo) {
+      if (!st.heslo || st.heslo.length < 8) { this.setState({ chyba: 'Heslo musí mít aspoň 8 znaků.' }); return; }
+      this.setState({ busy: true, chyba: '' });
+      Promise.resolve(this.api().zmenHeslo(st.heslo)).then(function (r) {
+        if (r && r.ok) self.setState({ busy: false, noveHeslo: false, heslo: '', info: 'Heslo je změněné. Přihlaste se novým heslem.' });
+        else self.setState({ busy: false, chyba: (r && r.chyba) || 'Heslo se nepodařilo změnit.' });
+      });
+      return;
+    }
     if (!st.email.trim()) { this.setState({ chyba: 'Napište e-mail.' }); return; }
     if (!st.heslo) { this.setState({ chyba: 'Napište heslo.' }); return; }
     if (st.pozvanka && !st.kod.trim()) { this.setState({ chyba: 'Opište kód pozvánky.' }); return; }
@@ -191,11 +201,11 @@ class Component extends DCLogic {
     } : { on: false, jmeno: '', role: '', hasWhy: false, why: '', goLabel: '', go: function () {}, logout: function () {} };
     var SRV = this.srv(), ADMIN = this.chtel === 'admin';
     return {
-      ses: ses, srv: SRV, showDemo: !SRV, showOblasti: !ADMIN,
-      nadpis: ADMIN ? 'Správa LifeOS' : st.pozvanka ? 'Mám pozvánku' : 'Přihlášení',
+      ses: ses, srv: SRV && !st.noveHeslo, showDemo: !SRV, showOblasti: !ADMIN && !st.noveHeslo,
+      nadpis: st.noveHeslo ? 'Nové heslo' : ADMIN ? 'Správa LifeOS' : st.pozvanka ? 'Mám pozvánku' : 'Přihlášení',
       school: ADMIN ? 'Jen pro provozovatele — školky, ředitelky, předplatné' : SRV ? 'Přihlaste se do své školky' : 'MŠ Sluníčko · Praha 6',
       pozvanka: st.pozvanka, kod: st.kod, onKod: function (e) { self.setState({ kod: e.target.value, chyba: '' }); },
-      hesloLabel: st.pozvanka ? 'Nové heslo (aspoň 8 znaků)' : 'Heslo',
+      hesloLabel: st.pozvanka || st.noveHeslo ? 'Nové heslo (aspoň 8 znaků)' : 'Heslo',
       pozvankaLink: st.pozvanka ? 'Zpět na přihlášení' : 'Mám pozvánku',
       togglePozvanka: function () { self.setState({ pozvanka: !self.state.pozvanka, chyba: '', info: '' }); },
       showZapomenute: !st.pozvanka, zapomenute: function () { self.zapomenute(); },
@@ -210,7 +220,7 @@ class Component extends DCLogic {
       onHeslo: function (e) { self.setState({ heslo: e.target.value, chyba: '' }); },
       onKey: function (e) { if (e.key === 'Enter') self.login(); },
       prihlasit: function () { self.login(); },
-      prihlasitLabel: st.busy ? 'Přihlašuji…' : st.pozvanka ? 'Vytvořit účet a přihlásit' : ADMIN ? 'Přihlásit do správy' : ({ reditel: 'Přihlásit do ředitelny', trida: 'Přihlásit do třídy', jidelna: 'Přihlásit do jídelny' })[cur[0]],
+      prihlasitLabel: st.busy ? (st.noveHeslo ? 'Ukládám…' : 'Přihlašuji…') : st.noveHeslo ? 'Uložit nové heslo' : st.pozvanka ? 'Vytvořit účet a přihlásit' : ADMIN ? 'Přihlásit do správy' : ({ reditel: 'Přihlásit do ředitelny', trida: 'Přihlásit do třídy', jidelna: 'Přihlásit do jídelny' })[cur[0]],
       prihlasitStyle: 'height: 56px; border: 0; border-radius: 28px; background: #DCE6F2; color: #1F3A5C; font-size: 16px; font-weight: 800; cursor: pointer; ' + (st.busy ? 'opacity: 0.6' : ''),
       demo: { email: DEMO[st.oblast], fill: function () { self.setState({ email: DEMO[self.state.oblast], heslo: 'skolka', chyba: '' }); } }
     };

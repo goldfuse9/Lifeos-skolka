@@ -157,6 +157,20 @@ function noveHeslo() {
 
 /* Ostrý provoz (server.js + config.js): účet je ze Supabase. */
 const SRV = () => (window.SkolkaServer && window.SkolkaServer.zapnuto ? window.SkolkaServer : null);
+
+/* Úložiště desek. Zkušební provoz: localStorage (ukázková data zůstanou i po
+   zavření). Ostrý provoz: jen v paměti otevřené stránky — skutečná data jsou
+   na serveru a v prohlížeči (sdílený počítač, tablet) po nikom nesmí zůstat.
+   Starší verze ukládaly i v ostrém provozu → při startu se smažou. */
+const DATA_DESEK = ['skolka-reditel-v1', 'skolka-sdilene-v1', 'skolka-jidelna-v1'];
+const pametDesek = {};
+window.SkolkaUloziste = {
+  get(k) { if (SRV()) return Object.prototype.hasOwnProperty.call(pametDesek, k) ? pametDesek[k] : null; try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { if (SRV()) { pametDesek[k] = String(v); return; } try { localStorage.setItem(k, v); } catch (e) { /* plné nebo zakázané */ } },
+  remove(k) { delete pametDesek[k]; if (!SRV()) { try { localStorage.removeItem(k); } catch (e) { /* nic */ } } },
+  vycisti() { DATA_DESEK.forEach((k) => { delete pametDesek[k]; }); },
+};
+if (SRV()) { try { DATA_DESEK.forEach((k) => localStorage.removeItem(k)); } catch (e) { /* nic */ } }
 const SRV_ROLE = { reditelka: 'reditelka', zastupce: 'zastupce', ucitelka: 'ucitelka', hospodarka: 'hospodarka', kucharka: 'kucharka', superadmin: 'superadmin' };
 function ucetZeServeru(s) {
   const r = ROLE[SRV_ROLE[s.role] || 'ucitelka'];
@@ -237,11 +251,17 @@ window.SkolkaUcet = {
     otevri(kam);
     return { ok: true };
   },
+  /* Ostrý provoz: nové heslo po odkazu z e-mailu. */
+  async zmenHeslo(heslo) {
+    if (!SRV()) return { ok: false, chyba: 'Jen v ostrém provozu.' };
+    try { await SRV().noveHeslo(heslo); return { ok: true }; } catch (e) { return { ok: false, chyba: SRV().chyba(e) }; }
+  },
   async zapomenuteHeslo(email) {
     if (!SRV()) return { ok: false, chyba: 'Heslo v zkušebním provozu obnoví ředitelka (Přístupy → Nové heslo).' };
     try { await SRV().zapomenuteHeslo(email); return { ok: true }; } catch (e) { return { ok: false, chyba: SRV().chyba(e) }; }
   },
   odhlas() {
+    window.SkolkaUloziste.vycisti();
     if (SRV()) SRV().odhlas();
     try { localStorage.removeItem(KLIC_UCTU); } catch (e) { /* nic */ }
     window.__ucetBezUloziste = null;
@@ -335,14 +355,36 @@ async function otevri(chtene, zHashe, vychozi) {
   if (!soubor || prepinam) return;
   prepinam = true;
   try {
+    /* Ostrý provoz: účet se ověří při každém otevření desky (blokace, nová třída). */
+    if (SRV() && klic !== 'prihlaseni' && nactiUcet()) {
+      const o = await SRV().overUcet();
+      if (!o.ok) {
+        window.SkolkaUcet.zEmailu = o.chyba ? { chyba: o.chyba } : null;
+        await SRV().odhlas();
+        prepinam = false;
+        return otevri('prihlaseni');
+      }
+    }
     chybaEl.hidden = true;
     nacitam.hidden = false;
     const t = await zdroj(soubor);
+    if (klic === 'reditel' && SRV()) {
+      const d = new Date(), rok = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
+      const iso = (x) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+      window.__skolkaServerReditelna = await SRV().nactiReditelnu(rok + '-09-01', iso(d));
+    }
+    if (klic === 'jidelna' && SRV()) {
+      const iso = (x) => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+      const den = new Date(); if (den.getDay() === 6) den.setDate(den.getDate() + 2); if (den.getDay() === 0) den.setDate(den.getDate() + 1);
+      const po = new Date(den); po.setDate(po.getDate() - ((po.getDay() + 6) % 7));
+      const od = new Date(po); od.setDate(od.getDate() - 7); const doDne = new Date(po); doDne.setDate(doDne.getDate() + 25);
+      window.__skolkaServerJidelna = await SRV().nactiJidelnu(iso(od), iso(doDne), iso(den));
+    }
     if (klic === 'trida' && SRV()) {
       const u = nactiUcet();
       const deti = await SRV().nactiTridu(u.trida);
       if (!deti.length) throw new Error('Ve třídě ' + u.tridaNazev + ' zatím nejsou žádné děti — tablet se otevře, až je ředitelka do třídy zapíše.');
-      window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti, omluvy: await SRV().omluvy(deti).catch(() => []) };
+      window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti, omluvy: await SRV().omluvy(deti).catch(() => []), jidla: await SRV().jidlaDnes().catch(() => null), kniha: await SRV().kniha(u.trida).catch(() => []), den: new Date().toDateString() };
     }
     aktualni = klic;
     prizpusob();
@@ -353,7 +395,10 @@ async function otevri(chtene, zHashe, vychozi) {
   } catch (e) {
     nacitam.hidden = true;
     chybaEl.hidden = false;
-    chybaEl.textContent = 'Obrazovku se nepodařilo otevřít.\n\n' + (SRV() ? SRV().chyba(e) + '\n\n' : '') + (e && e.stack ? e.stack : e);
+    try { console.error(e); } catch (x) { /* nic */ }
+    chybaEl.textContent = SRV()
+      ? 'Obrazovku se nepodařilo otevřít.\n\n' + SRV().chyba(e) + '\n\nObnovte stránku; když to nepomůže, odhlaste se a přihlaste znovu.'
+      : 'Obrazovku se nepodařilo otevřít.\n\n' + (e && e.stack ? e.stack : e);
   } finally {
     prepinam = false;
   }
@@ -376,18 +421,31 @@ window.addEventListener('hashchange', () => {
 
 /* Návrat z odkazu v e-mailu od Supabase (potvrzení adresy / obnova hesla).
    Adresa nese tokeny nebo chybu v # — přihlašovací obrazovka řekne, co dál. */
-(function () {
+async function zEmailu() {
   const h = location.hash || '';
   if (!/access_token=|error_description=|type=(signup|recovery)/.test(h)) return;
   const q = new URLSearchParams(h.slice(1));
-  window.SkolkaUcet.zEmailu = q.get('error_description')
-    ? { chyba: 'Odkaz z e-mailu už neplatí (' + q.get('error_description').replace(/\+/g, ' ') + '). Zvolte „Mám pozvánku“ a zadejte e-mail, heslo a kód znovu — pokud e-mail ještě není potvrzený, pošleme nový odkaz.' }
-    : { info: q.get('type') === 'recovery' ? 'Odkaz pro nové heslo funguje — přihlaste se a heslo si změňte.' : 'E-mail je potvrzený. Zadejte e-mail, heslo a kód z pozvánky a dokončete přihlášení.' , pozvanka: q.get('type') !== 'recovery' };
-  try { if (SRV()) SRV().odhlas(); } catch (e) { /* nic */ }
   history.replaceState(null, '', location.pathname + '#prihlaseni');
+  if (q.get('error_description')) {
+    window.SkolkaUcet.zEmailu = { chyba: 'Odkaz z e-mailu už neplatí (' + q.get('error_description').replace(/\+/g, ' ') + '). Pro nové heslo zvolte znovu „Zapomenuté heslo“; u pozvánky zadejte e-mail, heslo a kód znovu — pokud e-mail ještě není potvrzený, pošleme nový odkaz.' };
+  } else if (q.get('type') === 'recovery' && SRV()) {
+    try {
+      const email = await SRV().prevezmiObnovu(q.get('access_token'), q.get('refresh_token'));
+      window.SkolkaUcet.zEmailu = { noveHeslo: true, email, info: 'Zvolte si nové heslo.' };
+      return;
+    } catch (e) {
+      window.SkolkaUcet.zEmailu = { chyba: 'Odkaz pro nové heslo už neplatí. Zvolte znovu „Zapomenuté heslo“.' };
+    }
+  } else {
+    window.SkolkaUcet.zEmailu = { info: 'E-mail je potvrzený. Zadejte e-mail, heslo a kód z pozvánky a dokončete přihlášení.', pozvanka: true };
+  }
+  try { if (SRV()) await SRV().odhlas(); } catch (e) { /* nic */ }
+}
+(async () => {
+  try { await zEmailu(); } catch (e) { /* nic */ }
+  const zacatek = (location.hash || '').slice(1);
+  otevri(PODLE_JMENA[zacatek] ? zacatek : 'prihlaseni', true, !PODLE_JMENA[zacatek]);
 })();
-const zacatek = (location.hash || '').slice(1);
-otevri(PODLE_JMENA[zacatek] ? zacatek : 'prihlaseni', true, !PODLE_JMENA[zacatek]);
 
 if (navigator.storage && navigator.storage.persist) {
   navigator.storage.persist().catch(() => {});

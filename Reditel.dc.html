@@ -304,7 +304,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
     <sc-if value="{{is.tridy}}" hint-placeholder-val="{{false}}">
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-content: start; flex-grow: 1; min-height: 0; overflow-y: auto; padding: 2px">
         <sc-for list="{{classCards}}" as="c" hint-placeholder-count="3">
-          <div style="background: #FFFFFF; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+          <section aria-label="Třída {{c.name}}" style="background: #FFFFFF; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
             <div style="display: flex; align-items: center; gap: 10px">
               <span style="{{c.dotStyle}}"></span>
               <span style="font-size: 20px; font-weight: 800; flex-grow: 1">{{c.name}}</span>
@@ -340,7 +340,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 <span style="font-size: 13px; font-weight: 700; color: #9A3412">{{c.warnText}}</span>
               </sc-if>
             </div>
-          </div>
+          </section>
         </sc-for>
       </div>
     </sc-if>
@@ -544,7 +544,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               </div>
             </sc-for>
             <sc-if value="{{doch.noNeoml}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #2F5212; font-weight: 700">Žádná.</span></sc-if>
-            <span style="font-size: 13px; color: #5A5C60; line-height: 18px">Obědy se berou do vyúčtování stravného v Platbách.</span>
+            <sc-if value="{{doch.platbyPozn}}" hint-placeholder-val="{{true}}"><span style="font-size: 13px; color: #5A5C60; line-height: 18px">Obědy se berou do vyúčtování stravného v Platbách.</span></sc-if>
           </section>
         </aside>
       </div>
@@ -1554,6 +1554,170 @@ class Component extends DCLogic {
     /* Kdo je přihlášený, určuje shell.js (účty a přístupy). */
     this.ucet = typeof window !== 'undefined' && window.SkolkaUcet ? window.SkolkaUcet.aktualni() : null;
     if (this.ucet && this.ucet.pravo) this.state.role = this.ucet.pravo;
+    /* Ostrý provoz: místo ukázkové školky skutečná data ze serveru
+       (shell.js je načte před otevřením desky). */
+    var SRVR = typeof window !== 'undefined' ? window.__skolkaServerReditelna : null;
+    this.srv = !!(this.ucet && this.ucet.server && SRVR && window.SkolkaServer);
+    if (this.srv) this.zeServeru(SRVR);
+  }
+
+  /* ================================================================ SERVER
+     Model ředitelny ze serveru a zpět. Změny v kartotéce, třídách, knize
+     úrazů a zprávy se po každém save() porovnají s posledním stavem ze
+     serveru a odešlou (srvSync). Stránky, které na server napojené nejsou,
+     se v ostrém provozu nezobrazují. */
+  zeServeru(D) {
+    var self = this;
+    var SK = D.skola || {};
+    this.school = { name: SK.nazev || '', izo: SK.izo || '', redizo: SK.red_izo || '', cast: SK.cast_skoly || '01', nazev: SK.nazev || '', provoz: 'C', doba: '', kontakt: SK.kontakt || '', rozliseni: 'bez',
+      adresa: '', telefon: SK.kontakt || '', email: '', datovka: '', ico: '', ucet: '', zrizovatel: '', provozni: '', uredni: '', poverenec: '', web: '' };
+    this.classes = (D.tridy || []).map(function (t) { return { id: t.id, name: t.nazev, code: t.kod || '', color: t.barva || '#9AA0A6', capacity: t.kapacita || 24, provoz: t.provoz || 'C' }; });
+    var ROLE_N = { reditelka: 'Ředitelka', zastupce: 'Zástupkyně', ucitelka: 'Učitelka', hospodarka: 'Hospodářka', kucharka: 'Kuchařka' };
+    var ut = {}; (D.ucitelTrida || []).forEach(function (x) { (ut[x.ucitel_id] = ut[x.ucitel_id] || []).push(x.trida_id); });
+    this.teachers = (D.zamestnanci || []).filter(function (z) { return z.aktivni !== false && (z.role === 'ucitelka' || z.role === 'zastupce'); }).map(function (z) {
+      return { id: z.id, name: z.jmeno, role: ROLE_N[z.role] || z.role, email: z.email || '', classes: ut[z.id] || [], uvazek: 1, absent: false, sub: null, phone: '', photo: '', look: null };
+    });
+    var jmenoUc = {}; (D.zamestnanci || []).forEach(function (z) { jmenoUc[z.id] = z.jmeno; });
+    var me = this.ucet || {};
+    this.users = { reditelka: { name: me.jmeno || '', role: 'ředitelka', initials: '', bg: '#E4ECCB' }, hospodarka: { name: me.jmeno || '', role: 'hospodářka', initials: '', bg: '#C9E4F5', id: 'hosp' } };
+    this.audit = [];
+    var os = {}; (D.osobni || []).forEach(function (o) { os[o.id] = o; });
+    this.souhrn = {}; (D.souhrn || []).forEach(function (x) { (self.souhrn[x.dite_id] = self.souhrn[x.dite_id] || {})[x.mesic] = x; });
+    this.srvDnes = {}; (D.dnes || []).forEach(function (x) { self.srvDnes[x.dite_id] = x; });
+    var cur = this.monthKeys[this.monthKeys.length - 1];
+    this.kids = (D.deti || []).map(function (d) {
+      var o = os[d.id] || {};
+      var zs = (d.zastupci || []).slice().sort(function (a, b) { return (a.poradi || 9) - (b.poradi || 9); });
+      var z1 = zs.filter(function (z) { return z.poradi === 1; })[0] || {}, z2 = zs.filter(function (z) { return z.poradi === 2; })[0] || {};
+      var sou = {}; (d.souhlasy || []).forEach(function (x) { sou[x.druh] = x; });
+      var m = (self.souhrn[d.id] || {})[cur] || {};
+      return {
+        id: d.id, first: d.jmeno, last: d.prijmeni, cls: d.trida_id, female: d.pohlavi === 'F',
+        birth: d.datum_narozeni ? new Date(d.datum_narozeni + 'T00:00:00') : new Date(), rc: o.rodne_cislo || '', foreignCode: o.kod_cizince || '',
+        obcan: d.obcanstvi || 'CZ', obec: o.obec || '', adresa: o.adresa || '', spad: d.spadovy !== false,
+        zahajeni: d.zahajeni || '', duvod: o.kod_zahajeni || '', provoz: 'C', zpusob: o.zpusob_ppv || 'Pravidelná docházka', odklad: !!o.odklad,
+        zastupce: z1.jmeno || '', telefon: z1.telefon || '', email: z1.email || '', zastupce2: z2.jmeno || '', telefon2: z2.telefon || '', dorucovaci: o.dorucovaci_adresa || '',
+        pojistovna: o.pojistovna || '', ockovani: o.ockovani !== false, alergie: d.alergie || '', svp: '', po: '', zvj: d.znalost_cj || '',
+        souhlasFoto: !!(sou.foto_trida && sou.foto_trida.udelen), souhlasWeb: !!(sou.foto_web && sou.foto_web.udelen), souhlasJmeno: !!(sou.jmeno && sou.jmeno.udelen),
+        souhlasDatum: sou.foto_trida ? String(sou.foto_trida.zmeneno || '').slice(0, 10) : '',
+        oml: m.omluven || 0, neoml: m.neomluven || 0, vs: d.variabilni_symbol || '',
+        povereni: (d.poverene_osoby || []).filter(function (p) { return !p.zruseno; }).map(function (p) { return { name: p.jmeno, since: p.zmocneni_od }; }),
+        poSt: d.po_stupen || 0, spz: o.spz || '', spzDo: o.spz_plati_do || '', ivp: !!d.ivp, ap: !!d.asistent, plppDo: d.plpp_do || '', ivOvereni: o.iv_overeni || null,
+        absStep: 0, absDate: null, ended: d.ukonceno ? { date: d.ukonceno, reason: o.duvod_ukonceni || '' } : null,
+        app: zs.some(function (z) { return !!z.uzivatel_id; }), znacka: d.znacka || null
+      };
+    });
+    this.by = {}; this.kids.forEach(function (k) { self.by[k.first + ' ' + k.last] = k; });
+    var kidById = {}; this.kids.forEach(function (k) { kidById[k.id] = k; });
+    this.urazy = (D.urazy || []).map(function (u) {
+      var d = new Date(u.kdy), k = kidById[u.dite_id];
+      return { id: u.id, no: u.cislo, date: self.iso(d), time: d.getHours() + ':' + self.pad(d.getMinutes(), 2), place: u.kde || '', child: k ? k.first + ' ' + k.last : '', kidId: u.dite_id,
+        what: u.co, care: u.osetreni || '', by: jmenoUc[u.zapsal] || '', witness: u.svedek || '', absent: u.dny_absence || 0, record: u.zaznam_odeslan || null, parents: null, comment: u.komentar || '', zaznam: u.zaznam || null, tablet: true };
+    });
+    var komuN = function (k) { if (k === 'vse') return 'Celá školka'; if (k === 'zamestnanci') return 'Zaměstnanci'; if (/^trida:/.test(k)) { var c = self.classes.filter(function (x) { return 'trida:' + x.id === k; })[0]; return c ? 'Třída ' + c.name : 'Třída'; } if (/^dite:/.test(k)) { var kk = kidById[k.slice(5)]; return kk ? 'Rodiče: ' + kk.first + ' ' + kk.last : 'Rodiče dítěte'; } return k; };
+    this.messages = (D.zpravy || []).map(function (z) { var d = new Date(z.odeslano); return { id: z.id, title: z.predmet, text: z.text, to: komuN(z.komu), komu: z.komu, at: self.cz(d), by: jmenoUc[z.odeslal] || '', read: 0, total: 0, app: 0, mail: 0 }; });
+    this.porady = []; this._seedPorady = []; this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
+    this.zapis.apps = [];
+    this.state.dochCls = this.classes[0] ? this.classes[0].id : '';
+    this.srvSnap = this.srvStav();
+  }
+
+  /* Řádky pro server — podle nich se pozná, co se změnilo. */
+  srvDite(k) {
+    var row = { jmeno: k.first, prijmeni: k.last, trida_id: k.cls || null, datum_narozeni: k.birth ? this.iso(new Date(k.birth)) : null, pohlavi: k.female ? 'F' : 'M',
+      obcanstvi: k.obcan || 'CZ', znalost_cj: k.zvj || null, spadovy: !!k.spad, zahajeni: k.zahajeni || null, po_stupen: k.poSt || 0, ivp: !!k.ivp, asistent: !!k.ap,
+      plpp_do: k.plppDo || null, alergie: k.alergie || null, variabilni_symbol: k.vs || null, ukonceno: k.ended ? k.ended.date : null };
+    if (this.state.role === 'reditelka' || (this.ucet && this.ucet.kod === 'zastupce')) Object.assign(row, { rodne_cislo: k.rc || null, kod_cizince: k.foreignCode || null, obec: k.obec || null, adresa: k.adresa || null,
+      dorucovaci_adresa: k.dorucovaci || null, kod_zahajeni: k.duvod || null, zpusob_ppv: k.zpusob || null, odklad: !!k.odklad, spz: k.spz || null, spz_plati_do: k.spzDo || null,
+      iv_overeni: k.ivOvereni || null, pojistovna: k.pojistovna || null, ockovani: !!k.ockovani, duvod_ukonceni: k.ended ? k.ended.reason || null : null });
+    return {
+      row: row,
+      zast: [{ poradi: 1, jmeno: k.zastupce || '', telefon: k.telefon || '', email: k.email || '' }, { poradi: 2, jmeno: k.zastupce2 || '', telefon: k.telefon2 || '', email: '' }],
+      pov: (k.povereni || []).map(function (p) { return { jmeno: p.name, od: p.since }; }),
+      sou: [{ druh: 'foto_trida', udelen: !!k.souhlasFoto }, { druh: 'foto_web', udelen: !!k.souhlasWeb }, { druh: 'jmeno', udelen: !!k.souhlasJmeno }]
+    };
+  }
+  srvStav() {
+    var self = this, o = { kids: {}, classes: {}, urazy: {} };
+    this.kids.forEach(function (k) { o.kids[k.id] = JSON.stringify(self.srvDite(k)); });
+    this.classes.forEach(function (c) { o.classes[c.id] = JSON.stringify([c.name, c.code, c.color, +c.capacity, c.provoz || 'C']); });
+    o.ut = {}; this.teachers.forEach(function (t) { o.ut[t.id] = t.classes.slice().sort(); });
+    this.urazy.forEach(function (u) { if (u.id) o.urazy[u.id] = JSON.stringify([+u.absent || 0, u.record || null, u.comment || '', u.zaznam || null]); });
+    return o;
+  }
+  jeUuid(id) { return /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(String(id || '')); }
+  async srvSync() {
+    if (this._syncing) { this._syncZnovu = true; return; }
+    this._syncing = true;
+    var self = this, SV = window.SkolkaServer, snap = this.srvSnap, chyby = [], poslano = 0;
+    /* Stejný neúspěšný stav se znovu neposílá (save() běží po každém překreslení);
+       další pokus přijde se změnou nebo po obnovení stránky. */
+    var pokus = this.srvPokus = this.srvPokus || {};
+    var zkus = function (klic, hodnota) { if (pokus[klic] === hodnota) return false; pokus[klic] = hodnota; return true; };
+    try {
+      for (var i = 0; i < this.classes.length; i++) {
+        var c = this.classes[i], cs = JSON.stringify([c.name, c.code, c.color, +c.capacity, c.provoz || 'C']);
+        if (snap.classes[c.id] === cs || !zkus('c' + c.id, cs)) continue;
+        poslano++;
+        try {
+          var stare = c.id, nid = await SV.ulozTridu(this.jeUuid(c.id) ? c.id : null, { nazev: c.name, kod: c.code || null, barva: c.color || null, kapacita: +c.capacity || null, provoz: c.provoz || 'C' });
+          if (stare !== nid) { c.id = nid; this.kids.forEach(function (k) { if (k.cls === stare) k.cls = nid; }); this.teachers.forEach(function (t) { t.classes = t.classes.map(function (x) { return x === stare ? nid : x; }); }); }
+          snap.classes[nid] = cs;
+        } catch (e) { chyby.push('třída ' + c.name + ': ' + SV.chyba(e)); }
+      }
+      snap.ut = snap.ut || {};
+      for (var ti = 0; ti < this.teachers.length; ti++) {
+        var tc = this.teachers[ti]; if (!this.jeUuid(tc.id)) continue;
+        var ted = tc.classes.filter(function (x) { return self.jeUuid(x); }).sort(), bylo = snap.ut[tc.id] || [];
+        if (JSON.stringify(ted) === JSON.stringify(bylo) || !zkus('t' + tc.id, JSON.stringify(ted))) continue;
+        poslano++;
+        try { await SV.ulozTridyUcitele(tc.id, bylo, ted); snap.ut[tc.id] = ted; }
+        catch (e) { chyby.push(tc.name + ': ' + SV.chyba(e)); }
+      }
+      for (var j = 0; j < this.kids.length; j++) {
+        var k = this.kids[j], d = this.srvDite(k), ds = JSON.stringify(d);
+        if (snap.kids[k.id] === ds || !zkus('k' + k.id, ds)) continue;
+        poslano++;
+        try {
+          var nov = !this.jeUuid(k.id), predtim = snap.kids[k.id] ? JSON.parse(snap.kids[k.id]) : null;
+          var zm = {}; Object.keys(d.row).forEach(function (key) { if (!predtim || JSON.stringify(predtim.row[key]) !== JSON.stringify(d.row[key])) zm[key] = d.row[key]; });
+          var id = await SV.ulozDite(nov ? null : k.id, nov ? d.row : zm,
+            !predtim || JSON.stringify(predtim.zast) !== JSON.stringify(d.zast) ? d.zast : null,
+            !predtim || JSON.stringify(predtim.pov) !== JSON.stringify(d.pov) ? d.pov : null,
+            !predtim || JSON.stringify(predtim.sou) !== JSON.stringify(d.sou) ? d.sou : null);
+          if (nov) { var star = k.id; k.id = id; if (this.state.kidId === star) this.state.kidId = id; }
+          snap.kids[k.id] = ds;
+        } catch (e) { chyby.push(k.first + ' ' + k.last + ': ' + SV.chyba(e)); }
+      }
+      for (var u = 0; u < this.urazy.length; u++) {
+        var ur = this.urazy[u]; if (!ur.id) continue;
+        var us = JSON.stringify([+ur.absent || 0, ur.record || null, ur.comment || '', ur.zaznam || null]);
+        if (snap.urazy[ur.id] === us || !zkus('u' + ur.id, us)) continue;
+        poslano++;
+        try { await SV.ulozUraz(ur.id, { dny_absence: +ur.absent || 0, zaznam_odeslan: ur.record || null, komentar: ur.comment || null, zaznam: ur.zaznam || null }); snap.urazy[ur.id] = us; }
+        catch (e) { chyby.push('úraz č. ' + ur.no + ': ' + SV.chyba(e)); }
+      }
+      for (var m = 0; m < this.messages.length; m++) {
+        var msg = this.messages[m]; if (msg.id || !msg.komu || msg.chyba) continue;
+        poslano++;
+        try { var r = await SV.posliZpravu(msg.komu, msg.title, msg.text); msg.id = r.id; }
+        catch (e) { msg.chyba = true; chyby.push('zpráva „' + msg.title + '“: ' + SV.chyba(e)); }
+      }
+    } finally {
+      this._syncing = false;
+    }
+    if (chyby.length) this.showToast('Neuloženo na server — ' + chyby[0] + (chyby.length > 1 ? ' (a další ' + (chyby.length - 1) + ')' : ''));
+    else if (poslano) this.forceUpdate();
+    if (this._syncZnovu) { this._syncZnovu = false; this.srvSync(); }
+  }
+
+  /* Docházka ze souhrnu serveru (ostrý provoz). */
+  attSrv(k, key) {
+    var start = k.zahajeni ? k.zahajeni.slice(0, 7) : '0000-00';
+    if (start > key || (k.ended && k.ended.date.slice(0, 7) < key)) return { d: 0, p: 0, o: 0, n: 0 };
+    var m = (this.souhrn[k.id] || {})[key] || {};
+    var p = m.pritomen || 0, o = m.omluven || 0, n = m.neomluven || 0;
+    return { d: Math.max(this.schoolDays(key), p + o + n), p: p, o: o, n: n };
   }
 
   /* ------------------------------------------------------------ pomocné */
@@ -1745,6 +1909,9 @@ class Component extends DCLogic {
      (tady zjednodušeně, přesná kontrola proběhne na straně MŠMT). */
   missing(k) {
     var m = [];
+    /* Ostrý provoz: hospodářka osobní údaje (RČ, adresu) nevidí — nejsou „chybějící“. */
+    var osobni = !this.srv || this.state.role === 'reditelka' || (this.ucet && this.ucet.kod === 'zastupce');
+    if (!osobni) { if (!k.zahajeni) m.push(['zahajeni', 'datum zahájení']); if (!k.zastupce) m.push(['zastupce', 'zákonný zástupce']); if (!k.telefon) m.push(['telefon', 'telefon zástupce']); return m; }
     if (!k.rc && !k.foreignCode) m.push(['rc', 'rodné číslo']);
     else if (k.rc && !this.rcInfo(k.rc).ok) m.push(['rc', 'neplatné rodné číslo (' + this.rcInfo(k.rc).why + ')']);
     if (!k.obcan) m.push(['obcan', 'státní občanství']);
@@ -1829,7 +1996,7 @@ class Component extends DCLogic {
     var w = typeof window !== 'undefined' ? window : {};
     if (!w.__skolka) {
       var saved = null;
-      try { saved = JSON.parse(localStorage.getItem('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
+      try { saved = JSON.parse(window.SkolkaUloziste.get('skolka-sdilene-v1') || 'null'); } catch (e) { saved = null; }
       var d0 = new Date(), today = d0.getFullYear() + '-' + (d0.getMonth() + 1) + '-' + d0.getDate();
       if (saved && saved.day !== today) { saved.att = {}; saved.kidAtt = null; }
       w.__skolka = saved || { urazy: [], att: {}, kniha: {}, urazNo: 3 };
@@ -1839,7 +2006,7 @@ class Component extends DCLogic {
   }
 
   saveStore() {
-    try { localStorage.setItem('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* bez úložiště to funguje dál, jen se nic nepamatuje */ }
+    try { window.SkolkaUloziste.set('skolka-sdilene-v1', JSON.stringify(this.store())); } catch (e) { /* bez úložiště to funguje dál, jen se nic nepamatuje */ }
   }
 
   /* Zkušební provoz: všechno, co se v ředitelně změní, zůstane v tomto
@@ -1848,7 +2015,7 @@ class Component extends DCLogic {
 
   restore() {
     var raw = null;
-    try { raw = localStorage.getItem('skolka-reditel-v1'); } catch (e) { return; }
+    try { raw = window.SkolkaUloziste.get('skolka-reditel-v1'); } catch (e) { return; }
     if (!raw) return;
     var data;
     try { data = JSON.parse(raw, function (k, v) { return k === 'birth' && typeof v === 'string' ? new Date(v) : v; }); } catch (e) { return; }
@@ -1865,17 +2032,18 @@ class Component extends DCLogic {
 
   save() {
     var self = this;
+    if (this.srv) { clearTimeout(this._s); this._s = setTimeout(function () { self.srvSync(); }, 300); return; }
     clearTimeout(this._s);
     this._s = setTimeout(function () {
       var data = { alergSeed: true };
       self.persistKeys().forEach(function (k) { data[k] = self[k]; });
-      try { localStorage.setItem('skolka-reditel-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
+      try { window.SkolkaUloziste.set('skolka-reditel-v1', JSON.stringify(data)); } catch (e) { /* plné nebo zakázané úložiště */ }
       self.saveStore();
     }, 300);
   }
 
   resetDemo() {
-    try { localStorage.removeItem('skolka-reditel-v1'); localStorage.removeItem('skolka-sdilene-v1'); } catch (e) { /* nic */ }
+    try { window.SkolkaUloziste.remove('skolka-reditel-v1'); window.SkolkaUloziste.remove('skolka-sdilene-v1'); } catch (e) { /* nic */ }
     if (typeof window !== 'undefined') { window.__skolka = null; window.location.reload(); }
   }
 
@@ -1900,6 +2068,7 @@ class Component extends DCLogic {
 
   /* Docházka dítěte za měsíc: d dnů provozu, p přítomen, o omluveno, n neomluveno. */
   att(k, key) {
+    if (this.srv) return this.attSrv(k, key);
     var start = k.zahajeni ? k.zahajeni.slice(0, 7) : '0000-00';
     if (start > key || (k.ended && k.ended.date.slice(0, 7) < key)) return { d: 0, p: 0, o: 0, n: 0 };
     var d = this.schoolDays(key), idx = this.monthKeys.indexOf(key), num = +k.id.replace(/\D/g, '').slice(-4) || 0;
@@ -2659,7 +2828,10 @@ class Component extends DCLogic {
     var UC = this.ucet, board = function (b) { return !UC || UC.desky.indexOf(b) !== -1; };
     var SU = typeof window !== 'undefined' ? window.SkolkaUcet : null;
     var SRVON = !!(SU && SU.server && SU.server());
-    var allowed = function (p) { if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
+    /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
+       (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
+    var SRV_SKRYT = ['zapis', 'platby', 'web', 'ucitele', 'porady', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
+    var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
     var kids = this.kids.filter(function (k) { return !k.ended && (!k.zahajeni || k.zahajeni <= todayIso); });
@@ -2670,7 +2842,8 @@ class Component extends DCLogic {
         + (on ? 'background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4');
     };
     var bigBtn = function (on) { return 'flex-grow: 2; min-height: 56px; border: 0; border-radius: 28px; font-size: 15px; font-weight: 800; cursor: pointer; ' + (on ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #5A5C60'); };
-    var go = function (page, extra) { return function () { self.setState(Object.assign({ page: page }, extra || {})); }; };
+    if (!allowed(st.page)) { st.page = 'prehled'; }
+    var go = function (page, extra) { return function () { if (!allowed(page)) return; self.setState(Object.assign({ page: page }, extra || {})); }; };
     var nDeti = function (n) { return n === 1 ? '1 dítě' : n + (n >= 2 && n <= 4 ? ' děti' : ' dětí'); };
     var openKid = function (k) { return function () { self.setState({ page: 'deti', kidId: k.id, editAll: false, povName: '', editKeys: st.role === 'reditelka' ? self.missing(k).map(function (m) { return m[0]; }) : [] }); }; };
 
@@ -2725,7 +2898,7 @@ class Component extends DCLogic {
     var deadline = st.matDate === 'podzim' ? '15. 10. ' + this.syStart : '15. 4. ' + (this.syStart + 1);
     var PAGES = {
       prehled: [todayLabel, 'Přehled', '', null],
-      deti: ['Kartotéka podle školní matriky', 'Kartotéka dětí', '+ Přidat dítě', function () { self.setState({ dlg: 'dite', df: { cls: 'slunicka', start: self.iso(today) } }); }],
+      deti: ['Kartotéka podle školní matriky', 'Kartotéka dětí', '+ Přidat dítě', function () { self.setState({ dlg: 'dite', df: { cls: self.classes[0] ? self.classes[0].id : '', start: self.iso(today) } }); }],
       ucitele: ['Pedagogové a další pracovníci', 'Učitelé', '+ Přidat učitele', function () { self.setState({ dlg: 'ucitel', df: { role: 'Učitelka', classes: [] } }); }],
       tridy: ['Školní rok ' + this.syStart + '/' + (this.syStart + 1), 'Třídy', '+ Nová třída', function () { self.setState({ dlg: 'trida', df: { color: '#3BA55C', capacity: '24' } }); }],
       matrika: ['Předávání individuálních údajů · vyhl. 364/2005 Sb.', 'Matrika MŠMT', '', null],
@@ -2747,7 +2920,7 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- přehled */
     // Docházka „dnes“ je v ředitelně ukázková (skutečná přijde z tabletů tříd).
-    var present = function (c) { if (S.att && S.att[c.id]) return S.att[c.id].present; var n = kids.filter(function (k) { return k.cls === c.id; }).length; return Math.max(0, n - (c.id === 'slunicka' ? 6 : c.id === 'berusky' ? 2 : 1)); };
+    var present = function (c) { if (self.srv) return kids.filter(function (k) { var x = self.srvDnes[k.id]; return k.cls === c.id && x && x.stav === 'pritomen' && !x.odchod; }).length; if (S.att && S.att[c.id]) return S.att[c.id].present; var n = kids.filter(function (k) { return k.cls === c.id; }).length; return Math.max(0, n - (c.id === 'slunicka' ? 6 : c.id === 'berusky' ? 2 : 1)); };
     var presentAll = CL.reduce(function (a, c) { return a + present(c); }, 0);
     var capAll = CL.reduce(function (a, c) { return a + c.capacity; }, 0);
     var statCard = function (bg) { return 'border: 0; text-align: left; cursor: pointer; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #17181A; background: ' + bg; };
@@ -2757,6 +2930,10 @@ class Component extends DCLogic {
       { label: 'Matrika k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.'), value: matErr.length ? nChyb(matErr.length) : 'Hotovo', sub: 'odevzdat do ' + deadline, subFg: matErr.length ? '#9A3412' : '#2F5212', style: statCard(matErr.length ? '#FAEBE4' : '#EDF4E4'), go: go('matrika') },
       { label: 'Obsazenost', value: kids.length + ' / ' + capAll, sub: (capAll - kids.length) + ' volných míst', subFg: '#5A5C60', style: statCard('#FFFFFF'), go: go('tridy') }
     ];
+    if (this.srv) {
+      var rok = String(today.getFullYear()), urRok = this.urazy.filter(function (u) { return u.date.slice(0, 4) === rok; });
+      stats[2] = { label: 'Kniha úrazů ' + rok, value: String(urRok.length), sub: urazPending.length ? urazPending.length + ' čeká na záznam pro ČŠI' : 'nic nečeká', subFg: urazPending.length ? '#9A3412' : '#2F5212', style: statCard(urazPending.length ? '#FAEBE4' : '#EDF4E4'), go: go('urazy') };
+    }
     var todoItem = function (bg, dotC, title, sub, action, fn, pg) { return { pg: pg || 'deti', title: title, sub: sub, action: action, go: fn, dotStyle: dot(dotC, 12), style: 'display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 16px; border-radius: 18px; background: ' + bg }; };
     var todo = [];
     if (matErr.length) todo.push(todoItem('#FCF4EF', '#F28C28', 'Matrika: ' + nDeti(matErr.length) + ' s chybějícími údaji', 'Sběr k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.') + ', odevzdání do ' + deadline + ' na matrika.msmt.cz', 'Opravit', go('matrika'), 'matrika'));
@@ -2773,12 +2950,12 @@ class Component extends DCLogic {
     });
     if (unpaidPrev.length) todo.push(todoItem('#F7F0DA', '#C99A00', 'Po splatnosti: ' + nDeti(unpaidPrev.length), unpaidPrev.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '. ' + self.fmtH(self.kUhrade(k.id)); }).join(', ') + ' — pošlete upomínku', 'Platby', go('platby', { payFilter: 'dluh' }), 'platby'));
     var noPhoto = kids.filter(function (k) { return !k.souhlasFoto; });
-    if (noPhoto.length) todo.push(todoItem('#F3F4F2', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + ' — učitelky to vidí v galerii', 'Seznam', go('deti'), 'deti'));
+    if (noPhoto.length) todo.push(todoItem('#F3F4F2', '#8A8C90', nDeti(noPhoto.length) + ' bez souhlasu s focením', noPhoto.map(function (k) { return k.first + ' ' + k.last.charAt(0) + '.'; }).join(', ') + (self.srv ? ' — doplňte souhlas v kartě dítěte' : ' — učitelky to vidí v galerii'), 'Seznam', go('deti'), 'deti'));
     var noVax = kids.filter(function (k) { return !k.ockovani && !self.ppv(k); });
     noVax.forEach(function (k) { todo.push(todoItem('#F3F4F2', '#8A8C90', 'Chybí doklad o očkování: ' + k.first + ' ' + k.last, 'Dítě mimo povinné předškolní vzdělávání musí mít doklad o očkování', 'Karta', openKid(k))); });
     CL.forEach(function (c) {
       var ped = self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && (t.role === 'Učitelka'); }).length;
-      if (ped < 2) todo.push(todoItem('#F3F4F2', c.color, 'Třída ' + c.name + ': jen ' + ped + ' učitelka', 'Celodenní provoz obvykle potřebuje dvě — přiřaďte v Učitelích', 'Přiřadit', go('tridy'), 'tridy'));
+      if (ped < 2) todo.push(todoItem('#F3F4F2', c.color, 'Třída ' + c.name + ': jen ' + ped + ' učitelka', (self.srv ? 'Celodenní provoz obvykle potřebuje dvě — klepněte na učitelku v Třídách' : 'Celodenní provoz obvykle potřebuje dvě — přiřaďte v Učitelích'), 'Přiřadit', go('tridy'), 'tridy'));
     });
     this.docs.filter(function (d) { return d.required && !d.approved; }).forEach(function (d) { todo.push(todoItem('#F3F4F2', '#8A8C90', 'Dokument: ' + d.title, 'Předvyplněná šablona čeká na kontrolu a schválení', 'Otevřít', go('dokumenty', { docSel: d.key }), 'dokumenty')); });
     todo = todo.filter(function (x) { return allowed(x.pg); });
@@ -2786,7 +2963,7 @@ class Component extends DCLogic {
       var tot = kids.filter(function (k) { return k.cls === c.id; }).length, p = present(c);
       var diary = S.kniha && S.kniha[c.id] && S.kniha[c.id][0] && S.kniha[c.id][0].date === todayIso;
       return { name: c.name, present: p, total: tot, dotStyle: dot(c.color, 12),
-        diary: diary ? 'Třídní kniha dnes zapsána' : 'Třídní kniha dnes zatím nezapsána',
+        diary: self.srv ? '' : diary ? 'Třídní kniha dnes zapsána' : 'Třídní kniha dnes zatím nezapsána',
         diaryStyle: 'font-size: 12px; font-weight: 700; color: ' + (diary ? '#2F5212' : '#8A8C90'),
         teachers: 'Učitelky: ' + (self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && !(t.role === 'Asistent pedagoga' || t.role === 'Chůva'); }).map(function (t) { return t.name; }).join(', ') || 'žádná'),
         assts: self.teachers.filter(function (t) { return t.classes.indexOf(c.id) !== -1 && (t.role === 'Asistent pedagoga' || t.role === 'Chůva'); }).map(function (t) { return t.name + (t.role === 'Chůva' ? ' (chůva)' : ''); }).join(', '),
@@ -3095,9 +3272,10 @@ class Component extends DCLogic {
         deadline: dl.getDate() + '. ' + (dl.getMonth() + 1) + '.', doneAt: u.record ? self.cz(new Date(u.record)) : '',
         record: function () { self.setState({ dlg: 'zaznam', df: Object.assign({ uid: u.no }, self.zaznamDefaults(u)) }); },
         download: function () { self.download({ name: 'zaznam-o-urazu-' + u.no + '-' + self.syStart + '.html', text: self.zaznamHtml(u), type: 'text/html' }); },
-        parentsOff: !app || !!u.parents,
+        /* Ostrý provoz: úraz z tabletu dostali rodiče do aplikace hned při zápisu učitelky. */
+        parentsOff: self.srv || !app || !!u.parents,
         parentsHint: !app ? 'Rodiče nemají mobilní aplikaci — povolíte ji v kartě dítěte' : '',
-        parentsLabel: !app ? 'Bez aplikace' : u.parents ? 'Posláno ' + self.cz(new Date(u.parents)).replace(/ \d{4}$/, '') : 'Poslat rodičům',
+        parentsLabel: !app ? 'Bez aplikace' : self.srv ? 'Mají v aplikaci' : u.parents ? 'Posláno ' + self.cz(new Date(u.parents)).replace(/ \d{4}$/, '') : 'Poslat rodičům',
         parentsStyle: 'height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 800; ' + (!app ? 'border: 0; background: #F3F4F2; color: #A0A2A6; cursor: not-allowed' : u.parents ? 'border: 0; background: #EDF4E4; color: #2F5212; cursor: default' : 'border: 0; background: #DCE6F2; color: #1F3A5C; cursor: pointer'),
         sendParents: function () { if (!app || u.parents) return; u.parents = self.iso(self.today); self.log('Úraz č. ' + u.no + ' poslán rodičům do aplikace — ' + u.child); self.forceUpdate(); self.showToast('Rodiče ' + u.child.split(' ')[0] + ' dostali zápis o úrazu do aplikace'); }
       };
@@ -3206,7 +3384,8 @@ class Component extends DCLogic {
       days: this.schoolDays(dM) + ' dnů provozu' + (dM === curMonth ? ' do dneška' : ''),
       rows: dRows.map(function (x) { return { name: x.k.first + ' ' + x.k.last, ppv: self.ppv(x.k), p: x.a.p, o: x.a.o, n: x.a.n, hasN: x.a.n > 0, noN: !x.a.n, meals: x.a.p, msg: absenceMsg(x.k, x.a.n, dM) }; }),
       count: nDeti(dRows.length), sumP: sum('p'), sumO: sum('o'), sumN: sum('n'), sumMeals: sum('p'),
-      today: CL.map(function (c) { var a = S.att && S.att[c.id]; return { name: c.name, dotStyle: dot(c.color, 12), present: (a ? a.present : present(c)) + ' / ' + kids.filter(function (k) { return k.cls === c.id; }).length, src: a ? 'tablet ' + a.at : 'ukázka' }; }),
+      platbyPozn: !self.srv,
+      today: CL.map(function (c) { var a = self.srv ? null : S.att && S.att[c.id]; return { name: c.name, dotStyle: dot(c.color, 12), present: (a ? a.present : present(c)) + ' / ' + kids.filter(function (k) { return k.cls === c.id; }).length, src: a ? 'tablet ' + a.at : self.srv ? 'ze serveru' : 'ukázka' }; }),
       neoml: neoml.map(function (k) { return { name: k.first + ' ' + k.last, sub: k.neoml + ' dny bez omluvenky · ' + (k.absStep === 0 ? 'vyzvat rodiče' : k.absStep === 1 ? 'výzva odeslána' : 'oznámeno OSPOD'), open: openKid(k), msg: absenceMsg(k, k.neoml, curMonth) }; }),
       noNeoml: neoml.length === 0
     };
@@ -3386,25 +3565,38 @@ class Component extends DCLogic {
       return kids.filter(function (k) { return k.cls === key; });
     };
     var kidTo = /^kid:/.test(st.msgTo) ? recip(st.msgTo)[0] : null;
-    var TO = (kidTo ? [[st.msgTo, 'Rodiče: ' + kidTo.first + ' ' + kidTo.last]] : []).concat([['all', 'Celá školka']]).concat(CL.map(function (c) { return [c.id, c.name]; })).concat([['ppv', 'Předškoláci'], ['dluh', 'Nezaplacené platby']]);
+    var TO = (kidTo ? [[st.msgTo, 'Rodiče: ' + kidTo.first + ' ' + kidTo.last]] : []).concat([['all', 'Celá školka']]).concat(CL.map(function (c) { return [c.id, c.name]; })).concat(self.srv ? [] : [['ppv', 'Předškoláci'], ['dluh', 'Nezaplacené platby']]);
     TO.forEach(function (x) { x[2] = recip(x[0]).length; });
     var toSel = TO.filter(function (x) { return x[0] === st.msgTo; })[0] || TO[0];
     var rList = recip(toSel[0]);
-    var viaApp = rList.filter(function (k) { return k.app; }), viaMail = rList.filter(function (k) { return !k.app && k.email; }), noCont = rList.filter(function (k) { return !k.app && !k.email; });
+    /* Ostrý provoz: zprávy jdou jen do aplikace LifeOS (e-maily server zatím neposílá). */
+    var viaApp = rList.filter(function (k) { return k.app; }), viaMail = self.srv ? [] : rList.filter(function (k) { return !k.app && k.email; }), noCont = rList.filter(function (k) { return !k.app && (self.srv || !k.email); });
     var mOk = !!(st.msgTitle.trim() && st.msgText.trim()) && toSel[2] > 0 && (viaApp.length + viaMail.length) > 0;
     var msg = {
       to: TO.map(function (x) { var on = st.msgTo === x[0]; return { label: x[1] + ' · ' + x[2], on: on, style: chip(on, true), pick: function () { self.setState({ msgTo: x[0] }); } }; }),
       title: st.msgTitle, onTitle: function (e) { self.setState({ msgTitle: e.target.value }); },
       text: st.msgText, onText: function (e) { self.setState({ msgText: e.target.value }); },
-      summary: !(st.msgTitle.trim() && st.msgText.trim()) ? 'Vyberte komu, napište předmět a text.' : 'Do aplikace: ' + viaApp.length + ' · e-mailem: ' + viaMail.length + (noCont.length ? ' · bez kontaktu: ' + noCont.length : ''),
+      summary: !(st.msgTitle.trim() && st.msgText.trim()) ? 'Vyberte komu, napište předmět a text.' : 'Do aplikace: ' + viaApp.length + (self.srv ? '' : ' · e-mailem: ' + viaMail.length) + (noCont.length ? ' · ' + (self.srv ? 'bez aplikace' : 'bez kontaktu') + ': ' + noCont.length : ''),
       hasDelivery: toSel[2] > 0, delivery: [
-        { label: 'Do aplikace', value: rList.length === 1 ? (viaApp.length ? 'ano' : 'ne') : nRod(viaApp.length), sub: 'rodiče s mobilní aplikací — uvidí, kdo si zprávu přečetl', style: delStyle('#EDF4E4', '#2F5212') },
+        { label: 'Do aplikace', value: rList.length === 1 ? (viaApp.length ? 'ano' : 'ne') : nRod(viaApp.length), sub: self.srv ? 'rodiče propojení v aplikaci LifeOS' : 'rodiče s mobilní aplikací — uvidí, kdo si zprávu přečetl', style: delStyle('#EDF4E4', '#2F5212') }
+      ].concat(self.srv ? [] : [
         { label: 'E-mailem', value: rList.length === 1 ? (viaMail.length ? viaMail[0].email : 'není potřeba') : nRod(viaMail.length), sub: 'na adresu ze zápisu, když aplikaci nemají', style: delStyle('#EBF1FA', '#27407A') }
-      ].concat(noCont.length ? [{ label: 'Bez kontaktu', value: noCont.map(function (k) { return k.first + ' ' + k.last; }).join(', '), sub: 'nemají aplikaci ani e-mail — doplňte v kartě dítěte', style: delStyle('#FAEBE4', '#9A3412') }] : []),
+      ]).concat(noCont.length ? [{ label: self.srv ? 'Bez aplikace' : 'Bez kontaktu', value: noCont.map(function (k) { return k.first + ' ' + k.last; }).join(', '), sub: self.srv ? 'zprávu neuvidí — vydejte jim kód v „Rodiče v LifeOS“' : 'nemají aplikaci ani e-mail — doplňte v kartě dítěte', style: delStyle('#FAEBE4', '#9A3412') }] : []),
       cantSend: !mOk, sendStyle: bigBtn(mOk).replace('flex-grow: 2; ', ''), sendLabel: mOk ? 'Poslat rodičům' : 'Napište zprávu',
       send: function () {
         if (!mOk) return;
-        self.messages.unshift({ title: st.msgTitle.trim(), text: st.msgText.trim(), to: toSel[1], at: self.cz(self.today), by: ME.name, read: 0, total: viaApp.length + viaMail.length, app: viaApp.length, mail: viaMail.length });
+        var komu = toSel[0] === 'all' ? 'vse' : /^kid:/.test(toSel[0]) ? 'dite:' + toSel[0].slice(4) : 'trida:' + toSel[0];
+        if (self.srv) {
+          var m0 = { title: st.msgTitle.trim(), text: st.msgText.trim(), to: toSel[1], komu: komu, at: self.cz(self.today), by: ME.name, read: 0, total: viaApp.length, app: viaApp.length, mail: 0, odesilam: true };
+          self.messages.unshift(m0);
+          self.setState({ msgTitle: '', msgText: '', msgTo: kidTo ? 'all' : st.msgTo });
+          window.SkolkaServer.posliZpravu(komu, m0.title, m0.text).then(function (r) {
+            m0.id = r.id; m0.odesilam = false;
+            self.showToast('Odesláno do aplikace LifeOS' + (viaApp.length ? ' — ' + (viaApp.length === 1 ? '1 rodina' : viaApp.length + ' rodin') : '') + (noCont.length ? ' · ' + noCont.length + ' bez aplikace' : ''));
+          }).catch(function (e) { m0.chyba = true; m0.odesilam = false; self.showToast('Zprávu se nepodařilo odeslat: ' + window.SkolkaServer.chyba(e)); });
+          return;
+        }
+        self.messages.unshift({ title: st.msgTitle.trim(), text: st.msgText.trim(), to: toSel[1], komu: komu, at: self.cz(self.today), by: ME.name, read: 0, total: viaApp.length + viaMail.length, app: viaApp.length, mail: viaMail.length });
         self.log('Zpráva rodičům „' + st.msgTitle.trim() + '“ — ' + toSel[1] + ' (aplikace ' + viaApp.length + ', e-mail ' + viaMail.length + ')');
         if (kidTo && kidTo.neoml > 0 && self.ppv(kidTo) && kidTo.absStep === 0) { kidTo.absStep = 1; kidTo.absDate = self.iso(self.today); }
         self.setState({ msgTitle: '', msgText: '', msgTo: kidTo ? 'all' : st.msgTo });
@@ -3486,7 +3678,7 @@ class Component extends DCLogic {
     var mePerson = role === 'reditelka' ? (this.teachers.filter(function (x) { return UC ? x.name === UC.jmeno : x.role === 'Ředitelka'; })[0] || this.teachers.filter(function (x) { return x.role === 'Ředitelka'; })[0] || ME) : ME;
     var me = { name: UC && UC.server ? UC.jmeno : mePerson.name, role: UC ? UC.role : ME.role, tablet: board('trida') && !!UC,
       logout: function () { if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); }, initials: ME.initials, av: this.avatar(mePerson, 40),
-      profile: function () { self.setState({ dlg: 'profil', df: { pid: mePerson.id || 'hosp', self: true, name: mePerson.name, email: mePerson.email || '', phone: mePerson.phone || '', role: mePerson.role, photo: mePerson.photo || '', look: self.look(mePerson) } }); },
+      profile: function () { if (self.srv) return; self.setState({ dlg: 'profil', df: { pid: mePerson.id || 'hosp', self: true, name: mePerson.name, email: mePerson.email || '', phone: mePerson.phone || '', role: mePerson.role, photo: mePerson.photo || '', look: self.look(mePerson) } }); },
       avatarStyle: 'width: 40px; height: 40px; border-radius: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; background: ' + ME.bg,
       switch: function () {
         var next = role === 'reditelka' ? 'hospodarka' : 'reditelka';
@@ -3668,7 +3860,7 @@ class Component extends DCLogic {
       var list = !SRVP ? (SU ? SU.pristupy() : []) : (self._pr || []).map(function (z) {
         var pozv = !!z.pozvanka;
         return { id: z.id, jmeno: z.jmeno, email: z.email || '', role: (RN[z.role] || z.role) + (z.trida ? ' · ' + z.trida : '') + (pozv ? ' · pozvánka ' + z.pozvanka : ''),
-          desky: ((R[z.role] || {}).desky || []), aktivni: pozv ? true : !!z.aktivni, posledni: null, pozvanka: z.pozvanka, plati: z.plati_do, srvRole: z.role };
+          desky: ((R[z.role] || {}).desky || []).filter(function (d) { return d !== 'trida' || !!z.trida; }), aktivni: pozv ? true : !!z.aktivni, posledni: null, pozvanka: z.pozvanka, plati: z.plati_do, srvRole: z.role };
       });
       var dd = function (iso) { if (!iso) return ''; var d = new Date(iso); return isNaN(d) ? '' : d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + (iso.length > 10 ? d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') : ''); };
       var rows = list.map(function (u) {
@@ -3998,13 +4190,18 @@ class Component extends DCLogic {
           areas: [area('Opatření proti opakování', 'opatreni', 'Co se změní, aby se to neopakovalo')],
           hasExtra: true, extraLabel: 'Náhled záznamu ke stažení', extra: function () { var tmp = Object.assign({}, U, { zaznam: { druh: df.druh, cast: df.cast, zdroj: df.zdroj, pricina: df.pricina, opatreni: df.opatreni, dohled: df.dohled } }); self.download({ name: 'zaznam-o-urazu-' + U.no + '-' + self.syStart + '.html', text: self.zaznamHtml(tmp), type: 'text/html' }); },
           canSave: okZz,
-          summary: okZz ? 'Odejde ČŠI a pojišťovně ' + (UK ? UK.pojistovna : '') + '; kopii dostanou rodiče. Ve zkušebním provozu se odeslání jen zapíše.' : 'Vyberte druh, místo na těle, zdroj a příčinu.',
-          saveLabel: okZz ? 'Odeslat ČŠI a pojišťovně' : 'Doplňte záznam',
+          summary: !okZz ? 'Vyberte druh, místo na těle, zdroj a příčinu.' : this.srv ? 'Záznam si stáhnete a pošlete ČŠI a pojišťovně ' + (UK ? UK.pojistovna + ' ' : '') + 'sami (datovou schránkou nebo e-mailem) do 5. dne dalšího měsíce. Aplikace ho za vás neposílá.' : 'Odejde ČŠI a pojišťovně ' + (UK ? UK.pojistovna : '') + '; kopii dostanou rodiče. Ve zkušebním provozu se odeslání jen zapíše.',
+          saveLabel: okZz ? (this.srv ? 'Stáhnout a označit jako odeslaný' : 'Odeslat ČŠI a pojišťovně') : 'Doplňte záznam',
           save: function () {
             if (!okZz) return;
             U.zaznam = { druh: df.druh, cast: df.cast, zdroj: df.zdroj, pricina: df.pricina, opatreni: (df.opatreni || '').trim(), dohled: df.dohled };
             U.record = self.iso(self.today);
             if (UK && UK.app && !U.parents) U.parents = U.record;
+            if (self.srv) {
+              self.download({ name: 'zaznam-o-urazu-' + U.no + '-' + self.syStart + '.html', text: self.zaznamHtml(U), type: 'text/html' });
+              self.setState({ dlg: null, df: {} }); self.showToast('Záznam stažen a označen jako odeslaný — pošlete ho ČŠI a pojišťovně');
+              return;
+            }
             self.log('Záznam o úrazu č. ' + U.no + ' odeslán ČŠI a pojišťovně — ' + U.child);
             self.setState({ dlg: null, df: {} }); self.showToast('Záznam o úrazu odeslán ČŠI a pojišťovně (zkušební provoz)');
           }
@@ -4047,7 +4244,7 @@ class Component extends DCLogic {
 
     return {
       school: { name: UC && UC.server && UC.skola ? UC.skola : this.school.name },
-      provoz: UC && UC.server ? { label: 'Pilot · část ukázková', title: 'Ze serveru jsou Přístupy a Rodiče v LifeOS. Ostatní stránky zatím ukazují ukázková data.' } : { label: 'Zkušební provoz', title: 'Všechno funguje, ale nic neodchází ven' },
+      provoz: this.srv ? { label: 'Ostrý provoz', title: 'Data ze serveru školky. Stránky, které ještě nejsou napojené (zápis, platby, matrika, dokumenty…), se nezobrazují.' } : { label: 'Zkušební provoz', title: 'Všechno funguje, ale nic neodchází ven' },
       year: this.syStart + '/' + (this.syStart + 1),
       nav: nav, is: is, page: page,
       stats: stats, todo: todo, todoNone: todo.length === 0, classesToday: classesToday,

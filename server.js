@@ -25,8 +25,31 @@
         ? { accessToken: function () { return Promise.resolve(C.testToken); } }
         : { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'skolka-sb-auth' } };
       sb = window.supabase.createClient(C.url, C.key, o);
+      if (!C.testToken) hlidejJinyUcet();
     }
     return sb;
+  }
+  /* Dvě záložky jednoho prohlížeče sdílí přihlášení. Když se v jiné záložce
+     přihlásí někdo jiný (nebo se odhlásí), tahle záložka nesmí dál zapisovat
+     pod cizím účtem — vrátí se na přihlášení. */
+  var prihlasuji = false;
+  function hlidejJinyUcet() {
+    var konec = function () {
+      pamet = null;
+      try { if (window.SkolkaUloziste) window.SkolkaUloziste.vycisti(); } catch (e) { /* nic */ }
+      location.hash = '#prihlaseni';
+      location.reload();
+    };
+    var zkontroluj = function (uid) {
+      if (prihlasuji || !pamet || pamet.role === undefined) return;
+      if (!uid || uid !== pamet.id) konec();
+    };
+    window.addEventListener('storage', function (e) {
+      if (e.key !== 'skolka-sb-auth') return;
+      var uid = null;
+      try { var v = JSON.parse(e.newValue || 'null'); uid = v && v.user ? v.user.id : null; } catch (x) { uid = null; }
+      zkontroluj(uid);
+    });
   }
   function chyba(e) {
     var m = (e && (e.message || e.error_description)) || String(e || '');
@@ -35,9 +58,32 @@
     if (/Password should be/i.test(m)) return 'Heslo je moc slabé — použijte aspoň 8 znaků.';
     if (/rate limit/i.test(m)) return 'Moc pokusů za sebou — zkuste to za chvíli.';
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Server není dostupný — zkontrolujte připojení k internetu.';
+    if (/row-level security|permission denied/i.test(m)) return 'Na tuto akci nemáte oprávnění (nebo je přístup zablokovaný).';
+    if (/duplicate key|already exists/i.test(m)) return 'Takový záznam už existuje.';
+    if (/JWT expired|invalid JWT|Auth session missing/i.test(m)) return 'Přihlášení vypršelo — přihlaste se znovu.';
+    if (/violates foreign key/i.test(m)) return 'Záznam souvisí s jinými údaji a nejde takhle změnit.';
+    if (/violates check constraint|invalid input syntax/i.test(m)) return 'Některý údaj má nesprávný tvar.';
+    /* Technické hlášky v angličtině se uživateli neukazují doslova. */
+    if (m && /^[\x00-\x7F]*$/.test(m)) { try { console.warn('Server:', m); } catch (x) { /* nic */ } return 'Server školky odpověděl chybou. Zkuste to znovu, případně dejte vědět správci.'; }
     return m;
   }
-  function ok(r) { if (r.error) throw r.error; return r.data; }
+  function ok(r) { if (r.error) { hlidejOdepreni(r.error); throw r.error; } return r.data; }
+  /* Odepřený zápis/čtení během práce (zablokovaný účet nebo školka): ověřit účet
+     a případně odhlásit s vysvětlením — data dětí nesmí zůstat na obrazovce. */
+  var overuji = false;
+  function hlidejOdepreni(e) {
+    var m = (e && (e.message || e.code)) || '';
+    if (overuji || !/row-level security|permission denied|JWT expired|42501|PGRST301/i.test(String(m))) return;
+    overuji = true;
+    setTimeout(function () {
+      API.overUcet().then(function (o) {
+        overuji = false;
+        if (o.ok || !window.SkolkaUcet) return;
+        window.SkolkaUcet.zEmailu = o.chyba ? { chyba: o.chyba } : null;
+        window.SkolkaUcet.odhlas();
+      }).catch(function () { overuji = false; });
+    }, 0);
+  }
   function dnes() {
     var d = new Date();
     return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();
@@ -89,7 +135,7 @@
       id: d.id, name: d.jmeno + ' ' + (d.prijmeni || '').charAt(0) + '.', sym: zn(d, i)[0], symName: zn(d, i)[1],
       allergies: d.alergie ? String(d.alergie).split(/\s*[,;]\s*/).filter(Boolean) : [],
       usualPickup: 'rodiče', pickupToday: null, att: 'expected', arrived: null, left: null, excuse: '',
-      temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, noPhoto: false, ppv: false, server: true
+      temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, noPhoto: false, ppv: false, server: true, female: d.pohlavi === 'F'
     };
     aplikuj(k, doch, vyz, ud);
     return k;
@@ -131,13 +177,14 @@
     return { doch: doch, vyz: vyz, ud: ud };
   }
 
-  window.SkolkaServer = {
+  var API = window.SkolkaServer = {
     zapnuto: zapnuto,
     dnes: dnes,
     chyba: chyba,
     ucet: nactiUcet,
 
     async prihlas(email, heslo, kod) {
+      prihlasuji = true;
       try {
         var uid = mojeId();
         if (!uid) {
@@ -158,11 +205,12 @@
       } catch (e) {
         try { if (!C.testToken) await klient().auth.signOut(); } catch (x) { /* nic */ }
         return { ok: false, chyba: chyba(e), bezSkoly: !!(e && e.bezSkoly) };
-      }
+      } finally { prihlasuji = false; }
     },
     /* Nový účet z pozvánky: e-mail (stejný jako v pozvánce), heslo, kód. */
     async registruj(email, heslo, kod) {
       var self = this;
+      prihlasuji = true;
       try {
         var mail = String(email || '').trim().toLowerCase();
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw new Error('E-mail nevypadá správně.');
@@ -193,11 +241,40 @@
         return { ok: true, ucet: u };
       } catch (e) {
         return { ok: false, chyba: chyba(e) };
-      }
+      } finally { prihlasuji = false; }
     },
     async zapomenuteHeslo(email) {
-      var r = await klient().auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: location.origin + location.pathname + '#prihlaseni' });
+      var r = await klient().auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: location.origin + location.pathname });
       if (r.error) throw r.error;
+    },
+    /* Odkaz „nové heslo“ z e-mailu: převezme dočasné přihlášení z adresy. */
+    async prevezmiObnovu(access, refresh) {
+      var r = await klient().auth.setSession({ access_token: access, refresh_token: refresh });
+      if (r.error) throw r.error;
+      return r.data.user ? r.data.user.email || '' : '';
+    },
+    async noveHeslo(heslo) {
+      if (!heslo || heslo.length < 8) throw new Error('Heslo musí mít aspoň 8 znaků.');
+      var r = await klient().auth.updateUser({ password: heslo });
+      if (r.error) throw r.error;
+      try { await klient().auth.signOut(); } catch (e) { /* nic */ }
+      return true;
+    },
+    /* Před otevřením desky: platí účet pořád? (blokace, změna třídy, role) */
+    async overUcet() {
+      var u = nactiUcet();
+      if (!u) return { ok: false, chyba: '' };
+      try {
+        var uid = mojeId();
+        if (!uid) { var s0 = await klient().auth.getSession(); uid = s0.data && s0.data.session ? s0.data.session.user.id : null; }
+        if (!uid) return { ok: false, chyba: 'Přihlášení vypršelo — přihlaste se znovu.' };
+        var p = await profil(uid);
+        p.email = u.email; ulozUcet(p);
+        return { ok: true };
+      } catch (e) {
+        if (/Failed to fetch|NetworkError|Load failed/i.test((e && e.message) || '')) return { ok: true, offline: true };
+        return { ok: false, chyba: chyba(e) };
+      }
     },
     async odhlas() {
       ulozUcet(null);
@@ -206,9 +283,26 @@
 
     /* ---------------------------------------------------- tablet třídy */
     async nactiTridu(tridaId) {
-      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
+      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka, pohlavi').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
       var den = deti.length ? await denTridy(deti.map(function (d) { return d.id; })) : { doch: {}, vyz: {}, ud: {} };
       return deti.map(function (d, i) { return diteProDesku(d, i, den.doch[d.id], den.vyz[d.id], den.ud[d.id], tridaId); });
+    },
+    /* Třídní kniha (povinná dokumentace) — posledních 30 zápisů třídy. */
+    async kniha(tridaId) {
+      var r = ok(await klient().from('tridni_kniha').select('den, tema, cinnosti, pouceni, pritomno, chybelo, uzivatele(jmeno)').eq('trida_id', tridaId).order('den', { ascending: false }).limit(30));
+      return r.map(function (e) { return { date: e.den, theme: e.tema, acts: e.cinnosti || [], safety: e.pouceni || [], by: e.uzivatele ? e.uzivatele.jmeno : '', present: e.pritomno || 0, absent: e.chybelo || 0 }; });
+    },
+    async zapisKnihy(tridaId, e) {
+      ok(await klient().from('tridni_kniha').upsert({ trida_id: tridaId, den: e.date, tema: e.theme, cinnosti: e.acts, pouceni: e.safety, pritomno: e.present, chybelo: e.absent, zapsal: nactiUcet().id }, { onConflict: 'trida_id,den' }));
+    },
+    /* Dnešní jídla třídy (zveřejněný jídelníček) — alergeny jako názvy. */
+    async jidlaDnes() {
+      var A = [null, 'lepek', 'korýši', 'vejce', 'ryby', 'arašídy', 'sója', 'mléko', 'ořechy', 'celer', 'hořčice', 'sezam', 'siřičitany', 'vlčí bob', 'měkkýši'];
+      var r = ok(await klient().rpc('jidelnicek_tyden', { p_od: dnes(), p_do: dnes() }));
+      if (!r.length) return null;
+      var obed = r.filter(function (x) { return x.chod === 'obed'; })[0], al = {};
+      r.forEach(function (x) { if (x.chod !== 'nap') (x.alergeny || []).forEach(function (n) { if (A[n]) al[A[n]] = true; }); });
+      return { name: obed ? obed.nazev.split(',')[0] : r[0].nazev.split(',')[0], allergens: Object.keys(al), chody: r.map(function (x) { return x.chod + ': ' + x.nazev; }) };
     },
     /* Znovu načte dnešek a přepíše ho do dětí desky (po změně od rodiče). */
     async obnovDen(kids) {
@@ -226,13 +320,26 @@
       return ok(await klient().rpc('potvrd_omluvenku', { p_dite: k.id, p_od: od, p_do: doDne }));
     },
     /* Docházka dítěte podle stavu na desce. */
-    async dochazka(k) {
+    async dochazka(k, puvodni) {
+      /* Vrácení: obnoví přesně předchozí řádek (např. omluvenku od rodiče). */
+      if (puvodni !== undefined) {
+        if (puvodni === null) return ok(await klient().from('dochazka').delete().eq('dite_id', k.id).eq('den', dnes()));
+        return ok(await klient().from('dochazka').upsert(puvodni, { onConflict: 'dite_id,den' }));
+      }
       if (k.att === 'expected') return ok(await klient().from('dochazka').delete().eq('dite_id', k.id).eq('den', dnes()));
       if (k.att === 'excused') return null;
-      return ok(await klient().from('dochazka').upsert({
+      var radek = {
         dite_id: k.id, den: dnes(), stav: 'pritomen', prichod: cas(k.arrived), odchod: k.att === 'left' ? cas(k.left) : null,
         vyzvedl: k.att === 'left' ? (k.pickupToday ? k.pickupToday.who : k.usualPickup || null) : null
-      }, { onConflict: 'dite_id,den' }));
+      };
+      /* Omluvené dítě přesto přišlo: omluvenka a její potvrzení neplatí. Oběd
+         zůstane, jak ho kuchyně objednala (strava_prihlasena se nemění). */
+      if (k.excuse || k.wasExcused) { radek.omluvenka = null; radek.omluva_potvrzena = null; radek.omluvu_potvrdil = null; }
+      return ok(await klient().from('dochazka').upsert(radek, { onConflict: 'dite_id,den' }));
+    },
+    /* Řádek docházky dítěte dnes (pro vrácení akce). */
+    async dochazkaDnes(diteId) {
+      return ok(await klient().from('dochazka').select('dite_id, den, stav, prichod, odchod, vyzvedl, omluvenka, trida_dnes, strava_prihlasena, omluva_zadana, omluva_potvrzena, omluvu_potvrdil').eq('dite_id', diteId).eq('den', dnes()).maybeSingle());
     },
     /* Zápis pro rodiče: { druh, titulek, hodnota, text, osetreni, cas } */
     async zapis(k, z, kdo) {
@@ -244,11 +351,10 @@
     },
     /* Kniha úrazů (číslo za rok průběžně). */
     async uraz(k, x) {
+      /* Číslo v knize přiděluje databáze (souběžné zápisy, učitelka nevidí úrazy jiných tříd). */
       var u = nactiUcet(), rok = new Date().getFullYear();
-      var posl = ok(await klient().from('urazy').select('cislo').eq('skola_id', u.skolaId).eq('rok', rok).order('cislo', { ascending: false }).limit(1));
-      var cislo = (posl[0] ? posl[0].cislo : 0) + 1;
-      ok(await klient().from('urazy').insert({ skola_id: u.skolaId, cislo: cislo, rok: rok, dite_id: k.id, kdy: new Date().toISOString(), kde: x.kde || null, co: x.co, osetreni: x.osetreni || null, svedek: x.svedek || null, komentar: x.komentar || null, zapsal: u.id }));
-      return cislo;
+      var r = ok(await klient().from('urazy').insert({ skola_id: u.skolaId, cislo: 0, rok: rok, dite_id: k.id, kdy: new Date().toISOString(), kde: x.kde || null, co: x.co, osetreni: x.osetreni || null, svedek: x.svedek || null, komentar: x.komentar || null, zapsal: u.id }).select('cislo').single());
+      return r.cislo;
     },
     /* Živé změny dnešní docházky a vyzvedávání (omluvenky od rodičů). */
     sleduj(tridaId, priZmene) {
@@ -265,8 +371,33 @@
 
     /* --------------------------------------------------------- jídelna */
     /* Zveřejní týden: [{ den, chod, nazev, alergeny, nahrady }] */
-    async zverejniJidelnicek(dny) {
-      return ok(await klient().rpc('zverejni_jidelnicek', { p_dny: dny }));
+    async zverejniJidelnicek(dny, od, doDne) {
+      var arg = { p_dny: dny };
+      if (od) { arg.p_od = od; arg.p_do = doDne; }
+      return ok(await klient().rpc('zverejni_jidelnicek', arg));
+    },
+    /* Jídelna v ostrém provozu: katalog jídel, jídelníček, počty jídel na den, diety. */
+    async nactiJidelnu(od, doDne, den) {
+      var u = nactiUcet();
+      var r = await Promise.all([
+        klient().from('jidelna_katalog').select('data').eq('skola_id', u.skolaId).maybeSingle(),
+        klient().rpc('jidelnicek_kuchyne', { p_od: od, p_do: doDne }),
+        klient().rpc('obedy_den', { p_den: den }),
+        klient().rpc('deti_diety'),
+        klient().from('skoly').select('nazev, nahrady_obedu').eq('id', u.skolaId).maybeSingle(),
+        klient().from('uzivatele').select('id', { count: 'exact', head: true }).neq('role', 'rodic').eq('aktivni', true)
+      ]);
+      var D = r.slice(0, 5).map(ok);
+      if (r[5].error) throw r[5].error;
+      return { katalog: D[0] ? D[0].data : null, menu: D[1], obedy: D[2], diety: D[3], skola: D[4], zamestnancu: r[5].count || 0, den: den };
+    },
+    async ulozChody(chody) { return ok(await klient().rpc('uloz_chody', { p_chody: chody })); },
+    async ulozKatalog(data) {
+      var u = nactiUcet();
+      ok(await klient().from('jidelna_katalog').upsert({ skola_id: u.skolaId, data: data, zmeneno: new Date().toISOString(), zmenil: u.id }));
+    },
+    async ulozDietu(diteId, doporuceni, poznamka) {
+      ok(await klient().from('diety').upsert({ dite_id: diteId, doporuceni_lekare: !!doporuceni, poznamka: poznamka || null }));
     },
     async nahradyObedu() {
       var u = nactiUcet();
@@ -290,6 +421,74 @@
     async tridySkoly() { return ok(await klient().from('tridy').select('id, nazev').order('nazev')); },
     async pozviZamestnance(x) { return ok(await klient().rpc('pozvi_zamestnance', { p_jmeno: x.jmeno, p_email: x.email, p_role: x.role, p_trida: x.trida || null })); },
     async nastavUcetZamestnance(uid, aktivni) { return ok(await klient().rpc('nastav_ucet_zamestnance', { p_uzivatel: uid, p_aktivni: !!aktivni })); },
+
+    /* --------------------------------------------- ředitelna: data školky
+       Načte vše, co ředitelna v ostrém provozu ukazuje (kartotéka, třídy,
+       zaměstnanci, kniha úrazů, souhrn docházky, dnešek, zprávy). Rodná čísla
+       a další osobní údaje jen pro vedení (deti_osobni). */
+    async nactiReditelnu(od, doDne) {
+      var u = nactiUcet(), ved = u && (u.role === 'reditelka' || u.role === 'zastupce');
+      var prazdno = Promise.resolve({ data: [], error: null });
+      var r = await Promise.all([
+        klient().from('skoly').select('id, nazev, izo, red_izo, cast_skoly, kontakt').eq('id', u.skolaId).maybeSingle(),
+        klient().from('tridy').select('id, nazev, kod, barva, kapacita, provoz').order('nazev'),
+        klient().from('deti').select('id, trida_id, jmeno, prijmeni, datum_narozeni, pohlavi, obcanstvi, znalost_cj, spadovy, zahajeni, po_stupen, ivp, asistent, plpp_do, alergie, variabilni_symbol, ukonceno, znacka, zastupci(id, jmeno, telefon, email, poradi, uzivatel_id), poverene_osoby(id, jmeno, zmocneni_od, zruseno), souhlasy(druh, udelen, zmeneno)').order('prijmeni'),
+        ved ? klient().rpc('deti_osobni') : prazdno,
+        klient().from('uzivatele').select('id, jmeno, role, email, aktivni').neq('role', 'rodic').order('jmeno'),
+        klient().from('ucitel_trida').select('ucitel_id, trida_id'),
+        klient().from('urazy').select('id, cislo, rok, dite_id, kdy, kde, co, osetreni, svedek, komentar, zapsal, dny_absence, zaznam_odeslan, zaznam').order('kdy', { ascending: false }).limit(500),
+        klient().rpc('dochazka_souhrn', { p_od: od, p_do: doDne }),
+        klient().from('dochazka').select('dite_id, stav, prichod, odchod').eq('den', dnes()),
+        klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100)
+      ]);
+      var D = r.map(ok);
+      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9] };
+    },
+    /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
+    async ulozDite(id, radek, zastupci, poverene, souhlasy) {
+      if (!id) {
+        var nove = ok(await klient().from('deti').insert(Object.assign({ skola_id: nactiUcet().skolaId }, radek)).select('id').single());
+        id = nove.id;
+      } else if (radek && Object.keys(radek).length) {
+        ok(await klient().from('deti').update(radek).eq('id', id));
+      }
+      var stavajici = ok(await klient().from('zastupci').select('id, uzivatel_id, poradi').eq('dite_id', id));
+      for (var i = 0; i < (zastupci || []).length; i++) {
+        var z = zastupci[i], byl = stavajici.filter(function (x) { return x.poradi === z.poradi; })[0];
+        if (z.jmeno) {
+          var data = { jmeno: z.jmeno, telefon: z.telefon || null, email: z.email || null };
+          if (byl) ok(await klient().from('zastupci').update(data).eq('id', byl.id));
+          else ok(await klient().from('zastupci').insert(Object.assign({ dite_id: id, poradi: z.poradi }, data)));
+        } else if (byl && !byl.uzivatel_id) {
+          ok(await klient().from('zastupci').delete().eq('id', byl.id));
+        }
+      }
+      if (poverene) {
+        var pov = ok(await klient().from('poverene_osoby').select('id, jmeno').eq('dite_id', id).is('zruseno', null));
+        var jmena = poverene.map(function (p) { return p.jmeno; });
+        for (var j = 0; j < pov.length; j++) if (jmena.indexOf(pov[j].jmeno) === -1) ok(await klient().from('poverene_osoby').update({ zruseno: dnes() }).eq('id', pov[j].id));
+        var mame = pov.map(function (p) { return p.jmeno; });
+        var pridat = poverene.filter(function (p) { return mame.indexOf(p.jmeno) === -1; }).map(function (p) { return { dite_id: id, jmeno: p.jmeno, zmocneni_od: p.od || dnes() }; });
+        if (pridat.length) ok(await klient().from('poverene_osoby').insert(pridat));
+      }
+      if (souhlasy && souhlasy.length) {
+        ok(await klient().from('souhlasy').upsert(souhlasy.map(function (x) { return { dite_id: id, druh: x.druh, udelen: !!x.udelen, zmeneno: new Date().toISOString(), zmenil: nactiUcet().id }; })));
+      }
+      return id;
+    },
+    async ulozTridu(id, radek) {
+      if (id) { ok(await klient().from('tridy').update(radek).eq('id', id)); return id; }
+      return ok(await klient().from('tridy').insert(Object.assign({ skola_id: nactiUcet().skolaId }, radek)).select('id').single()).id;
+    },
+    async ulozTridyUcitele(ucitel, bylo, ted) {
+      var pryc = bylo.filter(function (x) { return ted.indexOf(x) === -1; }), nove = ted.filter(function (x) { return bylo.indexOf(x) === -1; });
+      if (pryc.length) ok(await klient().from('ucitel_trida').delete().eq('ucitel_id', ucitel).in('trida_id', pryc));
+      if (nove.length) ok(await klient().from('ucitel_trida').insert(nove.map(function (t) { return { ucitel_id: ucitel, trida_id: t }; })));
+    },
+    async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
+    async posliZpravu(komu, predmet, text) {
+      return ok(await klient().from('zpravy').insert({ skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet, text: text, odeslal: nactiUcet().id }).select('id, odeslano').single());
+    },
 
     /* --------------------------------------------- ředitelna: rodiče v LifeOS */
     async detiSkoly() {

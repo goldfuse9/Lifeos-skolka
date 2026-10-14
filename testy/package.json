@@ -1,0 +1,12 @@
+{
+  "name": "skolka-testy",
+  "private": true,
+  "description": "Lokální testovací režim školky: E2E (Playwright) a bezpečnostní testy proti lokální náhradě Supabase.",
+  "scripts": {
+    "e2e": "node e2e/spust.js",
+    "vse": "bash spust-vse.sh"
+  },
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}
