@@ -391,5 +391,19 @@ t "nastavení plateb bez nepovinných parametrů nic nepřepíše" "2|prefix_por
 select uloz_financni_nastaveni('19-2000145399/0800', 950, 48, 52, 15) \\g /dev/null
 select omluva_dni_predem || '|' || vs_schema from financni_nastaveni where skola_id = '$A';"
 t "neplatné VS schéma neprojde" ERR $RA reditelka@test.cz "select uloz_financni_nastaveni('1/0800', 900, 48, 52, 15, 1, '08:00', 'nahodne');"
+echo "== archiv: skartační plán a záznam změn jen pro vedení"
+t "ředitelka uloží skartační plán" 1 $RA reditelka@test.cz "with u as (update skoly set skartacni_plan = '{\"Třídní knihy\": 12}' where id = '$A' returning 1) select count(*) from u;"
+t "hospodářka plán nezmění" 0 $HA hospodarka@test.cz "with u as (update skoly set skartacni_plan = '{}' where id = '$A' returning 1) select count(*) from u;"
+t "plán musí být objekt" ERR $RA reditelka@test.cz "update skoly set skartacni_plan = '[1,2]' where id = '$A';"
+t "záznam změn: úprava karty dítěte se jménem ředitelky" "Ivana Pokorná|deti|UPDATE|$EMA" $RA reditelka@test.cz "update deti set alergie = 'pyl' where id = '$EMA';
+select kdo || '|' || tabulka || '|' || akce || '|' || dite from archiv_zmen(5) limit 1;"
+t "záznam změn: žádost o přijetí s reg. číslem" "zadosti|Z001" $RA reditelka@test.cz "select reg_cislo from nova_zadost(2027, 'Eva', 'Nová', '225707/0002', '2022-07-07', 'F', true, false, '') \\g /dev/null
+select tabulka || '|' || detail from archiv_zmen(5) limit 1;"
+t "učitelka archiv nevidí" ERR $UA ucitelka@test.cz "select count(*) from archiv_zmen(5);"
+t "hospodářka archiv nevidí" ERR $HA hospodarka@test.cz "select count(*) from archiv_zmen(5);"
+t "ředitelka B nevidí změny školky A" 0 $RB reditelka.b@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+update deti set alergie = 'x' where id = '$EMA';
+select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
+select count(*) from archiv_zmen(1000) where dite = '$EMA';"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
