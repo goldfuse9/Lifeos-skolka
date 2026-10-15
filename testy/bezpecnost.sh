@@ -244,5 +244,43 @@ t "ředitelka B nevidí zápisy školky A" 1 $RB reditelka.b@test.cz "${PSEED//\
 t "ředitelka B nevidí zápis A" 0 $RB reditelka.b@test.cz "${PSEED//\$ME/$RB} select count(*) from porady where id='99999999-0000-4000-8000-0000000000a1';"
 t "zápis nejde upravit" ERR $RA reditelka@test.cz "${PSEED//\$ME/$RA} update porady set program='přepsáno' where id='99999999-0000-4000-8000-0000000000a1';"
 t "zápis nejde smazat" ERR $RA reditelka@test.cz "${PSEED//\$ME/$RA} delete from porady where id='99999999-0000-4000-8000-0000000000a1';"
+echo "== zápis: žádosti vidí a řídí jen vedení"
+NZ="select reg_cislo from nova_zadost(2027, 'Tereza', 'Malá', '225305/0008', '2022-03-05', 'F', true, false, 'mala@test.cz');"
+ZSEED="reset role; insert into zadosti (id, skola_id, rok, reg_cislo, jmeno, prijmeni, rodne_cislo, datum_narozeni) values ('99999999-0000-4000-8000-0000000000c1', '$A', 2027, 'Z001', 'Eva', 'A', '220101/0001', '2022-01-01'), ('99999999-0000-4000-8000-0000000000c2', '$B', 2027, 'Z001', 'Iva', 'B', '220202/0002', '2022-02-02'); set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+t "ředitelka zapíše žádost (Z001)" Z001 $RA reditelka@test.cz "$NZ"
+t "druhá žádost dostane Z002" Z002 $RA reditelka@test.cz "$NZ select reg_cislo from nova_zadost(2027, 'Jan', 'Novák', '215101/0007', '2021-01-01', 'M', false, false, '');" 2>/dev/null
+t "stejné RČ podruhé neprojde" ERR $RA reditelka@test.cz "$NZ $NZ"
+t "zástupkyně zapíše žádost" Z001 $ZA zastupce@test.cz "$NZ"
+t "učitelka žádost nezapíše" ERR $UA ucitelka@test.cz "$NZ"
+t "hospodářka žádost nezapíše" ERR $HA hospodarka@test.cz "$NZ"
+t "rodič žádost nezapíše" ERR $RODA "" "$NZ"
+t "žádost nejde vložit přímo (obejít reg. číslo)" ERR $RA reditelka@test.cz "insert into zadosti (skola_id, rok, reg_cislo, jmeno, rodne_cislo, datum_narozeni) values ('$A', 2027, 'Z999', 'X', '1', '2022-01-01');"
+t "učitelka žádosti nevidí (rodná čísla)" 0 $UA ucitelka@test.cz "${ZSEED//\$ME/$UA} select count(*) from zadosti;"
+t "hospodářka žádosti nevidí" 0 $HA hospodarka@test.cz "${ZSEED//\$ME/$HA} select count(*) from zadosti;"
+t "rodič žádosti nevidí" 0 $RODA "" "${ZSEED//\$ME/$RODA} select count(*) from zadosti;"
+t "ředitelka vidí jen žádosti své školky" "Eva" $RA reditelka@test.cz "${ZSEED//\$ME/$RA} select string_agg(jmeno, ',') from zadosti;"
+t "ředitelka B nezmění výsledek žádosti A" 0 $RB reditelka.b@test.cz "${ZSEED//\$ME/$RB} with u as (update zadosti set vysledek='prijato' where id='99999999-0000-4000-8000-0000000000c1' returning 1) select count(*) from u;"
+t "výsledek nejde změnit před rozhodnutím" ERR $RA reditelka@test.cz "${ZSEED//\$ME/$RA} update zadosti set vysledek='prijato' where id='99999999-0000-4000-8000-0000000000c1';"
+t "ředitelka nemění jiné údaje žádosti (RČ)" ERR $RA reditelka@test.cz "${ZSEED//\$ME/$RA} update zadosti set rodne_cislo='x' where id='99999999-0000-4000-8000-0000000000c1';"
+t "ředitelka žádost nesmaže" ERR $RA reditelka@test.cz "${ZSEED//\$ME/$RA} delete from zadosti where id='99999999-0000-4000-8000-0000000000c1';"
+t "rozhodnutí podle kritérií" 1 $RA reditelka@test.cz "${ZSEED//\$ME/$RA} select rozhodni_zapis(2027, '[{\"id\":\"99999999-0000-4000-8000-0000000000c1\",\"vysledek\":\"prijato\",\"poradi\":1},{\"id\":\"99999999-0000-4000-8000-0000000000c2\",\"vysledek\":\"prijato\",\"poradi\":1}]');"
+t "učitelka nerozhoduje" ERR $UA ucitelka@test.cz "select rozhodni_zapis(2027, '[]');"
+t "odeslání před zveřejněním neprojde" ERR $RA reditelka@test.cz "${ZSEED//\$ME/$RA} select rozhodni_zapis(2027, '[]'); select zapis_krok(2027, 'odeslano');"
+t "převod před odesláním neprojde" ERR $RA reditelka@test.cz "${ZSEED//\$ME/$RA} select rozhodni_zapis(2027, '[]'); select zapis_krok(2027, 'zverejneno'); select preved_prijate(2027);"
+t "po odeslání výsledek nejde změnit" ERR $RA reditelka@test.cz "${ZSEED//\$ME/$RA} select rozhodni_zapis(2027, '[{\"id\":\"99999999-0000-4000-8000-0000000000c1\",\"vysledek\":\"prijato\",\"poradi\":1}]') \\g /dev/null
+select zapis_krok(2027, 'zverejneno') \\g /dev/null
+select zapis_krok(2027, 'odeslano') \\g /dev/null
+update zadosti set vysledek='neprijato' where id='99999999-0000-4000-8000-0000000000c1';"
+t "převod přijatých do kartotéky (a podruhé nic nezdvojí)" "1|0|1" $RA reditelka@test.cz "${ZSEED//\$ME/$RA} select rozhodni_zapis(2027, '[{\"id\":\"99999999-0000-4000-8000-0000000000c1\",\"vysledek\":\"prijato\",\"poradi\":1}]') \\g /dev/null
+select zapis_krok(2027, 'zverejneno') \\g /dev/null
+select zapis_krok(2027, 'odeslano') \\g /dev/null
+select set_config('t.v', preved_prijate(2027) || '|' || preved_prijate(2027), true) \\g /dev/null
+reset role;
+select current_setting('t.v') || '|' || count(*) from deti where jmeno='Eva' and zahajeni = '2027-09-01' and rodne_cislo = '220101/0001';"
+t "stav zápisu jiné školky není vidět" 0 $RB reditelka.b@test.cz "${ZSEED//\$ME/$RA} select rozhodni_zapis(2027, '[]') \\g /dev/null
+select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
+select count(*) from zapis_rocnik where skola_id='$A';"
+t "stav zápisu nejde měnit přímo" ERR $RA reditelka@test.cz "insert into zapis_rocnik (skola_id, rok, odeslano) values ('$A', 2027, current_date);"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
