@@ -456,5 +456,24 @@ t "rodič fotku nesmaže" 0 $RODA "" "${FSEED//\$ME/$RODA} ${FPUB//\$ME/$RODA} w
 t "učitelka nezveřejní album cizí třídy" 0 $UA ucitelka@test.cz "${FSEED//\$ME/$UA} with x as (update alba set zverejneno = now() where id = '$F2' returning 1) select count(*) from x;"
 t "učitelka zveřejní album své třídy" 1 $UA ucitelka@test.cz "${FSEED//\$ME/$UA} with x as (update alba set zverejneno = now() where id = '$F1' returning 1) select count(*) from x;"
 t "rodič album nezaloží" ERR $RODA "" "insert into alba (skola_id, trida_id, den, nazev) values ('$A', '$SLUN', current_date, 'x');"
+echo "== push: telefony rodičů a komu přijde oznámení"
+TOKS="reset role; insert into push_tokeny (token, uzivatel_id, platforma) values ('ExponentPushToken[aaaaaaaaaaaa]', '$RODA', 'ios'), ('ExponentPushToken[bbbbbbbbbbbb]', '$ROD2A', 'ios'), ('ExponentPushToken[cccccccccccc]', '$RODB', 'android'); set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+FR() { echo "reset role; select coalesce(string_agg(right(token, 3), ',' order by token), '-') from push_fronta;"; }
+t "rodič zapne oznámení na svém telefonu" 1 $RODA "" "select uloz_push_token('ExponentPushToken[xyzxyzxyzxyz]', 'ios'); select count(*) from push_tokeny;"
+t "neplatný token neprojde" ERR $RODA "" "select uloz_push_token('http://zly.example/x', 'ios');"
+t "učitelka si oznámení rodičů nezapíná" ERR $UA ucitelka@test.cz "select uloz_push_token('ExponentPushToken[xyzxyzxyzxyz]', 'ios');"
+t "rodič nevidí cizí telefony" 0 $RODA "" "${TOKS//\$ME/$RODA} select count(*) from push_tokeny where uzivatel_id <> '$RODA';"
+t "token nejde zapsat přímo" ERR $RODA "" "insert into push_tokeny (token, uzivatel_id) values ('ExponentPushToken[qqqqqqqqqqqq]', '$RODA');"
+t "frontu oznámení aplikace nečte" ERR $RA reditelka@test.cz "select count(*) from push_fronta;"
+t "zpráva celé školce: oba rodiče školky A, ne B" "aa],bb]" $RA reditelka@test.cz "${TOKS//\$ME/$RA} insert into zpravy (komu, predmet, text) values ('vse', 'Besídka', 'Ve čtvrtek'); $(FR)"
+t "zpráva třídě: rodiče třídy" "aa],bb]" $UA ucitelka@test.cz "${TOKS//\$ME/$UA} insert into zpravy (komu, predmet, text) values ('trida:$SLUN', '', 'Holínky'); $(FR)"
+t "zpráva jen Emě: jen její rodič" "aa]" $UA ucitelka@test.cz "${TOKS//\$ME/$UA} insert into zpravy (komu, predmet, text) values ('dite:$EMA', '', 'Ema zapomněla mikinu'); $(FR)"
+t "rodič píše školce: rodičům nic" "-" $RODA "" "${TOKS//\$ME/$RODA} insert into zpravy (komu, predmet, text) values ('dite:$EMA', '', 'Díky'); $(FR)"
+t "akce Berušek: rodičům Sluníček nic" "-" $RA reditelka@test.cz "${TOKS//\$ME/$RA} insert into akce (skola_id, trida_id, den, nazev) values ('$A', '$BER', current_date + 3, 'Divadlo'); $(FR)"
+t "akce Sluníček: rodiče třídy, text bez podrobností" "2|Nová akce: Výlet" $UA ucitelka@test.cz "${TOKS//\$ME/$UA} insert into akce (skola_id, trida_id, den, nazev) values ('$A', '$SLUN', current_date + 3, 'Výlet'); reset role; select count(*) || '|' || min(left(text, 16)) from push_fronta;"
+t "zveřejnění alba: rodiče třídy jednou (ne znovu)" "aa],bb]" $UA ucitelka@test.cz "${TOKS//\$ME/$UA} insert into alba (id, skola_id, trida_id, den, nazev) values ('99999999-0000-4000-8000-0000000000f9', '$A', '$SLUN', current_date, 'Podzim');
+update alba set zverejneno = now() where id = '99999999-0000-4000-8000-0000000000f9'; update alba set zverejneno = now() where id = '99999999-0000-4000-8000-0000000000f9'; $(FR)"
+t "zápis učitelky (teplota): jen rodič dítěte, bez hodnoty" "1|Nový zápis ze školky — klepněte pro podrobnosti." $UA ucitelka@test.cz "${TOKS//\$ME/$UA} insert into udalosti_ditete (skola_id, dite_id, druh, titulek, hodnota) values ('$A', '$EMA', 'teplota', 'Teplota', '38,4 °C'); reset role; select count(*) || '|' || min(text) from push_fronta;"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
