@@ -9,7 +9,7 @@ module.exports = async () => {
   let telo = await t.locator('body').innerText();
   const obed = sqlJako(UA, 'ucitelka@test.cz', `select split_part(nazev, ',', 1) from jidelnicek_tyden(current_date, current_date) where chod='obed';`);
   kontrola('karta Oběd = jídelníček ze serveru (ne ukázkové „Rizoto se sýrem“)', obed ? telo.toLowerCase().includes(obed.toLowerCase()) : /není zveřejněný/i.test(telo), obed || 'dnes bez jídelníčku');
-  kontrola('záložky Fotky/Akce/Schůzky v ostrém provozu skryté', !/\nFotky\n|\nAkce\n|\nSchůzky\n/.test(telo) && telo.includes('Třídní kniha'));
+  kontrola('záložka Fotky v ostrém provozu skrytá, Akce a Schůzky ano', !/\nFotky\n/.test(telo) && /\nAkce\n/.test(telo) && /\nSchůzky\n/.test(telo) && telo.includes('Třídní kniha'));
   // omluvený Oliver přesto přišel → vrátit
   await t.click('[role=tab]:has-text("Docházka")'); await t.waitForTimeout(500);
   await t.click('div[aria-label="Docházka"] button[aria-label^="Oliver"]'); await t.waitForTimeout(300);
