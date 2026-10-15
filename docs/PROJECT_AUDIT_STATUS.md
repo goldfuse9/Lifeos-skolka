@@ -139,7 +139,7 @@ Stavy: OVĚŘENO (test prošel), OPRAVENO (oprava + test), NEOVĚŘENO, BLOKOVÁ
 
 | # | Problém | Proč |
 | --- | --- | --- |
-| Z1 | Nenapojené stránky (matrika, web, archiv — Učitelé, Porady, Zápis, Dokumenty, Platby a Nastavení už napojené 15. 10.; jídelna: kuchařky, sklad; tablet: fotky, akce, schůzky) jsou v ostrém provozu skryté | Rozsah — každá potřebuje vlastní datový model a návrh rozhraní; skrytí brání falešným datům a „uložení“ jen do prohlížeče |
+| Z1 | Nenapojené stránky (web, archiv — Učitelé, Porady, Zápis, Dokumenty, Platby, Nastavení a Matrika už napojené 15. 10.; jídelna: kuchařky, sklad; tablet: fotky, akce, schůzky) jsou v ostrém provozu skryté | Rozsah — každá potřebuje vlastní datový model a návrh rozhraní; skrytí brání falešným datům a „uložení“ jen do prohlížeče |
 | Z2 | Limit pokusů o kód rodiče jde obejít novými anonymními účty (R4) | Globální limit potřebuje nastavení Supabase (CAPTCHA / limit anonymních registrací) nebo Edge Function → **BLOKOVÁNO: rozhodnutí a nastavení v Supabase** |
 | Z3 | Rodič s dětmi ve dvou školkách | Vyžaduje změnu modelu (škola podle dítěte místo účtu) |
 | Z4 | Omluvené dítě, které přesto přišlo, má oběd odhlášený | Záměr: kuchyně už oběd neobjedná; tablet učitelku upozorní |
