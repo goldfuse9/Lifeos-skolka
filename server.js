@@ -428,7 +428,13 @@
        a další osobní údaje jen pro vedení (deti_osobni). */
     async nactiReditelnu(od, doDne) {
       var u = nactiUcet(), ved = u && (u.role === 'reditelka' || u.role === 'zastupce');
+      var fin = u && (ved || u.role === 'hospodarka');
       var prazdno = Promise.resolve({ data: [], error: null });
+      /* Supabase vrací nejvýš 1000 řádků na dotaz — delší tabulky po stránkách. */
+      var vse = async function (dotaz) {
+        var out = [], od = 0;
+        for (;;) { var d = ok(await dotaz().range(od, od + 999)); out = out.concat(d || []); if (!d || d.length < 1000) return { data: out, error: null }; od += 1000; }
+      };
       var r = await Promise.all([
         klient().from('skoly').select('id, nazev, izo, red_izo, cast_skoly, kontakt').eq('id', u.skolaId).maybeSingle(),
         klient().from('tridy').select('id, nazev, kod, barva, kapacita, provoz').order('nazev'),
@@ -443,10 +449,19 @@
         klient().from('porady').select('id, den, druh, program, usneseni, pritomni').order('den', { ascending: false }).limit(300),
         ved ? klient().from('zadosti').select('id, rok, reg_cislo, jmeno, prijmeni, rodne_cislo, datum_narozeni, pohlavi, spadovy, sourozenec, email, poradi, vysledek, dite_id').order('reg_cislo') : prazdno,
         ved ? klient().from('zapis_rocnik').select('rok, rozhodnuto, zverejneno, odeslano, preneseno') : prazdno,
-        ved ? klient().from('dokumenty').select('klic, html, fmt, schvaleno, verze, upraveno_po_schvaleni, na_webu') : prazdno
+        ved ? klient().from('dokumenty').select('klic, html, fmt, schvaleno, verze, upraveno_po_schvaleni, na_webu') : prazdno,
+        fin ? klient().from('financni_nastaveni').select('ucet, skolkovne, omluva_dni_predem, omluva_do, splatnost_den, vs_schema, vs_prefix, vs_delka') : prazdno,
+        fin ? klient().from('sazby_stravneho').select('kategorie, cena') : prazdno,
+        fin ? vse(function () { return klient().from('predpisy').select('id, dite_id, obdobi, castka, uhrazeno, stav, splatnost, vystaveno, predpis_polozky(poradi, druh, popis, mnozstvi, cena, castka)').order('obdobi').order('id'); }) : prazdno,
+        fin ? vse(function () { return klient().from('ucetni_pohyby').select('id, datum, md, dal, castka, popis, doklad').order('datum').order('vytvoreno').order('id'); }) : prazdno,
+        fin ? vse(function () { return klient().from('platby').select('id, datum, castka, vs, protiucet, nazev, doklad, dite_id').order('datum').order('id'); }) : prazdno,
+        fin ? klient().from('nesparovane_platby').select('platba_id, duvod, vyreseno').eq('vyreseno', false) : prazdno,
+        fin ? vse(function () { return klient().from('upominky').select('dite_id, obdobi, kanal, odeslano').order('odeslano').order('id'); }) : prazdno,
+        fin ? klient().from('konta').select('dite_id, saldo') : prazdno
       ]);
       var D = r.map(ok);
-      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12], dokumenty: D[13] };
+      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12], dokumenty: D[13],
+        fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21] } : null };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {
@@ -510,6 +525,12 @@
       if (!r || !r.length) ok(await klient().from('dokumenty').insert(Object.assign({ skola_id: nactiUcet().skolaId, klic: klic }, data)));
     },
     async schvalDokument(klic, html, fmt, zneni) { return ok(await klient().rpc('schval_dokument', { p_klic: klic, p_html: html || null, p_fmt: fmt || null, p_zneni: zneni })); },
+    /* --------------------------------------------- platby (funkce v databázi) */
+    async ulozFinNastaveni(x) { ok(await klient().rpc('uloz_financni_nastaveni', { p_ucet: x.ucet, p_skolkovne: x.skolkovne, p_stravne_36: x.s36, p_stravne_7: x.s7, p_splatnost: x.splatnost })); },
+    async vystavPredpisy(obdobi) { return ok(await klient().rpc('vystav_predpisy', { p_obdobi: obdobi })); },
+    async zpracujPlatby(platby) { return ok(await klient().rpc('zpracuj_platby', { p_platby: platby })); },
+    async sparujPlatbu(platba, dite) { return ok(await klient().rpc('sparuj_platbu', { p_platba: platba, p_dite: dite })); },
+    async zapisUpominku(dite, kanal) { return ok(await klient().rpc('zapis_upominku', { p_dite: dite, p_kanal: kanal || 'push' })); },
     async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
     async posliZpravu(komu, predmet, text, odpovedNa) {
       var radek = { skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet || '', text: text, odeslal: nactiUcet().id };
