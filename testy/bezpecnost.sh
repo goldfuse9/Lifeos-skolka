@@ -431,5 +431,30 @@ t "jiný rodič cizí odpověď nevidí" 0 $ROD2A "" "${AKS//\$ME/$RODA} select 
 select set_config('request.jwt.claim.sub','$ROD2A',true) \\g /dev/null
 select count(*) from akce_odpovedi;"
 t "ředitelka B nevidí akce školky A" 0 $RB reditelka.b@test.cz "${AKS//\$ME/$RB} select count(*) from akce where skola_id = '$A';"
+echo "== fotky: alba a soubory jen třídě, rodičům až po zveřejnění"
+F1=99999999-0000-4000-8000-0000000000f1; F2=99999999-0000-4000-8000-0000000000f2
+FSEED="reset role; insert into alba (id, skola_id, trida_id, den, nazev, fotky) values ('$F1', '$A', '$SLUN', current_date, 'Podzim', '{}'), ('$F2', '$A', '$BER', current_date, 'Berušky', '{}');
+insert into storage.objects (bucket_id, name) values ('fotky', '$A/$SLUN/$F1/a.jpg');
+set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+FPUB="reset role; update alba set zverejneno = now() where id = '$F1'; set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+FINS() { echo "with x as (insert into storage.objects (bucket_id, name) values ('fotky', '$1') returning 1) select count(*) from x;"; }
+t "učitelka nahraje fotku do alba své třídy" 1 $UA ucitelka@test.cz "${FSEED//\$ME/$UA} $(FINS $A/$SLUN/$F1/b.jpg)"
+t "učitelka nenahraje do alba cizí třídy" ERR $UA ucitelka@test.cz "${FSEED//\$ME/$UA} $(FINS $A/$BER/$F2/b.jpg)"
+t "podvržená cesta (cizí třída v cestě) neprojde" ERR $UA ucitelka@test.cz "${FSEED//\$ME/$UA} $(FINS $A/$BER/$F1/b.jpg)"
+t "rodič fotku nenahraje" ERR $RODA "" "${FSEED//\$ME/$RODA} ${FPUB//\$ME/$RODA} $(FINS $A/$SLUN/$F1/c.jpg)"
+t "hospodářka fotku nenahraje" ERR $HA hospodarka@test.cz "${FSEED//\$ME/$HA} $(FINS $A/$SLUN/$F1/c.jpg)"
+t "rodič nezveřejněné album nevidí (ani fotku)" "0|0" $RODA "" "${FSEED//\$ME/$RODA} select (select count(*) from alba where id = '$F1') || '|' || (select count(*) from storage.objects where bucket_id = 'fotky');"
+t "rodič po zveřejnění album i fotku vidí" "1|1" $RODA "" "${FSEED//\$ME/$RODA} ${FPUB//\$ME/$RODA} select (select count(*) from alba where id = '$F1') || '|' || (select count(*) from storage.objects where bucket_id = 'fotky');"
+t "rodič nevidí album cizí třídy" 0 $RODA "" "${FSEED//\$ME/$RODA} reset role; update alba set zverejneno = now(); set local role authenticated; select set_config('request.jwt.claim.sub','$RODA',true) \\g /dev/null
+select count(*) from alba where id = '$F2';"
+t "rodič z jiné školky fotku nevidí" 0 $RODB "" "${FSEED//\$ME/$RODB} ${FPUB//\$ME/$RODB} select count(*) from storage.objects where bucket_id = 'fotky';"
+t "ředitelka B fotku nevidí" 0 $RB reditelka.b@test.cz "${FSEED//\$ME/$RB} select count(*) from storage.objects where bucket_id = 'fotky';"
+t "učitelka smaže fotku své třídy" 1 $UA ucitelka@test.cz "${FSEED//\$ME/$UA} with x as (delete from storage.objects where name = '$A/$SLUN/$F1/a.jpg' returning 1) select count(*) from x;"
+t "rodič fotku nesmaže" 0 $RODA "" "${FSEED//\$ME/$RODA} ${FPUB//\$ME/$RODA} with x as (delete from storage.objects where bucket_id = 'fotky' returning 1) select count(*) from x;"
+t "učitelka nezveřejní album cizí třídy" 0 $UA ucitelka@test.cz "${FSEED//\$ME/$UA} with x as (update alba set zverejneno = now() where id = '$F2' returning 1) select count(*) from x;"
+t "učitelka zveřejní album své třídy" 1 $UA ucitelka@test.cz "${FSEED//\$ME/$UA} with x as (update alba set zverejneno = now() where id = '$F1' returning 1) select count(*) from x;"
+t "rodič album nezaloží" ERR $RODA "" "insert into alba (skola_id, trida_id, den, nazev) values ('$A', '$SLUN', current_date, 'x');"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

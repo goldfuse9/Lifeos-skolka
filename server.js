@@ -135,7 +135,9 @@
       id: d.id, name: d.jmeno + ' ' + (d.prijmeni || '').charAt(0) + '.', sym: zn(d, i)[0], symName: zn(d, i)[1],
       allergies: d.alergie ? String(d.alergie).split(/\s*[,;]\s*/).filter(Boolean) : [],
       usualPickup: 'rodiče', pickupToday: null, att: 'expected', arrived: null, left: null, excuse: '',
-      temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, noPhoto: false, ppv: false, server: true, female: d.pohlavi === 'F'
+      temp: null, unwell: null, log: [], cls: tridaId, todayCls: null, ppv: false, server: true, female: d.pohlavi === 'F',
+      /* Bez písemného souhlasu se dítě nefotí (GDPR) — chybějící souhlas = ne. */
+      noPhoto: !(d.souhlasy || []).some(function (x) { return x.druh === 'foto_trida' && x.udelen; })
     };
     aplikuj(k, doch, vyz, ud);
     return k;
@@ -283,10 +285,36 @@
 
     /* ---------------------------------------------------- tablet třídy */
     async nactiTridu(tridaId) {
-      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka, pohlavi').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
+      var deti = ok(await klient().from('deti').select('id, jmeno, prijmeni, alergie, datum_narozeni, znacka, pohlavi, souhlasy(druh, udelen)').eq('trida_id', tridaId).is('ukonceno', null).order('prijmeni'));
       var den = deti.length ? await denTridy(deti.map(function (d) { return d.id; })) : { doch: {}, vyz: {}, ud: {} };
       return deti.map(function (d, i) { return diteProDesku(d, i, den.doch[d.id], den.vyz[d.id], den.ud[d.id], tridaId); });
     },
+    /* --------------------------------------------- fotky (alba třídy v úložišti) */
+    async albaTridy(tridaId) {
+      return ok(await klient().from('alba').select('id, den, druh, nazev, popis, fotky, zverejneno').eq('trida_id', tridaId).order('den', { ascending: false }).order('vytvoreno', { ascending: false }).limit(60));
+    },
+    async zalozAlbum(x) {
+      return ok(await klient().from('alba').insert({ skola_id: nactiUcet().skolaId, trida_id: x.trida_id, den: x.den, nazev: x.nazev, druh: x.druh || 'den', popis: x.popis || null }).select('id').single()).id;
+    },
+    /* Fotka (už zmenšená) do úložiště; vrátí cestu <škola>/<třída>/<album>/<soubor>.jpg */
+    async nahrajFotku(tridaId, albumId, data, typ) {
+      var cesta = nactiUcet().skolaId + '/' + tridaId + '/' + albumId + '/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + (typ === 'image/png' ? '.png' : '.jpg');
+      var r = await klient().storage.from('fotky').upload(cesta, data, { contentType: typ || 'image/jpeg', upsert: false });
+      if (r.error) throw r.error;
+      return cesta;
+    },
+    async ulozFotkyAlba(albumId, fotky) { ok(await klient().from('alba').update({ fotky: fotky }).eq('id', albumId)); },
+    async smazFotku(cesta) { var r = await klient().storage.from('fotky').remove([cesta]); if (r.error) throw r.error; },
+    async zverejnitAlbum(albumId, ano) { ok(await klient().from('alba').update({ zverejneno: ano ? new Date().toISOString() : null }).eq('id', albumId)); },
+    /* Dočasné odkazy na fotky (1 h) — cesta → URL. */
+    async odkazyFotek(cesty) {
+      if (!cesty.length) return {};
+      var r = await klient().storage.from('fotky').createSignedUrls(cesty, 3600);
+      if (r.error) throw r.error;
+      var o = {}; (r.data || []).forEach(function (x) { if (x.signedUrl) o[x.path] = x.signedUrl; });
+      return o;
+    },
+
     /* Akce a třídní schůzky třídy (i celoškolní) od včerejška, s odpověďmi rodičů. */
     async akceTridy(tridaId) {
       var vcera = new Date(); vcera.setDate(vcera.getDate() - 1);

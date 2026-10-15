@@ -7,7 +7,7 @@ module.exports = async () => {
   const za = (n) => sql(`select to_char(current_date + ${n}, 'YYYY-MM-DD')`);
   const t = await stranka({ width: 1194, height: 834 });
   await prihlas(t, 'Třída', 'ucitelka@test.cz'); await t.waitForTimeout(800);
-  kontrola('tablet: záložky Akce a Schůzky v ostrém provozu, Fotky zatím ne', (await t.locator('[role=tab]:has-text("Akce")').count()) === 1 && (await t.locator('[role=tab]:has-text("Schůzky")').count()) === 1 && !(await t.locator('[role=tab]:has-text("Fotky")').count()));
+  kontrola('tablet: záložky Akce a Schůzky v ostrém provozu', (await t.locator('[role=tab]:has-text("Akce")').count()) === 1 && (await t.locator('[role=tab]:has-text("Schůzky")').count()) === 1);
   await t.click('[role=tab]:has-text("Akce")'); await t.waitForTimeout(600);
   kontrola('akce ze serveru: výlet třídy i akce celé školky', (await t.locator('body').innerText()).includes('Výlet do ZOO') && (await t.locator('body').innerText()).includes('Drakiáda'));
   await t.click('button:has-text("+ Nová akce")'); await t.waitForTimeout(300);

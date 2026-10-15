@@ -1332,6 +1332,11 @@ class Component extends DCLogic {
       this.kids.forEach(function (k) { by[k.id] = k; });
       this.albums = []; this.events = []; this.meetings = {}; this.konz = {}; this.kniha[SRVT.id] = SRVT.kniha || [];
       this.akceZeServeru(SRVT.akce || [], SRVT.id);
+      this.albums = (SRVT.alba || []).map(function (a) {
+        return { id: a.id, name: a.nazev, scope: 'trida', cls: SRVT.id, date: a.den, published: !!a.zverejneno,
+          photos: (a.fotky || []).map(function (c) { return { id: c, path: c, url: '', demo: 0 }; }) };
+      });
+      this.odkazy = {};
       this.state.viewCls = SRVT.id;
       this.state.picked = this.kids[0] ? this.kids[0].id : null;
       this.srvOmluvy = SRVT.omluvy || [];
@@ -1362,6 +1367,31 @@ class Component extends DCLogic {
         bring: a.s_sebou || [], price: cena(a.cena), yes: odp(a, 'ano'), no: odp(a, 'ne') });
     });
   }
+  /* Dočasné odkazy na fotky ze serveru (náhledy alb nebo celé album). */
+  nactiOdkazy(cesty) {
+    var self = this, chybi = cesty.filter(function (c) { return c && !self.odkazy[c]; });
+    if (!this.srv || !chybi.length) return;
+    window.SkolkaServer.odkazyFotek(chybi).then(function (o) {
+      Object.assign(self.odkazy, o);
+      self.albums.forEach(function (a) { a.photos.forEach(function (p) { if (p.path && self.odkazy[p.path]) p.url = self.odkazy[p.path]; }); });
+      self.forceUpdate();
+    }).catch(function () { /* náhledy zůstanou barevné */ });
+  }
+  /* Zmenšení fotky v tabletu (delší strana 1600 px, JPEG) — šetří místo i data rodičů. */
+  zmensiFotku(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+        var c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? b.arrayBuffer().then(resolve, reject) : reject(new Error('Fotku se nepodařilo zpracovat.')); }, 'image/jpeg', 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Soubor není fotka.')); };
+      img.src = url;
+    });
+  }
   nactiAkce() {
     var self = this;
     if (!this.srv) return;
@@ -1370,6 +1400,7 @@ class Component extends DCLogic {
 
   componentDidMount() {
     var self = this;
+    if (this.srv) this.nactiOdkazy(this.albums.map(function (a) { return a.photos[0] && a.photos[0].path; }).filter(Boolean));
     if (!this.srv) return;
     /* Tablet zapnutý přes půlnoc: nový den = načíst znovu (jinak by se včerejší
        stav zapisoval do dneška). */
@@ -2219,10 +2250,8 @@ class Component extends DCLogic {
     };
 
     /* -------------------------------------------------- záložky */
-    /* Ostrý provoz: Fotky zatím na server napojené nejsou → nezobrazují se. */
-    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['zpravy', 'Zprávy'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return self.srv ? x[0] !== 'fotky' : x[0] !== 'zpravy'; });
+    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['zpravy', 'Zprávy'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return self.srv ? true : x[0] !== 'zpravy'; });
     var zp = this.zpravyView();
-    if (self.srv && st.tab === 'fotky') st.tab = 'trida';
     var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '', zpravy: zp.noveCelkem ? String(zp.noveCelkem) : '' };
     var tabs = TABS.map(function (t) {
       var on = st.tab === t[0];
@@ -2348,6 +2377,16 @@ class Component extends DCLogic {
         saveLabel: aName ? 'Vytvořit a přidat fotky' : 'Napište název',
         save: function () {
           if (!aName) return;
+          if (self.srv) {
+            if (self._fotBezi) return;
+            self._fotBezi = true;
+            window.SkolkaServer.zalozAlbum({ trida_id: home, den: todayIso, nazev: aName }).then(function (id) {
+              self._fotBezi = false;
+              self.albums.unshift({ id: id, name: aName, scope: 'trida', cls: home, date: todayIso, published: false, photos: [] });
+              self.setState({ dlg: null, df: {}, tab: 'fotky', albumId: id });
+            }).catch(function (e) { self._fotBezi = false; self.showToast('Album se nevytvořilo: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           var al = { id: 'a' + Date.now(), name: aName, scope: df.scope || 'trida', cls: home, date: todayIso, published: false, photos: [] };
           self.albums.unshift(al);
           self.setState({ dlg: null, df: {}, tab: 'fotky', albumId: al.id });
@@ -2497,7 +2536,7 @@ class Component extends DCLogic {
           status: a.published ? 'Rodiče vidí' : 'Jen školka',
           statusStyle: 'position: absolute; top: 10px; left: 10px; height: 26px; padding: 0 10px; border-radius: 13px; display: flex; align-items: center; font-size: 12px; font-weight: 700; '
             + (a.published ? 'background: #EDF4E4; color: #2F5212' : 'background: rgba(255,255,255,0.92); color: #3A3C40'),
-          open: function () { self.setState({ albumId: a.id }); }
+          open: function () { if (self.srv) self.nactiOdkazy(a.photos.map(function (p) { return p.path; })); self.setState({ albumId: a.id }); }
         };
       })
     };
@@ -2512,6 +2551,16 @@ class Component extends DCLogic {
         publishStyle: 'height: 48px; padding: 0 18px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; flex-shrink: 0; '
           + (al.published ? 'background: #EDF4E4; color: #2F5212; border: 2px solid #EDF4E4' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4'),
         togglePublish: function () {
+          if (self.srv) {
+            if (self._fotBezi) return;
+            self._fotBezi = true;
+            var ano = !al.published;
+            window.SkolkaServer.zverejnitAlbum(al.id, ano).then(function () {
+              self._fotBezi = false; al.published = ano; self.forceUpdate();
+              self.showToast(ano ? 'Album uvidí rodiče třídy v aplikaci LifeOS' : 'Album je zase jen pro školku');
+            }).catch(function (e) { self._fotBezi = false; self.showToast('Nepodařilo se: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           al.published = !al.published;
           self.showToast(al.published ? 'Album uvidí rodiče · ' + (al.scope === 'skolka' ? 'celá školka' : 'třída ' + clsById[al.cls].name) : 'Album je zase jen pro školku');
         },
@@ -2531,6 +2580,29 @@ class Component extends DCLogic {
       var cur = self.albums.filter(function (a) { return a.id === self.state.albumId; })[0];
       var files = e && e.target && e.target.files ? Array.prototype.slice.call(e.target.files) : [];
       if (!cur || !files.length) return;
+      if (self.srv) {
+        var fotky = files.filter(function (f) { return /^image\//.test(f.type || 'image/'); });
+        try { e.target.value = ''; } catch (err) { /* nevadí */ }
+        if (!fotky.length || self._fotBezi) return;
+        self._fotBezi = true;
+        self.showToast('Nahrávám ' + nFotek(fotky.length) + '…');
+        var nove = [], chyby = 0;
+        fotky.reduce(function (pr, f) {
+          return pr.then(function () {
+            return self.zmensiFotku(f).then(function (data) { return window.SkolkaServer.nahrajFotku(cur.cls, cur.id, data, 'image/jpeg'); })
+              .then(function (c) { nove.push(c); }, function () { chyby++; });
+          });
+        }, Promise.resolve()).then(function () {
+          if (!nove.length) throw new Error('Žádná fotka se nenahrála.');
+          var vse = cur.photos.map(function (p) { return p.path; }).concat(nove);
+          return window.SkolkaServer.ulozFotkyAlba(cur.id, vse).then(function () {
+            nove.forEach(function (c) { cur.photos.push({ id: c, path: c, url: '', demo: 0 }); });
+            self._fotBezi = false; self.nactiOdkazy(nove);
+            self.showToast('Nahráno: ' + nFotek(nove.length) + (chyby ? ' · ' + chyby + ' se nepodařilo' : '') + (cur.published ? ' · rodiče je uvidí' : ''));
+          });
+        }).catch(function (er) { self._fotBezi = false; self.showToast('Fotky se nenahrály: ' + window.SkolkaServer.chyba(er)); });
+        return;
+      }
       files.forEach(function (file, i) {
         if (!/^image\//.test(file.type || 'image/')) return;
         cur.photos.push({ id: 'p' + Date.now() + '-' + i, url: URL.createObjectURL(file), demo: 0 });
@@ -2552,6 +2624,17 @@ class Component extends DCLogic {
       next: function () { if (vAl) self.setState({ viewer: { albumId: vAl.id, idx: (vw.idx + 1) % vAl.photos.length } }); },
       remove: function () {
         if (!vAl || !vP) return;
+        if (self.srv) {
+          if (self._fotBezi) return;
+          self._fotBezi = true;
+          var zbyle = vAl.photos.filter(function (p) { return p !== vP; });
+          window.SkolkaServer.smazFotku(vP.path).then(function () { return window.SkolkaServer.ulozFotkyAlba(vAl.id, zbyle.map(function (p) { return p.path; })); }).then(function () {
+            self._fotBezi = false; vAl.photos = zbyle;
+            self.setState({ viewer: zbyle.length ? { albumId: vAl.id, idx: Math.min(vw.idx, zbyle.length - 1) } : null });
+            self.showToast('Fotka smazána');
+          }).catch(function (e) { self._fotBezi = false; self.showToast('Fotku se nepodařilo smazat: ' + window.SkolkaServer.chyba(e)); });
+          return;
+        }
         if (vP.url) { try { URL.revokeObjectURL(vP.url); } catch (err) { /* nevadí */ } }
         vAl.photos.splice(vw.idx, 1);
         self.setState({ viewer: vAl.photos.length ? { albumId: vAl.id, idx: Math.min(vw.idx, vAl.photos.length - 1) } : null });
