@@ -123,7 +123,7 @@ echo "== E5 citlivé sloupce"
 t "hospodářka nevidí rodná čísla" ERR $HA hospodarka@test.cz "select rodne_cislo from deti limit 1;"
 t "učitelka nevidí adresy" ERR $UA ucitelka@test.cz "select adresa from deti limit 1;"
 echo "== E6 účetní kniha"
-t "hospodářka zapíše předpis do konta dítěte" 1 $HA hospodarka@test.cz "with i as (insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'dite:$EMA', 'vynosy:skolkovne', 100, 'x') returning 1) select count(*) from i;"
+t "hospodářka nezapíše do knihy přímo (jen funkcí vystav_predpisy)" ERR $HA hospodarka@test.cz "with i as (insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'dite:$EMA', 'vynosy:skolkovne', 100, 'x') returning 1) select count(*) from i;"
 t "hospodářka A nepřipíše pohyb dítěti B" ERR $HA hospodarka@test.cz "insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'banka', 'dite:$ADAM', 100, 'x');"
 echo "== E7 účty zaměstnanců"
 t "ředitelka nedegraduje spoluředitelku" ERR $RA reditelka@test.cz "reset role; insert into auth.users(id,email) values ('aaaaaaaa-0000-4000-8000-0000000000f2','r2@test.cz'); insert into uzivatele (id, skola_id, jmeno, role) values ('aaaaaaaa-0000-4000-8000-0000000000f2','$A','R2','reditelka'); set local role authenticated; with u as (update uzivatele set role='ucitelka', aktivni=false where id='aaaaaaaa-0000-4000-8000-0000000000f2' returning 1) select 1/count(*) from u;"
@@ -308,5 +308,70 @@ t "učitelka dokumenty nevidí" 0 $UA ucitelka@test.cz "reset role; insert into 
 select count(*) from dokumenty;"
 t "ředitelka B nevidí dokumenty A" 0 $RB reditelka.b@test.cz "reset role; insert into dokumenty (skola_id, klic, html) values ('$A','svp','x'); set local role authenticated; select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
 select count(*) from dokumenty;"
+echo "== platby: předpisy, párování a kniha jen funkcemi"
+FSET="select uloz_financni_nastaveni('19-2000145399/0800', 900, 48, 52, 15) \\g /dev/null
+"
+# Ema: 3 obědy v září, z toho jeden omluvený včas (nepočítá se) a jeden pozdě (počítá se)
+DOCH="reset role; insert into dochazka (dite_id, den, stav, strava_prihlasena, omluva_zadana) values
+ ('$EMA', '2026-09-01', 'pritomen', true, null),
+ ('$EMA', '2026-09-02', 'omluven', true, '2026-09-01 07:00+02'),
+ ('$EMA', '2026-09-03', 'omluven', true, '2026-09-03 07:30+02'),
+ ('$EMA', '2026-09-04', 'omluven', false, null);
+set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+t "hospodářka ceny nenastaví" ERR $HA hospodarka@test.cz "$FSET"
+t "učitelka ceny nenastaví" ERR $UA ucitelka@test.cz "$FSET"
+t "přímá změna nastavení neprojde" ERR $RA reditelka@test.cz "update financni_nastaveni set skolkovne = 1;"
+t "ředitelka vystaví předpisy za září (3 děti)" 3 $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09');"
+t "podruhé nic nezdvojí" 0 $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
+select vystav_predpisy('2026-09');"
+t "stravné: jen obědy bez včasné omluvy (2 × 48 Kč)" "2|96.00|996.00" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
+select q.mnozstvi || '|' || q.castka || '|' || p.castka from predpisy p join predpis_polozky q on q.predpis_id = p.id and q.druh = 'stravne' where p.dite_id = '$EMA';"
+t "podvojnost: pohyby dítěte = předpis" "996.00|996.00" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
+select (select sum(castka) from ucetni_pohyby where md = 'dite:$EMA') || '|' || (select castka from predpisy where dite_id = '$EMA');"
+t "hospodářka předpisy vystaví" 3 $HA hospodarka@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+$FSET select set_config('request.jwt.claim.sub','$HA',true) \\g /dev/null
+select vystav_predpisy('2026-09');"
+t "běžící měsíc vystavit nejde" ERR $RA reditelka@test.cz "$FSET select vystav_predpisy(to_char(current_date, 'YYYY-MM'));"
+t "učitelka předpisy nevystaví" ERR $UA ucitelka@test.cz "select vystav_predpisy('2026-09');"
+t "rodič předpisy nevystaví" ERR $RODA "" "select vystav_predpisy('2026-09');"
+t "přímý zápis do účetní knihy neprojde" ERR $HA hospodarka@test.cz "insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'banka', 'dite:$EMA', 1000, 'podvrh');"
+t "přímá změna předpisu neprojde" ERR $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
+update predpisy set stav = 'zaplaceno';"
+t "přímá platba neprojde" ERR $HA hospodarka@test.cz "insert into platby (skola_id, datum, castka) values ('$A', current_date, 100);"
+PL() { echo "select zpracuj_platby('[{\"datum\":\"2026-10-05\",\"castka\":$1,\"vs\":\"$2\",\"protiucet\":\"123/0800\",\"nazev\":\"RODIC\",\"doklad\":\"$3\"}]')"; }
+t "platba přesně: konto 0, předpis zaplacen" "1|0.00|zaplaceno" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
+select set_config('t.r', ($(PL 996 260001 D1))->>'presne', true) \\g /dev/null
+select current_setting('t.r') || '|' || (select saldo from konta where dite_id='$EMA') || '|' || (select stav from predpisy where dite_id='$EMA');"
+t "stejný doklad podruhé se přeskočí" 1 $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
+$(PL 900 260001 D1) \\g /dev/null
+select ($(PL 900 260001 D1))->>'duplicita';"
+t "přeplatek zůstane na kontě" "1|100.00" $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
+select set_config('t.r', ($(PL 1000 260003 D2))->>'preplatek', true) \\g /dev/null
+select current_setting('t.r') || '|' || (select saldo from konta where dite_id='$TOB');"
+t "neznámý VS → nespárovaná, ruční spárování" "1|nedoplatek|true" $HA hospodarka@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+$FSET select vystav_predpisy('2026-09') \\g /dev/null
+select set_config('request.jwt.claim.sub','$HA',true) \\g /dev/null
+select set_config('t.r', ($(PL 500 999999 D3))->>'nesparovano', true) \\g /dev/null
+select set_config('t.s', (sparuj_platbu((select id from platby where doklad='D3'), '$OLI'))->>'vysledek', true) \\g /dev/null
+select current_setting('t.r') || '|' || current_setting('t.s') || '|' || (select vyreseno from nesparovane_platby);"
+t "ředitelka B nespáruje platbu školky A" ERR $RB reditelka.b@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+$(PL 500 999999 D4) \\g /dev/null
+select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
+select sparuj_platbu((select platba_id from nesparovane_platby limit 1), '$ADAM');"
+t "ředitelka B nevidí platby ani knihu školky A" "0|0" $RB reditelka.b@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+$FSET select vystav_predpisy('2026-09') \\g /dev/null
+$(PL 996 260001 D5) \\g /dev/null
+select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
+select (select count(*) from platby) || '|' || (select count(*) from ucetni_pohyby where md like 'dite:%' or dal like 'dite:%');"
+t "učitelka nezpracuje výpis" ERR $UA ucitelka@test.cz "$(PL 100 260001 D6);"
+t "rodič vidí jen předpis svého dítěte" "1" $RODA "" "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+$FSET select vystav_predpisy('2026-09') \\g /dev/null
+select set_config('request.jwt.claim.sub','$RODA',true) \\g /dev/null
+select count(*) from predpisy;"
+t "upomínka jen po splatnosti" 1 $HA hospodarka@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
+$FSET select vystav_predpisy('2026-08') \\g /dev/null
+select set_config('request.jwt.claim.sub','$HA',true) \\g /dev/null
+select zapis_upominku('$EMA');"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

@@ -562,7 +562,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <span style="flex-grow: 1"></span>
         <label for="vypis-gpc" style="height: 44px; padding: 0 18px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Načíst výpis z banky (.gpc)</label>
         <input id="vypis-gpc" type="file" accept=".gpc,.abo,.txt" onChange="{{pay.onFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none">
-        <button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Ukázkový výpis</button>
+ <sc-if value="{{pay.lokalni}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Ukázkový výpis</button></sc-if>
         <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Export pro účetnictví</button>
       </div>
       <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
@@ -1691,7 +1691,8 @@ class Component extends DCLogic {
     this.porady = (D.porady || []).map(function (x) { return { id: x.id, date: x.den, title: x.druh, program: x.program, usneseni: x.usneseni || '', pritomni: (x.pritomni || []).join(', ') }; });
     var dk = {}; (D.dokumenty || []).forEach(function (x) { dk[x.klic] = x; });
     this.docs.forEach(function (d) { var x = dk[d.key] || {}; d.html = x.html || null; d.text = null; d.fmt = x.fmt || null; d.approved = x.schvaleno || null; d.version = x.verze || 0; d.edited = !!x.upraveno_po_schvaleni; d.onWeb = !!x.na_webu; });
-    this._seedPorady = []; this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
+    this._seedPorady = [];
+    this.finZeServeru(D.fin);
     var zy = this.zapis.year, zr = (D.zapisRocnik || []).filter(function (x) { return x.rok === zy; })[0] || {};
     Object.assign(this.zapis, { decided: !!zr.rozhodnuto, published: zr.zverejneno || null, sent: zr.odeslano || null, moved: !!zr.preneseno });
     this.zapis.apps = (D.zadosti || []).filter(function (z) { return z.rok === zy; }).map(function (z) {
@@ -1767,6 +1768,73 @@ class Component extends DCLogic {
     var D = await window.SkolkaServer.nactiReditelnu(rok + '-09-01', this.iso(d));
     window.__skolkaServerReditelna = D;
     this.zeServeru(D);
+  }
+
+  /* Platby v ostrém provozu: data z databáze (částky v Kč → haléře, jak počítá ředitelna). */
+  finZeServeru(F) {
+    var self = this, h = function (x) { return Math.round(Number(x || 0) * 100); };
+    F = F || {};
+    var N = F.nastaveni || null, sz = {};
+    (F.sazby || []).forEach(function (x) { sz[x.kategorie] = h(x.cena); });
+    this.fin = { ucet: N ? N.ucet : '', skolkovne: N ? h(N.skolkovne) : 0, stravne: { '3-6': sz['3-6'] || 0, '7+': sz['7+'] || 0 },
+      omlDni: N ? N.omluva_dni_predem : 1, omlDo: N ? String(N.omluva_do).slice(0, 5) : '08:00', splatnost: N ? N.splatnost_den : 15,
+      vsSchema: N ? N.vs_schema : 'rok_poradi', vsPrefix: N ? N.vs_prefix : '', vsDelka: N ? N.vs_delka : 6 };
+    this.finNastaveno = !!N;
+    var ST = { zaplaceno: 'zaplaceno', castecne_zaplaceno: 'castecne', otevreno: 'otevreno' };
+    this.predpisy = {};
+    (F.predpisy || []).forEach(function (p) {
+      var pol = (p.predpis_polozky || []).slice().sort(function (a, b) { return a.poradi - b.poradi; }).map(function (q) { return { druh: q.druh, popis: q.popis, mn: q.mnozstvi, cena: h(q.cena), castka: h(q.castka) }; });
+      (self.predpisy[p.dite_id] || (self.predpisy[p.dite_id] = {}))[p.obdobi] = { id: p.id, polozky: pol, castka: h(p.castka), uhrazeno: h(p.uhrazeno), stav: ST[p.stav] || 'otevreno', splatnost: p.splatnost, vystaveno: p.vystaveno };
+    });
+    this.pohyby = (F.pohyby || []).map(function (p) { return { id: p.id, datum: p.datum, md: p.md, dal: p.dal, castka: h(p.castka), popis: p.popis, doklad: p.doklad || '' }; });
+    this.platby = (F.platby || []).map(function (p) { return { id: p.id, datum: p.datum, castka: h(p.castka), vs: p.vs || '', protiucet: p.protiucet || '', nazev: p.nazev || '', doklad: p.doklad || '', kidId: p.dite_id || null }; });
+    this.nespar = (F.nespar || []).map(function (n) { return { platbaId: n.platba_id, duvod: n.duvod, vyreseno: !!n.vyreseno }; });
+    this.upominky = (F.upominky || []).map(function (u) { return { kidId: u.dite_id, obdobi: u.obdobi, kanal: u.kanal, kdy: self.iso(new Date(u.odeslano)) }; });
+    this.srvSaldo = {}; (F.konta || []).forEach(function (k) { self.srvSaldo[k.dite_id] = h(k.saldo); });
+  }
+  openFinSet() {
+    var F = this.fin, kc = function (h) { return h ? String(h / 100).replace('.', ',') : ''; };
+    this.setState({ dlg: 'finSet', df: { ucet: F.ucet || '', skol: kc(F.skolkovne), s36: kc(F.stravne['3-6']), s7: kc(F.stravne['7+']), spl: String(F.splatnost || 15) } });
+  }
+  /* Výpis přečte prohlížeč, příchozí platby spáruje databáze. */
+  finImport(text, name) {
+    var self = this, v = this.gpc(text);
+    if (!v.tx.length) { this.setState({ payDlg: { kind: 'import', name: name, r: { pocty: { presne: 0, preplatek: 0, nedoplatek: 0, nesparovano: 0, duplicita: 0 }, odchozi: 0, chyby: v.chyby, celkem: 0, ucet: v.ucet, transakci: 0 }, empty: true } }); return; }
+    var prich = v.tx.filter(function (t) { return t.kod === '2' && t.castka > 0; });
+    var list = prich.map(function (t) { return { datum: t.datum || self.iso(self.today), castka: t.castka / 100, vs: t.vs, protiucet: t.protiucet, nazev: t.nazev, doklad: t.nas + ':' + (t.doklad || 'r' + t.radek) + ':' + t.datum }; });
+    this.finSrv(function () { return list.length ? window.SkolkaServer.zpracujPlatby(list) : Promise.resolve({ presne: 0, preplatek: 0, nedoplatek: 0, nesparovano: 0, duplicita: 0, celkem: 0 }); }, function (r) {
+      var res = { pocty: { presne: r.presne, preplatek: r.preplatek, nedoplatek: r.nedoplatek, nesparovano: r.nesparovano, duplicita: r.duplicita },
+        odchozi: v.tx.length - prich.length, chyby: v.chyby, celkem: Math.round(Number(r.celkem || 0) * 100), ucet: v.ucet, transakci: v.tx.length };
+      self.log('Načten výpis ' + name + ': ' + (r.presne + r.preplatek + r.nedoplatek) + ' spárováno, ' + r.nesparovano + ' nespárováno');
+      self.setState({ payDlg: { kind: 'import', name: name, r: res } });
+    });
+  }
+  /* Upomínka = zpráva rodičům do aplikace LifeOS (kanál dítěte) + záznam v databázi. */
+  finUpominka(list) {
+    var self = this, SV = window.SkolkaServer, F = this.fin, dnes = this.iso(this.today);
+    var sApp = list.filter(function (k) { return k.app; }), bez = list.length - sApp.length;
+    if (!sApp.length) { this.showToast(list.length === 1 ? 'Rodiče nemají aplikaci LifeOS — ozvěte se jim telefonem nebo e-mailem.' : 'Nikdo z nich nemá aplikaci LifeOS — ozvěte se jim jinak.'); return; }
+    if (this._finBezi) return;
+    this._finBezi = true;
+    var jeden = function (k) {
+      var text = 'Dobrý den, evidujeme neuhrazenou platbu za školku (' + k.first + ') ve výši ' + self.fmtH(self.kUhrade(k.id)) + '. Prosíme o úhradu na účet ' + F.ucet
+        + ', variabilní symbol ' + (k.vs || '—') + '. Pokud jste už zaplatili, zprávu prosím ignorujte. Děkujeme.';
+      return SV.posliZpravu('dite:' + k.id, 'Platba po splatnosti', text).then(function () { return SV.zapisUpominku(k.id, 'push'); })
+        .then(function () { self.upominky.push({ kidId: k.id, obdobi: '', kanal: 'push', kdy: dnes }); });
+    };
+    sApp.reduce(function (pr, k) { return pr.then(function () { return jeden(k); }); }, Promise.resolve()).then(function () {
+      self._finBezi = false; self.log('Upomínky do aplikace: ' + sApp.length); self.forceUpdate();
+      self.showToast('Upomínka odeslána do aplikace LifeOS: ' + sApp.length + (bez ? ' · ' + bez + ' bez aplikace — ozvěte se jim jinak' : ''));
+    }).catch(function (e) { self._finBezi = false; self.forceUpdate(); self.showToast('Upomínku se nepodařilo odeslat: ' + SV.chyba(e)); });
+  }
+  /* Akce plateb na serveru; po každé se data plateb načtou znovu. */
+  finSrv(akce, hotovo) {
+    var self = this;
+    if (this._finBezi) return;
+    this._finBezi = true;
+    akce().then(function (r) {
+      return self.srvZnovu().then(function () { self._finBezi = false; hotovo(r); self.forceUpdate(); });
+    }).catch(function (e) { self._finBezi = false; self.showToast('Neuloženo: ' + window.SkolkaServer.chyba(e)); });
   }
 
   /* Kdo může být na poradě (ostrý provoz): vedoucí, která zápis píše, a pedagogové školky. */
@@ -2286,6 +2354,7 @@ class Component extends DCLogic {
     this.pohyby.push({ id: 'u' + (this.pohyby.length + 1) + '-' + Date.now().toString(36), datum: datum, md: md, dal: dal, castka: castka, popis: popis, doklad: doklad || '' });
   }
   saldo(kidId) {
+    if (this.srv && this.srvSaldo) return this.srvSaldo[kidId] || 0;
     var a = 'dite:' + kidId, s = 0;
     for (var i = 0; i < this.pohyby.length; i++) { var p = this.pohyby[i]; if (p.dal === a) s += p.castka; if (p.md === a) s -= p.castka; }
     return s;
@@ -2969,7 +3038,7 @@ class Component extends DCLogic {
     var SRVON = !!(SU && SU.server && SU.server());
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
-    var SRV_SKRYT = ['platby', 'web', 'matrika', 'archiv', 'nastaveni'];
+    var SRV_SKRYT = ['web', 'matrika', 'archiv', 'nastaveni'];
     var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -3563,9 +3632,20 @@ class Component extends DCLogic {
         { label: 'Přeplatky na kontech', value: self.fmtH(kredit), sub: 'odečtou se z dalších předpisů', style: zStat('#EBF1FA') }
       ],
       noPredpisy: !payAll.length, hasPredpisy: payAll.length > 0,
-      issueLabel: 'Vystavit předpisy za ' + self.monthName(pM) + (monthEnded ? '' : ' (měsíc ještě běží)'),
+      lokalni: !self.srv,
+      issueLabel: self.srv && !monthEnded ? 'Předpisy za ' + self.monthName(pM) + ' až po skončení měsíce' : 'Vystavit předpisy za ' + self.monthName(pM) + (monthEnded ? '' : ' (měsíc ještě běží)'),
       issue: function () {
         if (!canPay) return;
+        if (self.srv) {
+          if (!self.finNastaveno) { if (role === 'reditelka') self.openFinSet(); else self.showToast('Ceny a účet školky nejdřív nastaví ředitelka.'); return; }
+          if (!monthEnded) { self.showToast('Předpisy se vystavují po skončení měsíce — stravné se počítá podle skutečné docházky.'); return; }
+          self.finSrv(function () { return window.SkolkaServer.vystavPredpisy(pM); }, function (n) {
+            self.log('Vystaveny předpisy za ' + self.monthName(pM) + ': ' + n);
+            var bezVs = kids.filter(function (k) { return !k.vs; }).length;
+            self.showToast((n ? 'Vystaveno předpisů: ' + n : 'Předpisy už jsou vystavené') + (bezVs ? ' · ' + bezVs + ' dětí nemá VS — doplňte ho v kartě, jinak se platba nespáruje' : ''));
+          });
+          return;
+        }
         var n = self.vystavMesic(pM);
         self.log('Vystaveny předpisy za ' + self.monthName(pM) + ': ' + n);
         self.forceUpdate(); self.showToast(n ? 'Vystaveno předpisů: ' + n : 'Předpisy už jsou vystavené');
@@ -3588,6 +3668,7 @@ class Component extends DCLogic {
           remindStyle: 'height: 34px; padding: 0 12px; border-radius: 17px; font-size: 13px; font-weight: 700; cursor: pointer; ' + (upomenutoDnes(k) ? 'border: 0; background: #F3F4F2; color: #8A8C90' : 'border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513'),
           remind: function () {
             if (!canPay || upomenutoDnes(k)) return;
+            if (self.srv) { self.finUpominka([k]); return; }
             upomenut(k); self.log('Upomínka (' + (kanal(k) === 'push' ? 'aplikace' : 'e-mail') + '): ' + k.first + ' ' + k.last + ', dluh ' + self.fmtH(self.kUhrade(k.id)));
             self.forceUpdate(); self.showToast('Upomínka odeslána ' + (kanal(k) === 'push' ? 'do aplikace' : 'e-mailem') + ' — ' + k.first);
           } };
@@ -3601,6 +3682,7 @@ class Component extends DCLogic {
         if (!canPay) return;
         var todo = dluzniciNow.filter(function (k) { return !upomenutoDnes(k); });
         if (!todo.length) { self.showToast('Dnes už jsou všichni upomenuti'); return; }
+        if (self.srv) { self.finUpominka(todo); return; }
         var push = 0; todo.forEach(function (k) { upomenut(k); if (kanal(k) === 'push') push++; });
         self.log('Hromadné upomínky: ' + todo.length + ' (aplikace ' + push + ', e-mail ' + (todo.length - push) + ')');
         self.forceUpdate(); self.showToast('Upomínky odeslány: ' + push + '× do aplikace, ' + (todo.length - push) + '× e-mailem');
@@ -3611,7 +3693,7 @@ class Component extends DCLogic {
           pair: function () { self.setState({ payDlg: { kind: 'pair', platbaId: n.platbaId, q: '' } }); } };
       }),
       noUnmatched: !this.nespar.some(function (n) { return !n.vyreseno; }),
-      canSettings: role === 'reditelka', goSettings: go('nastaveni'),
+      canSettings: role === 'reditelka', goSettings: self.srv ? function () { self.openFinSet(); } : go('nastaveni'),
       setup: [
         { k: 'Účet školky', v: F.ucet || 'chybí' },
         { k: 'Školkovné', v: self.fmtH(F.skolkovne) + ' / měsíc' },
@@ -3624,6 +3706,7 @@ class Component extends DCLogic {
         if (!f) return;
         f.arrayBuffer().then(function (buf) {
           var text; try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (er) { text = new TextDecoder('windows-1250').decode(buf); }
+          if (self.srv) { self.finImport(text, f.name); return; }
           var r = self.importGpc(text);
           if (!r.transakci) { self.setState({ payDlg: { kind: 'import', name: f.name, r: r, empty: true } }); return; }
           self.log('Načten výpis ' + f.name + ': ' + (r.pocty.presne + r.pocty.preplatek + r.pocty.nedoplatek) + ' spárováno, ' + r.pocty.nesparovano + ' nespárováno');
@@ -3672,6 +3755,15 @@ class Component extends DCLogic {
         kids: kids.filter(function (k) { return !qq || (k.first + ' ' + k.last + ' ' + k.vs).toLowerCase().indexOf(qq) >= 0; }).slice(0, 30).map(function (k) {
           return { name: k.first + ' ' + k.last, sub: clsById[k.cls].name + ' · VS ' + (k.vs || '—') + ' · k úhradě ' + self.fmtH(self.kUhrade(k.id)),
             pick: function () {
+              if (self.srv) {
+                self.finSrv(function () { return window.SkolkaServer.sparujPlatbu(PDg.platbaId, k.id); }, function (r) {
+                  var hh = function (x) { return self.fmtH(Math.round(Number(x || 0) * 100)); };
+                  self.log('Ručně spárováno: ' + self.fmtH(pl.castka) + ' → ' + k.first + ' ' + k.last);
+                  self.setState({ payDlg: null });
+                  self.showToast(k.first + ': ' + (r.vysledek === 'presne' ? 'zaplaceno přesně' : r.vysledek === 'preplatek' ? 'přeplatek ' + hh(r.preplatek) + ' na kontě' : 'zbývá doplatit ' + hh(r.zbyva)));
+                });
+                return;
+              }
               var r = self.sparujRucne(PDg.platbaId, k.id); if (!r) return;
               self.log('Ručně spárováno: ' + self.fmtH(pl.castka) + ' → ' + k.first + ' ' + k.last);
               self.setState({ payDlg: null });
@@ -4363,6 +4455,24 @@ class Component extends DCLogic {
           K.ended = { date: df.date, reason: reason };
           self.log('Ukončena docházka: ' + K.first + ' ' + K.last + ' — ' + reason.toLowerCase());
           self.setState({ dlg: null, df: {}, kidId: null, editAll: false }); self.showToast(K.first + ' ' + K.last + ': docházka ukončena');
+        }
+      });
+    }
+    if (dk === 'finSet') {
+      var numF = function (v) { var x = parseFloat(String(v == null ? '' : v).replace(',', '.').replace(/\s/g, '')); return isNaN(x) || x < 0 ? null : x; };
+      var ucOk = !!(df.ucet && self.iban(String(df.ucet).trim()));
+      var okF = ucOk && numF(df.skol) != null && numF(df.s36) != null && numF(df.s7) != null && +df.spl >= 1 && +df.spl <= 28;
+      Object.assign(dlg, {
+        title: 'Nastavení plateb',
+        inputs: [inp('Číslo účtu školky', 'ucet', 'Např. 19-2000145399/0800', 'text', df.ucet ? (ucOk ? 'Účet je v pořádku' : 'Číslo účtu nesedí — zkontrolujte ho') : '', !!df.ucet && !ucOk),
+          inp('Školkovné za měsíc (Kč)', 'skol', 'Např. 900'), inp('Stravné 3–6 let za den (Kč)', 's36', 'Např. 48'), inp('Stravné 7+ let za den (Kč)', 's7', 'Např. 52'), inp('Splatnost — den dalšího měsíce', 'spl', 'Např. 15')],
+        canSave: okF,
+        summary: okF ? 'Platí pro předpisy, které vystavíte od teď.' : 'Vyplňte účet, ceny a den splatnosti.',
+        saveLabel: okF ? 'Uložit' : 'Doplňte údaje',
+        save: function () {
+          if (!okF) return;
+          var x = { ucet: String(df.ucet).trim(), skolkovne: numF(df.skol), s36: numF(df.s36), s7: numF(df.s7), splatnost: +df.spl };
+          self.finSrv(function () { return window.SkolkaServer.ulozFinNastaveni(x); }, function () { self.setState({ dlg: null, df: {} }); self.showToast('Nastavení plateb uloženo'); });
         }
       });
     }
