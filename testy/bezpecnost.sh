@@ -282,5 +282,31 @@ t "stav zápisu jiné školky není vidět" 0 $RB reditelka.b@test.cz "${ZSEED//
 select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
 select count(*) from zapis_rocnik where skola_id='$A';"
 t "stav zápisu nejde měnit přímo" ERR $RA reditelka@test.cz "insert into zapis_rocnik (skola_id, rok, odeslano) values ('$A', 2027, current_date);"
+echo "== dokumenty: vedení upravuje a schvaluje, archiv verzí"
+DINS() { echo "with x as (insert into dokumenty (skola_id, klic, html) values ('$A', '$1', '<p>Text</p>') returning 1) select count(*) from x;"; }
+SCH="select schval_dokument('skolni-rad', null, null, '<h1>Školní řád</h1><p>Znění</p>');"
+t "ředitelka uloží rozpracovaný dokument" 1 $RA reditelka@test.cz "$(DINS skolni-rad)"
+t "zástupkyně uloží dokument" 1 $ZA zastupce@test.cz "$(DINS svp)"
+t "učitelka dokument neuloží" ERR $UA ucitelka@test.cz "$(DINS skolni-rad)"
+t "hospodářka dokument neuloží" ERR $HA hospodarka@test.cz "$(DINS skolni-rad)"
+t "rodič dokument neuloží" ERR $RODA "" "$(DINS skolni-rad)"
+t "ředitelka A neuloží dokument do školky B" ERR $RA reditelka@test.cz "insert into dokumenty (skola_id, klic, html) values ('$B', 'svp', 'x');"
+t "schválení přímo (bez funkce) neprojde" ERR $RA reditelka@test.cz "insert into dokumenty (skola_id, klic, schvaleno, verze) values ('$A', 'gdpr', current_date, 5);"
+t "verzi nejde přepsat přímo" ERR $RA reditelka@test.cz "$(DINS skolni-rad) update dokumenty set verze = 9 where klic='skolni-rad';"
+t "schválení: verze 1, pak 2" "1|2" $RA reditelka@test.cz "select schval_dokument('skolni-rad', null, null, 'v1') || '|' || schval_dokument('skolni-rad', '<p>nové</p>', null, 'v2');"
+t "archiv drží obě schválená znění" "v1,v2" $RA reditelka@test.cz "select schval_dokument('skolni-rad', null, null, 'v1') \\g /dev/null
+select schval_dokument('skolni-rad', null, null, 'v2') \\g /dev/null
+select string_agg(html, ',' order by verze) from dokumenty_verze where klic='skolni-rad';"
+t "úprava po schválení se označí" t $RA reditelka@test.cz "$SCH update dokumenty set html='<p>změna</p>' where klic='skolni-rad'; select upraveno_po_schvaleni from dokumenty where klic='skolni-rad';"
+t "nové schválení příznak úpravy zruší" f $RA reditelka@test.cz "$SCH update dokumenty set html='<p>změna</p>' where klic='skolni-rad'; $SCH select upraveno_po_schvaleni from dokumenty where klic='skolni-rad';"
+t "učitelka neschvaluje" ERR $UA ucitelka@test.cz "$SCH"
+t "hospodářka neschvaluje" ERR $HA hospodarka@test.cz "$SCH"
+t "prázdné znění neschválí" ERR $RA reditelka@test.cz "select schval_dokument('svp', null, null, '  ');"
+t "dokument nejde smazat" ERR $RA reditelka@test.cz "$(DINS svp) delete from dokumenty where klic='svp';"
+t "archiv verzí nejde měnit" ERR $RA reditelka@test.cz "$SCH update dokumenty_verze set html='podvrh';"
+t "učitelka dokumenty nevidí" 0 $UA ucitelka@test.cz "reset role; insert into dokumenty (skola_id, klic, html) values ('$A','svp','x'); set local role authenticated; select set_config('request.jwt.claim.sub','$UA',true) \\g /dev/null
+select count(*) from dokumenty;"
+t "ředitelka B nevidí dokumenty A" 0 $RB reditelka.b@test.cz "reset role; insert into dokumenty (skola_id, klic, html) values ('$A','svp','x'); set local role authenticated; select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
+select count(*) from dokumenty;"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

@@ -1689,6 +1689,8 @@ class Component extends DCLogic {
     var komuN = function (k) { if (k === 'vse') return 'Celá školka'; if (k === 'zamestnanci') return 'Zaměstnanci'; if (/^trida:/.test(k)) { var c = self.classes.filter(function (x) { return 'trida:' + x.id === k; })[0]; return c ? 'Třída ' + c.name : 'Třída'; } if (/^dite:/.test(k)) { var kk = kidById[k.slice(5)]; return kk ? 'Rodiče: ' + kk.first + ' ' + kk.last : 'Rodiče dítěte'; } return k; };
     this.messages = (D.zpravy || []).map(function (z) { var d = new Date(z.odeslano); return { id: z.id, title: z.predmet, text: z.text, to: komuN(z.komu), komu: z.komu, at: self.cz(d), by: jmenoUc[z.odeslal] || '', read: 0, total: 0, app: 0, mail: 0 }; });
     this.porady = (D.porady || []).map(function (x) { return { id: x.id, date: x.den, title: x.druh, program: x.program, usneseni: x.usneseni || '', pritomni: (x.pritomni || []).join(', ') }; });
+    var dk = {}; (D.dokumenty || []).forEach(function (x) { dk[x.klic] = x; });
+    this.docs.forEach(function (d) { var x = dk[d.key] || {}; d.html = x.html || null; d.text = null; d.fmt = x.fmt || null; d.approved = x.schvaleno || null; d.version = x.verze || 0; d.edited = !!x.upraveno_po_schvaleni; d.onWeb = !!x.na_webu; });
     this._seedPorady = []; this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
     var zy = this.zapis.year, zr = (D.zapisRocnik || []).filter(function (x) { return x.rok === zy; })[0] || {};
     Object.assign(this.zapis, { decided: !!zr.rozhodnuto, published: zr.zverejneno || null, sent: zr.odeslano || null, moved: !!zr.preneseno });
@@ -1721,7 +1723,10 @@ class Component extends DCLogic {
     this.classes.forEach(function (c) { o.classes[c.id] = JSON.stringify([c.name, c.code, c.color, +c.capacity, c.provoz || 'C']); });
     o.ut = {}; this.teachers.forEach(function (t) { o.ut[t.id] = t.classes.slice().sort(); });
     this.urazy.forEach(function (u) { if (u.id) o.urazy[u.id] = JSON.stringify([+u.absent || 0, u.record || null, u.comment || '', u.zaznam || null]); });
+    o.docs = {}; this.docs.forEach(function (d) { o.docs[d.key] = self.srvDok(d); });
     return o;
+  }
+  srvDok(d) { return JSON.stringify([d.html || null, d.fmt || null, !!d.onWeb]);
   }
   /* Zápis v ostrém provozu: každý krok jde na server. Aplikace sama nic
      nezveřejňuje ani neodesílá — kroky 2 a 3 jen zaznamenají, že to vedení udělalo. */
@@ -1820,6 +1825,14 @@ class Component extends DCLogic {
         poslano++;
         try { await SV.ulozUraz(ur.id, { dny_absence: +ur.absent || 0, zaznam_odeslan: ur.record || null, komentar: ur.comment || null, zaznam: ur.zaznam || null }); snap.urazy[ur.id] = us; }
         catch (e) { chyby.push('úraz č. ' + ur.no + ': ' + SV.chyba(e)); }
+      }
+      snap.docs = snap.docs || {};
+      for (var di = 0; di < this.docs.length; di++) {
+        var dd = this.docs[di], dsv = this.srvDok(dd);
+        if (snap.docs[dd.key] === dsv || !zkus('d' + dd.key, dsv)) continue;
+        poslano++;
+        try { await SV.ulozDokument(dd.key, { html: dd.html, fmt: dd.fmt, naWebu: dd.onWeb }); snap.docs[dd.key] = dsv; if (dd.approved) dd.edited = true; }
+        catch (e) { chyby.push('dokument ' + dd.title + ': ' + SV.chyba(e)); }
       }
       for (var m = 0; m < this.messages.length; m++) {
         var msg = this.messages[m]; if (msg.id || !msg.komu || msg.chyba || msg.odesilam) continue;
@@ -2956,7 +2969,7 @@ class Component extends DCLogic {
     var SRVON = !!(SU && SU.server && SU.server());
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
-    var SRV_SKRYT = ['platby', 'web', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
+    var SRV_SKRYT = ['platby', 'web', 'matrika', 'archiv', 'nastaveni'];
     var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -3892,7 +3905,7 @@ class Component extends DCLogic {
         pill: stt[0], pillStyle: 'height: 24px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; flex-shrink: 0; background: ' + stt[1] + '; color: ' + stt[2],
         style: 'width: 100%; border: 0; border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #17181A; background: ' + (on ? '#F3F4F2' : 'transparent') }; }),
       title: DS.title,
-      meta: DS.law + ' · ' + (DS.approved ? 'schváleno ' + this.cz(new Date(DS.approved)) + ', verze ' + DS.version : 'zatím neschváleno') + (DS.webable ? (DS.onWeb && DS.approved ? ' · na webu' : ' · není na webu') : ' · jen ve školce'),
+      meta: DS.law + ' · ' + (DS.approved ? 'schváleno ' + this.cz(new Date(DS.approved)) + ', verze ' + DS.version : 'zatím neschváleno') + (this.srv ? '' : DS.webable ? (DS.onWeb && DS.approved ? ' · na webu' : ' · není na webu') : ' · jen ve školce'),
       note: (DS.html || DS.text) ? 'Upravený text — údaje školky se do něj už samy nepropisují. „Vrátit šablonu“ ho znovu poskládá z aktuálních údajů.' : 'Předvyplněno z údajů školky podle předpisů platných k polovině roku 2026. Před schválením si text přečtěte a upravte podle školky.',
       noteStyle: 'font-size: 13px; line-height: 18px; padding: 8px 12px; border-radius: 12px; ' + ((DS.html || DS.text) ? 'background: #F7F0DA; color: #5C4300' : 'background: #EBF1FA; color: #27407A'),
       editable: canEdit ? 'true' : 'false',
@@ -3927,10 +3940,21 @@ class Component extends DCLogic {
         { label: 'Náhled', style: docBtn(false, false), go: function () { self.setState({ docPreview: DS.key }); } },
         { label: DS.approved && !DS.edited ? 'Schváleno' : DS.approved ? 'Schválit novou verzi' : 'Schválit', style: docBtn(true, !needApprove || !canEdit), go: function () {
           if (!needApprove || !canEdit) return;
+          if (self.srv) {
+            if (self._docSchval) return;
+            self._docSchval = true;
+            window.SkolkaServer.schvalDokument(DS.key, DS.html, DS.fmt, self.docBody(DS)).then(function (v) {
+              self._docSchval = false;
+              DS.approved = self.iso(self.today); DS.version = v; DS.edited = false;
+              if (self.srvSnap && self.srvSnap.docs) self.srvSnap.docs[DS.key] = self.srvDok(DS);
+              self.log('Schválen dokument ' + DS.title + ', verze ' + v); self.forceUpdate(); self.showToast(DS.title + ' — schválena verze ' + v);
+            }).catch(function (e) { self._docSchval = false; self.showToast('Neschváleno: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           DS.approved = self.iso(self.today); DS.version = (DS.version || 0) + 1; DS.edited = false;
           self.log('Schválen dokument ' + DS.title + ', verze ' + DS.version); self.forceUpdate(); self.showToast(DS.title + ' — schválena verze ' + DS.version);
         } }
-      ].concat(DS.webable ? [{ label: DS.onWeb ? 'Stáhnout z webu' : 'Zveřejnit na webu', style: docBtn(false, !DS.approved || !canEdit), go: function () {
+      ].concat(DS.webable && !self.srv ? [{ label: DS.onWeb ? 'Stáhnout z webu' : 'Zveřejnit na webu', style: docBtn(false, !DS.approved || !canEdit), go: function () {
           if (!DS.approved || !canEdit) return; DS.onWeb = !DS.onWeb; self.log((DS.onWeb ? 'Zveřejněn na webu: ' : 'Stažen z webu: ') + DS.title); self.forceUpdate(); self.showToast(DS.onWeb ? DS.title + ' je na webu' : DS.title + ' už na webu není');
         } }] : []).concat([{ label: 'Stáhnout', style: docBtn(false, false), go: function () { self.download({ name: DS.key + '.html', text: self.docHtml(DS), type: 'text/html' }); } }])
         .concat((DS.html || DS.text) ? [{ label: 'Vrátit šablonu', style: docBtn(false, !canEdit), go: function () { if (!canEdit) return; DS.text = null; DS.html = null; if (DS.approved) DS.edited = true; self.forceUpdate(); } }] : [])

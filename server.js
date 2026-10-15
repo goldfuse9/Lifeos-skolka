@@ -442,10 +442,11 @@
         klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100),
         klient().from('porady').select('id, den, druh, program, usneseni, pritomni').order('den', { ascending: false }).limit(300),
         ved ? klient().from('zadosti').select('id, rok, reg_cislo, jmeno, prijmeni, rodne_cislo, datum_narozeni, pohlavi, spadovy, sourozenec, email, poradi, vysledek, dite_id').order('reg_cislo') : prazdno,
-        ved ? klient().from('zapis_rocnik').select('rok, rozhodnuto, zverejneno, odeslano, preneseno') : prazdno
+        ved ? klient().from('zapis_rocnik').select('rok, rozhodnuto, zverejneno, odeslano, preneseno') : prazdno,
+        ved ? klient().from('dokumenty').select('klic, html, fmt, schvaleno, verze, upraveno_po_schvaleni, na_webu') : prazdno
       ]);
       var D = r.map(ok);
-      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12] };
+      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12], dokumenty: D[13] };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {
@@ -501,6 +502,14 @@
     async zmenVysledek(id, vysledek) { ok(await klient().from('zadosti').update({ vysledek: vysledek }).eq('id', id)); },
     async zapisKrok(rok, krok) { return ok(await klient().rpc('zapis_krok', { p_rok: rok, p_krok: krok })); },
     async prevedPrijate(rok) { return ok(await klient().rpc('preved_prijate', { p_rok: rok })); },
+    /* --------------------------------------------- dokumenty školy */
+    async ulozDokument(klic, x) {
+      /* nejdřív úprava, jinak nový řádek (upsert by potřeboval právo měnit i klíč) */
+      var data = { html: x.html || null, fmt: x.fmt || null, na_webu: !!x.naWebu };
+      var r = ok(await klient().from('dokumenty').update(data).eq('klic', klic).select('klic'));
+      if (!r || !r.length) ok(await klient().from('dokumenty').insert(Object.assign({ skola_id: nactiUcet().skolaId, klic: klic }, data)));
+    },
+    async schvalDokument(klic, html, fmt, zneni) { return ok(await klient().rpc('schval_dokument', { p_klic: klic, p_html: html || null, p_fmt: fmt || null, p_zneni: zneni })); },
     async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
     async posliZpravu(komu, predmet, text, odpovedNa) {
       var radek = { skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet || '', text: text, odeslal: nactiUcet().id };
