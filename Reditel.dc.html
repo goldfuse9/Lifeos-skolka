@@ -42,7 +42,6 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </sc-if>
       <sc-if value="{{n.isItem}}" hint-placeholder-val="{{true}}">
         <button type="button" onClick="{{n.pick}}" aria-current="{{n.current}}" style="{{n.style}}">
-          <span style="{{n.dotStyle}}"></span>
           <span style="flex-grow: 1; text-align: left">{{n.label}}</span>
           <sc-if value="{{n.hasCount}}" hint-placeholder-val="{{true}}">
             <span style="{{n.countStyle}}">{{n.count}}</span>
@@ -3149,7 +3148,7 @@ class Component extends DCLogic {
       for (var j = i + 1; j < NAV0.length && NAV0[j][0] !== '#'; j++) if (allowed(NAV0[j][0])) return true;
       return false;
     });
-    /* Barva skupiny v menu: tečka, nadpis a podklad vybrané položky. */
+    /* Barva skupiny v menu: jen nadpis kategorie (tečka + text). */
     var NAVB = { deti: ['#3BA55C', '#EDF4E4', '#2F5212'], skolka: ['#2F6FDB', '#E6EDF6', '#1F3A5C'], rodice: ['#8B5CF6', '#EEE8FB', '#5B3AA8'],
       penize: ['#E39B1B', '#FBF1DD', '#6B4A00'], evidence: ['#D9534F', '#FAEBE4', '#9A3412'], sprava: ['#8A8C90', '#EEF0ED', '#3A3C40'] };
     var nb = null;
@@ -3160,17 +3159,14 @@ class Component extends DCLogic {
           headStyle: 'padding: 12px 14px 3px; display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: ' + (nb ? nb[2] : '#8A8C90'),
           dotStyle: 'width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; background: ' + (nb ? nb[0] : '#C9C7BF') };
       }
-      var on = st.page === n[0], b = nb;
+      var on = st.page === n[0];
       var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web', 'zpravy'].indexOf(n[0]) !== -1 && n[2] !== '';
       return {
         isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
           + (warn ? 'background: #F7DCC6; color: #8A4513' : 'background: ' + (on ? '#F3F4F2' : '#E5E7E4') + '; color: #3A3C40'),
         pick: n[0] === 'jidelna' ? function () { location.hash = '#jidelna'; } : go(n[0], { kidId: null, editAll: false }),
-        dotStyle: 'width: 6px; height: 6px; border-radius: 3px; flex-shrink: 0; margin-left: 2px; background: ' + (b ? b[0] : 'transparent') + (b ? '' : '; display: none'),
-        style: 'min-height: 32px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; '
-          + (on ? 'background: ' + (b ? b[1] : '#FFFFFF') + '; color: ' + (b ? b[2] : '#17181A') : 'background: transparent; color: #17181A')
-          + '; font-weight: ' + (on ? '800' : '600')
+        style: 'min-height: 32px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
       };
     });
     var is = {};
