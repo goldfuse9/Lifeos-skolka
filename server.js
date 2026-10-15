@@ -287,6 +287,17 @@
       var den = deti.length ? await denTridy(deti.map(function (d) { return d.id; })) : { doch: {}, vyz: {}, ud: {} };
       return deti.map(function (d, i) { return diteProDesku(d, i, den.doch[d.id], den.vyz[d.id], den.ud[d.id], tridaId); });
     },
+    /* Akce a třídní schůzky třídy (i celoškolní) od včerejška, s odpověďmi rodičů. */
+    async akceTridy(tridaId) {
+      var vcera = new Date(); vcera.setDate(vcera.getDate() - 1);
+      var od = vcera.getFullYear() + '-' + String(vcera.getMonth() + 1).padStart(2, '0') + '-' + String(vcera.getDate()).padStart(2, '0');
+      return ok(await klient().from('akce').select('id, trida_id, den, cas, nazev, misto, poznamka, cena, jen_info, druh, s_sebou, program, akce_odpovedi(dite_id, odpoved)')
+        .or('trida_id.eq.' + tridaId + ',trida_id.is.null').gte('den', od).order('den').order('cas'));
+    },
+    async ulozAkci(x) {
+      return ok(await klient().from('akce').insert({ skola_id: nactiUcet().skolaId, trida_id: x.trida_id, den: x.den, cas: x.cas || null, nazev: x.nazev, misto: x.misto || null,
+        cena: x.cena == null ? null : x.cena, druh: x.druh || 'akce', s_sebou: x.s_sebou || [], program: x.program || null }).select('id').single()).id;
+    },
     /* Třídní kniha (povinná dokumentace) — posledních 30 zápisů třídy. */
     async kniha(tridaId) {
       var r = ok(await klient().from('tridni_kniha').select('den, tema, cinnosti, pouceni, pritomno, chybelo, uzivatele(jmeno)').eq('trida_id', tridaId).order('den', { ascending: false }).limit(30));

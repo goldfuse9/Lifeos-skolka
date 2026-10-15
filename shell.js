@@ -384,7 +384,7 @@ async function otevri(chtene, zHashe, vychozi) {
       const u = nactiUcet();
       const deti = await SRV().nactiTridu(u.trida);
       if (!deti.length) throw new Error('Ve třídě ' + u.tridaNazev + ' zatím nejsou žádné děti — tablet se otevře, až je ředitelka do třídy zapíše.');
-      window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti, omluvy: await SRV().omluvy(deti).catch(() => []), jidla: await SRV().jidlaDnes().catch(() => null), kniha: await SRV().kniha(u.trida).catch(() => []), den: new Date().toDateString() };
+      window.__skolkaServerTrida = { id: u.trida, nazev: u.tridaNazev, deti, omluvy: await SRV().omluvy(deti).catch(() => []), jidla: await SRV().jidlaDnes().catch(() => null), kniha: await SRV().kniha(u.trida).catch(() => []), akce: await SRV().akceTridy(u.trida).catch(() => []), den: new Date().toDateString() };
     }
     aktualni = klic;
     prizpusob();

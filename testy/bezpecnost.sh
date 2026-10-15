@@ -405,5 +405,31 @@ t "ředitelka B nevidí změny školky A" 0 $RB reditelka.b@test.cz "reset role;
 update deti set alergie = 'x' where id = '$EMA';
 select set_config('request.jwt.claim.sub','$RB',true) \\g /dev/null
 select count(*) from archiv_zmen(1000) where dite = '$EMA';"
+echo "== akce a schůzky: zakládá škola, odpovídá rodič za své dítě"
+AKS="reset role; insert into akce (id, skola_id, trida_id, den, nazev) values ('99999999-0000-4000-8000-0000000000e1', '$A', '$SLUN', current_date + 7, 'Výlet'), ('99999999-0000-4000-8000-0000000000e2', '$A', '$BER', current_date + 7, 'Berušky divadlo'), ('99999999-0000-4000-8000-0000000000e3', '$A', '$SLUN', current_date - 1, 'Včera'); set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+t "učitelka založí akci své třídy" 1 $UA ucitelka@test.cz "with x as (insert into akce (skola_id, trida_id, den, nazev, druh) values ('$A', '$SLUN', current_date + 5, 'Divadlo', 'akce') returning 1) select count(*) from x;"
+t "učitelka založí třídní schůzku" 1 $UA ucitelka@test.cz "with x as (insert into akce (skola_id, trida_id, den, nazev, druh) values ('$A', '$SLUN', current_date + 5, 'Třídní schůzka', 'schuzka') returning 1) select count(*) from x;"
+t "učitelka nezaloží akci cizí třídy" ERR $UA ucitelka@test.cz "insert into akce (skola_id, trida_id, den, nazev) values ('$A', '$BER', current_date + 5, 'x');"
+t "učitelka nezaloží akci celé školky" ERR $UA ucitelka@test.cz "insert into akce (skola_id, trida_id, den, nazev) values ('$A', null, current_date + 5, 'x');"
+t "ředitelka založí akci celé školky" 1 $RA reditelka@test.cz "with x as (insert into akce (skola_id, trida_id, den, nazev) values ('$A', null, current_date + 5, 'Besídka') returning 1) select count(*) from x;"
+t "rodič akci nezaloží" ERR $RODA "" "insert into akce (skola_id, trida_id, den, nazev) values ('$A', '$SLUN', current_date + 5, 'x');"
+t "neplatný druh neprojde" ERR $UA ucitelka@test.cz "insert into akce (skola_id, trida_id, den, nazev, druh) values ('$A', '$SLUN', current_date + 5, 'x', 'mejdan');"
+t "rodič vidí akci třídy svého dítěte, ne cizí" "1|0" $RODA "" "${AKS//\$ME/$RODA} select (select count(*) from akce where nazev = 'Výlet') || '|' || (select count(*) from akce where nazev = 'Berušky divadlo');"
+t "rodič odpoví za své dítě" ano $RODA "" "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ano');"
+t "odpověď jde změnit" "ne|1" $RODA "" "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ano') \\g /dev/null
+select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ne') || '|' || (select count(*) from akce_odpovedi);"
+t "rodič neodpoví za cizí dítě" ERR $RODA "" "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$TOB', 'ano');"
+t "rodič neodpoví na akci cizí třídy" ERR $RODA "" "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e2', '$EMA', 'ano');"
+t "na proběhlou akci se neodpovídá" ERR $RODA "" "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e3', '$EMA', 'ano');"
+t "učitelka za rodiče neodpoví" ERR $UA ucitelka@test.cz "${AKS//\$ME/$UA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ano');"
+t "odpověď nejde vložit přímo" ERR $RODA "" "${AKS//\$ME/$RODA} insert into akce_odpovedi (akce_id, dite_id, odpoved) values ('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ano');"
+t "učitelka vidí odpovědi" 1 $UA ucitelka@test.cz "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ano') \\g /dev/null
+select set_config('request.jwt.claim.sub','$UA',true) \\g /dev/null
+select count(*) from akce_odpovedi;"
+t "jiný rodič cizí odpověď nevidí" 0 $ROD2A "" "${AKS//\$ME/$RODA} select odpovez_na_akci('99999999-0000-4000-8000-0000000000e1', '$EMA', 'ano') \\g /dev/null
+select set_config('request.jwt.claim.sub','$ROD2A',true) \\g /dev/null
+select count(*) from akce_odpovedi;"
+t "ředitelka B nevidí akce školky A" 0 $RB reditelka.b@test.cz "${AKS//\$ME/$RB} select count(*) from akce where skola_id = '$A';"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

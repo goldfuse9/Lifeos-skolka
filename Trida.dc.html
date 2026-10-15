@@ -651,7 +651,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </sc-if>
       </section>
 
-      <section aria-label="Konzultační hodiny" style="background: #FFFFFF; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+ <sc-if value="{{kons.lokalni}}" hint-placeholder-val="{{true}}"><section aria-label="Konzultační hodiny" style="background: #FFFFFF; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0">
         <div style="display: flex; align-items: center; gap: 10px">
           <h2 style="margin: 0; font-size: 20px; font-weight: 700; flex-grow: 1">Konzultační hodiny</h2>
           <button type="button" onClick="{{kons.setup}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1.5px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #17181A; cursor: pointer">{{kons.setupLabel}}</button>
@@ -677,7 +677,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <sc-if value="{{kons.none}}" hint-placeholder-val="{{false}}">
           <div style="font-size: 16px; color: #5A5C60">Nastavte, kdy máte čas. Rodiče si pak sami vyberou termín.</div>
         </sc-if>
-      </section>
+      </section></sc-if>
     </div>
   </sc-if>
 
@@ -1331,6 +1331,7 @@ class Component extends DCLogic {
       var by = this.byId;
       this.kids.forEach(function (k) { by[k.id] = k; });
       this.albums = []; this.events = []; this.meetings = {}; this.konz = {}; this.kniha[SRVT.id] = SRVT.kniha || [];
+      this.akceZeServeru(SRVT.akce || [], SRVT.id);
       this.state.viewCls = SRVT.id;
       this.state.picked = this.kids[0] ? this.kids[0].id : null;
       this.srvOmluvy = SRVT.omluvy || [];
@@ -1339,6 +1340,32 @@ class Component extends DCLogic {
       this.srvZpravy = { zpravy: [], precteni: [] };
       this.zpPotv = {};
     }
+  }
+
+  /* Akce a třídní schůzka ze serveru; počty odpovědí jen za děti této třídy. */
+  akceZeServeru(rows, trida) {
+    var self = this, cls = trida || this.state.viewCls, kidIds = {};
+    this.kids.forEach(function (k) { kidIds[k.id] = true; });
+    var odp = function (a, v) { return (a.akce_odpovedi || []).filter(function (o) { return kidIds[o.dite_id] && o.odpoved === v; }).length; };
+    var cas = function (t) { return t ? String(t).slice(0, 5).replace(/^0/, '') : ''; };
+    var cena = function (c) { return c == null || +c === 0 ? 'Zdarma' : Math.round(+c) + ' Kč'; };
+    var dnes = this.iso(new Date());
+    this.events = []; this.meetings = {};
+    rows.forEach(function (a) {
+      if (a.den < dnes) return;
+      if (a.druh === 'schuzka') {
+        if (a.trida_id && !self.meetings[cls]) self.meetings[cls] = { id: a.id, date: a.den, time: cas(a.cas), place: a.misto || '', program: a.program || '', yes: odp(a, 'ano'), no: odp(a, 'ne') };
+        return;
+      }
+      if (a.jen_info) return;
+      self.events.push({ id: a.id, title: a.nazev, date: a.den, time: cas(a.cas), place: a.misto || '', scope: a.trida_id ? 'trida' : 'skolka', cls: a.trida_id || cls,
+        bring: a.s_sebou || [], price: cena(a.cena), yes: odp(a, 'ano'), no: odp(a, 'ne') });
+    });
+  }
+  nactiAkce() {
+    var self = this;
+    if (!this.srv) return;
+    window.SkolkaServer.akceTridy(this.state.viewCls).then(function (rows) { self.akceZeServeru(rows || []); self.forceUpdate(); }).catch(function () { /* zůstane poslední stav */ });
   }
 
   componentDidMount() {
@@ -2192,16 +2219,16 @@ class Component extends DCLogic {
     };
 
     /* -------------------------------------------------- záložky */
-    /* Ostrý provoz: Fotky, Akce a Schůzky zatím na server napojené nejsou → nezobrazují se. */
-    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['zpravy', 'Zprávy'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return self.srv ? ['fotky', 'akce', 'schuzky'].indexOf(x[0]) === -1 : x[0] !== 'zpravy'; });
+    /* Ostrý provoz: Fotky zatím na server napojené nejsou → nezobrazují se. */
+    var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['zpravy', 'Zprávy'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return self.srv ? x[0] !== 'fotky' : x[0] !== 'zpravy'; });
     var zp = this.zpravyView();
-    if (self.srv && ['fotky', 'akce', 'schuzky'].indexOf(st.tab) !== -1) st.tab = 'trida';
+    if (self.srv && st.tab === 'fotky') st.tab = 'trida';
     var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '', zpravy: zp.noveCelkem ? String(zp.noveCelkem) : '' };
     var tabs = TABS.map(function (t) {
       var on = st.tab === t[0];
       return { label: t[1], on: on, hasBadge: !!tabBadge[t[0]], badge: tabBadge[t[0]] || '',
         badgeStyle: 'margin-left: 6px; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; background: #F7DCC6; color: #8A4513; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center',
-        pick: function () { self.setState({ tab: t[0], undo: null, move: t[0] === 'trida' ? self.state.move : false, albumId: t[0] === 'fotky' ? self.state.albumId : null }); },
+        pick: function () { if (self.srv && (t[0] === 'akce' || t[0] === 'schuzky')) self.nactiAkce(); self.setState({ tab: t[0], undo: null, move: t[0] === 'trida' ? self.state.move : false, albumId: t[0] === 'fotky' ? self.state.albumId : null }); },
         style: 'height: 44px; padding: 0 13px; border-radius: 22px; border: 0; font-size: 15px; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; white-space: nowrap; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '700' : '500') };
     });
     var tab = { isZpravy: st.tab === 'zpravy', isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
@@ -2265,7 +2292,7 @@ class Component extends DCLogic {
       onName: function (e) { self.setDF({ name: e.target.value }); },
       onDate: function (e) { self.setDF({ date: e.target.value }); },
       onText: function (e) { self.setDF({ text: e.target.value }); },
-      scopes: [['trida', 'Naše třída'], ['skolka', 'Celá školka']].map(function (x) {
+      scopes: [['trida', 'Naše třída']].concat(self.srv ? [] : [['skolka', 'Celá školka']]).map(function (x) {
         var on = (df.scope || 'trida') === x[0];
         return { label: x[1], on: on, style: dchip(on), pick: function () { self.setDF({ scope: x[0] }); } };
       }),
@@ -2346,6 +2373,18 @@ class Component extends DCLogic {
         saveLabel: eOk ? 'Poslat pozvánku ' + eTotal + ' rodičům' : 'Vyplňte název a den',
         save: function () {
           if (!eOk) return;
+          if (self.srv) {
+            if (self._akceBezi) return;
+            self._akceBezi = true;
+            var cenaN = parseInt(String(df.price || '').replace(/\D/g, ''), 10) || null;
+            window.SkolkaServer.ulozAkci({ trida_id: home, den: eDate, cas: df.time || null, nazev: eName, cena: cenaN, s_sebou: df.bring || [], druh: 'akce' }).then(function (id) {
+              self._akceBezi = false;
+              self.events.push({ id: id, title: eName, date: eDate, time: df.time || '', place: '', scope: 'trida', cls: home, bring: df.bring || [], price: df.price || 'Zdarma', yes: 0, no: 0 });
+              self.setState({ dlg: null, df: {}, akceSel: id });
+              self.showToast('Pozvánka je v aplikaci LifeOS u rodičů třídy ' + clsById[home].name);
+            }).catch(function (e) { self._akceBezi = false; self.showToast('Akce se neuložila: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           var ev = { id: 'e' + Date.now(), title: eName, date: eDate, time: df.time || '', place: '', scope: eScope, cls: home, bring: df.bring || [], price: df.price || 'Zdarma', yes: 0, no: 0 };
           self.events.push(ev);
           self.setState({ dlg: null, df: {}, akceSel: ev.id });
@@ -2368,6 +2407,17 @@ class Component extends DCLogic {
         saveLabel: mOk ? 'Pozvat ' + classSize(home) + ' rodičů' : 'Vyberte den a čas',
         save: function () {
           if (!mOk) return;
+          if (self.srv) {
+            if (self._akceBezi) return;
+            self._akceBezi = true;
+            window.SkolkaServer.ulozAkci({ trida_id: home, den: mDate, cas: df.time, nazev: 'Třídní schůzka', misto: df.place || 'Ve třídě', program: (df.text || '').trim(), druh: 'schuzka' }).then(function (id) {
+              self._akceBezi = false;
+              self.meetings[home] = { id: id, date: mDate, time: df.time, place: df.place || 'Ve třídě', program: (df.text || '').trim(), yes: 0, no: 0 };
+              self.setState({ dlg: null, df: {} });
+              self.showToast('Pozvánka na schůzku je v aplikaci LifeOS u rodičů');
+            }).catch(function (e) { self._akceBezi = false; self.showToast('Schůzka se neuložila: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           self.meetings[home] = { date: mDate, time: df.time, place: df.place || 'Ve třídě', program: (df.text || '').trim(), yes: 0, no: 0 };
           self.setState({ dlg: null, df: {} });
           self.showToast('Pozvánka na schůzku odeslána');
@@ -2540,7 +2590,7 @@ class Component extends DCLogic {
         yes: evSel.yes, no: evSel.no, wait: wait,
         bring: evSel.bring, hasBring: evSel.bring.length > 0,
         price: evSel.price,
-        canRemind: wait > 0,
+        canRemind: wait > 0 && !self.srv,
         remind: function () { self.showToast('Připomenutí odesláno ' + wait + ' rodičům'); }
       };
     } else akce.sel = { bring: [] };
@@ -2556,7 +2606,7 @@ class Component extends DCLogic {
         day: md.getDate(), mon: MON[md.getMonth()],
         when: dShort(mt.date) + ' · ' + mt.time, place: mt.place, rel: relDay(mt.date),
         program: mt.program, hasProgram: !!mt.program,
-        yes: mt.yes, no: mt.no, wait: mWait, canRemind: mWait > 0,
+        yes: mt.yes, no: mt.no, wait: mWait, canRemind: mWait > 0 && !self.srv,
         remind: function () { self.showToast('Připomenutí odesláno ' + mWait + ' rodičům'); }
       });
     }
@@ -2564,6 +2614,7 @@ class Component extends DCLogic {
     var kz = this.konz[home];
     var kzOk = kz && dayDiff(kz.date) >= 0;
     var kons = {
+      lokalni: !self.srv,
       has: !!kzOk, none: !kzOk,
       setupLabel: kzOk ? 'Změnit' : 'Nastavit hodiny',
       setup: openDlg('konz', kzOk ? { date: kz.date, from: kz.from, to: kz.to, len: kz.len + ' min' } : { date: plusDays(7), from: '14:00', to: '16:00', len: '15 min' })
