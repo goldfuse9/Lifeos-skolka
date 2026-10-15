@@ -1688,7 +1688,8 @@ class Component extends DCLogic {
     });
     var komuN = function (k) { if (k === 'vse') return 'Celá školka'; if (k === 'zamestnanci') return 'Zaměstnanci'; if (/^trida:/.test(k)) { var c = self.classes.filter(function (x) { return 'trida:' + x.id === k; })[0]; return c ? 'Třída ' + c.name : 'Třída'; } if (/^dite:/.test(k)) { var kk = kidById[k.slice(5)]; return kk ? 'Rodiče: ' + kk.first + ' ' + kk.last : 'Rodiče dítěte'; } return k; };
     this.messages = (D.zpravy || []).map(function (z) { var d = new Date(z.odeslano); return { id: z.id, title: z.predmet, text: z.text, to: komuN(z.komu), komu: z.komu, at: self.cz(d), by: jmenoUc[z.odeslal] || '', read: 0, total: 0, app: 0, mail: 0 }; });
-    this.porady = []; this._seedPorady = []; this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
+    this.porady = (D.porady || []).map(function (x) { return { id: x.id, date: x.den, title: x.druh, program: x.program, usneseni: x.usneseni || '', pritomni: (x.pritomni || []).join(', ') }; });
+    this._seedPorady = []; this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
     this.zapis.apps = [];
     this.state.dochCls = this.classes[0] ? this.classes[0].id : '';
     this.srvSnap = this.srvStav();
@@ -1716,6 +1717,11 @@ class Component extends DCLogic {
     o.ut = {}; this.teachers.forEach(function (t) { o.ut[t.id] = t.classes.slice().sort(); });
     this.urazy.forEach(function (u) { if (u.id) o.urazy[u.id] = JSON.stringify([+u.absent || 0, u.record || null, u.comment || '', u.zaznam || null]); });
     return o;
+  }
+  /* Kdo může být na poradě (ostrý provoz): vedoucí, která zápis píše, a pedagogové školky. */
+  poradaKdo() {
+    var me = (this.ucet && this.ucet.jmeno) || '';
+    return (me ? [['_ja', me]] : []).concat(this.teachers.filter(function (t) { return t.role !== 'Chůva'; }).map(function (t) { return [t.id, t.name]; }));
   }
   jeUuid(id) { return /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(String(id || '')); }
   async srvSync() {
@@ -2902,7 +2908,7 @@ class Component extends DCLogic {
     var SRVON = !!(SU && SU.server && SU.server());
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
-    var SRV_SKRYT = ['zapis', 'platby', 'web', 'porady', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
+    var SRV_SKRYT = ['zapis', 'platby', 'web', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
     var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -2980,7 +2986,7 @@ class Component extends DCLogic {
       dochazka: ['Měsíční přehled z tabletů tříd', 'Docházka', '', null],
       platby: ['Úplata za předškolní vzdělávání a stravné', 'Platby', '', null],
       zpravy: this.srv ? ['Rodiče v LifeOS a učitelky na tabletech', 'Zprávy', '', null] : ['Hromadné zprávy do aplikace a e-mailem', 'Zprávy rodičům', '', null],
-      porady: ['Záznamy z pedagogických rad a provozních porad', 'Porady', '+ Nový zápis', function () { self.setState({ dlg: 'porada', df: { date: self.iso(today), typ: 'Pedagogická rada' } }); }],
+      porady: ['Záznamy z pedagogických rad a provozních porad', 'Porady', '+ Nový zápis', function () { self.setState({ dlg: 'porada', df: { date: self.iso(today), typ: 'Pedagogická rada', prit: self.srv ? self.poradaKdo().map(function (o) { return o[0]; }) : undefined } }); }],
       archiv: ['Spisová služba a kontrola přístupu', 'Archiv', '', null],
       web: ['Skládají se z údajů v ředitelně — kontakty, třídy, zápis, platby', 'Webové stránky', '', null],
       nastaveni: ['Údaje, ze kterých se skládá matrika, web, dokumenty i platby', 'Nastavení školky', '', null],
@@ -4281,13 +4287,25 @@ class Component extends DCLogic {
       Object.assign(dlg, {
         title: 'Nový zápis z porady',
         inputs: [inp('Datum', 'date', '', 'date')],
-        choices: [group('Typ', 'typ', [['Pedagogická rada', 'Pedagogická rada'], ['Provozní porada', 'Provozní porada']])],
+        choices: [group('Typ', 'typ', [['Pedagogická rada', 'Pedagogická rada'], ['Provozní porada', 'Provozní porada']])].concat(this.srv ? [group('Přítomni (klepnutím odeberete)', 'prit', this.poradaKdo(), true)] : []),
         areas: [area('Program', 'program', 'O čem se jednalo'), area('Usnesení', 'usneseni', 'Co se rozhodlo — nepovinné')],
         canSave: okP2,
-        summary: okP2 ? 'Přítomní se doplní sami — všichni, kdo dnes nechybí.' : 'Datum a program.',
+        summary: this.srv ? (okP2 ? 'Zápis se po uložení už nedá měnit.' : 'Datum a program.') : (okP2 ? 'Přítomní se doplní sami — všichni, kdo dnes nechybí.' : 'Datum a program.'),
         saveLabel: okP2 ? 'Uložit zápis' : 'Napište program',
         save: function () {
           if (!okP2) return;
+          if (self.srv) {
+            if (self._poradaOdesila) return;
+            var kdo = self.poradaKdo().filter(function (o) { return (df.prit || []).indexOf(o[0]) !== -1; }).map(function (o) { return o[1]; });
+            self._poradaOdesila = true;
+            window.SkolkaServer.ulozPoradu({ den: df.date, druh: df.typ || 'Pedagogická rada', program: df.program.trim(), usneseni: (df.usneseni || '').trim(), pritomni: kdo }).then(function (id) {
+              self._poradaOdesila = false;
+              self.porady.push({ id: id, date: df.date, title: df.typ || 'Pedagogická rada', program: df.program.trim(), usneseni: (df.usneseni || '').trim(), pritomni: kdo.join(', ') });
+              self.log('Zápis z porady ' + self.cz(new Date(df.date)));
+              self.setState({ dlg: null, df: {} }); self.showToast('Zápis z porady uložen');
+            }).catch(function (e) { self._poradaOdesila = false; self.showToast('Zápis se neuložil: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           self.porady.push({ date: df.date, title: df.typ || 'Pedagogická rada', program: df.program.trim(), usneseni: (df.usneseni || '').trim(), pritomni: self.teachers.filter(function (x) { return !x.absent && x.role !== 'Chůva'; }).map(function (x) { return x.name; }).join(', ') });
           self.log('Zápis z porady ' + self.cz(new Date(df.date)));
           self.setState({ dlg: null, df: {} }); self.showToast('Zápis z porady uložen');

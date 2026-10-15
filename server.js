@@ -439,10 +439,11 @@
         klient().from('urazy').select('id, cislo, rok, dite_id, kdy, kde, co, osetreni, svedek, komentar, zapsal, dny_absence, zaznam_odeslan, zaznam').order('kdy', { ascending: false }).limit(500),
         klient().rpc('dochazka_souhrn', { p_od: od, p_do: doDne }),
         klient().from('dochazka').select('dite_id, stav, prichod, odchod').eq('den', dnes()),
-        klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100)
+        klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100),
+        klient().from('porady').select('id, den, druh, program, usneseni, pritomni').order('den', { ascending: false }).limit(300)
       ]);
       var D = r.map(ok);
-      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9] };
+      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10] };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {
@@ -484,6 +485,10 @@
       var pryc = bylo.filter(function (x) { return ted.indexOf(x) === -1; }), nove = ted.filter(function (x) { return bylo.indexOf(x) === -1; });
       if (pryc.length) ok(await klient().from('ucitel_trida').delete().eq('ucitel_id', ucitel).in('trida_id', pryc));
       if (nove.length) ok(await klient().from('ucitel_trida').insert(nove.map(function (t) { return { ucitel_id: ucitel, trida_id: t }; })));
+    },
+    /* Zápis z porady: ukládá se jednou, pak už se nemění (dokument). */
+    async ulozPoradu(x) {
+      return ok(await klient().from('porady').insert({ skola_id: nactiUcet().skolaId, den: x.den, druh: x.druh, program: x.program, usneseni: x.usneseni || null, pritomni: x.pritomni || [] }).select('id').single()).id;
     },
     async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
     async posliZpravu(komu, predmet, text, odpovedNa) {

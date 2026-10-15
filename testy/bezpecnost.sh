@@ -224,5 +224,25 @@ t "ředitelka vidí, kdo potvrdil" "Jana Testová|Ema Testová" $RA reditelka@te
 select jmeno || '|' || dite from potvrzeni_zprav(array['99999999-0000-4000-8000-000000000001']::uuid[]) where potvrzeno is not null;"
 t "učitelka Berušek nevidí potvrzení rodiče ze Sluníček" 0 $U2A ucitelka2@test.cz "${KOR//\$ME/$RODA} select precti_zpravy(array['99999999-0000-4000-8000-000000000001']::uuid[], true); select set_config('request.jwt.claim.sub','$U2A',true) \\g /dev/null
 select count(*) from potvrzeni_zprav(array['99999999-0000-4000-8000-000000000001']::uuid[]);"
+echo "== porady: čte vedení a učitelky, zapisuje jen vedení"
+PSEED="reset role; insert into porady (id, skola_id, den, druh, program) values ('99999999-0000-4000-8000-0000000000a1', '$A', '2026-09-01', 'Pedagogická rada', 'Seed A'), ('99999999-0000-4000-8000-0000000000b1', '$B', '2026-09-01', 'Provozní porada', 'Seed B'); set local role authenticated; select set_config('request.jwt.claim.sub','\$ME',true) \\g /dev/null
+"
+PINS() { echo "with x as (insert into porady (skola_id, den, druh, program, pritomni) values ('$A', '2026-10-15', 'Pedagogická rada', '$1', array['Jana']) returning 1) select count(*) from x;"; }
+t "ředitelka zapíše zápis z porady" 1 $RA reditelka@test.cz "$(PINS 'Plán roku')"
+t "zástupkyně zapíše zápis z porady" 1 $ZA zastupce@test.cz "$(PINS 'Plán roku')"
+t "učitelka zápis nezapíše" ERR $UA ucitelka@test.cz "$(PINS 'x')"
+t "hospodářka zápis nezapíše" ERR $HA hospodarka@test.cz "$(PINS 'x')"
+t "rodič zápis nezapíše" ERR $RODA "" "$(PINS 'x')"
+t "ředitelka A nezapíše zápis do školky B" ERR $RA reditelka@test.cz "insert into porady (skola_id, den, druh, program) values ('$B', '2026-10-15', 'Pedagogická rada', 'x');"
+t "prázdný program neprojde" ERR $RA reditelka@test.cz "$(PINS '   ')"
+t "ředitelka čte jen zápisy své školky" 1 $RA reditelka@test.cz "${PSEED//\$ME/$RA} select count(*) from porady;"
+t "učitelka zápisy čte" 1 $UA ucitelka@test.cz "${PSEED//\$ME/$UA} select count(*) from porady;"
+t "hospodářka zápisy nevidí" 0 $HA hospodarka@test.cz "${PSEED//\$ME/$HA} select count(*) from porady;"
+t "kuchařka zápisy nevidí" 0 $KA kucharka@test.cz "${PSEED//\$ME/$KA} select count(*) from porady;"
+t "rodič zápisy nevidí" 0 $RODA "" "${PSEED//\$ME/$RODA} select count(*) from porady;"
+t "ředitelka B nevidí zápisy školky A" 1 $RB reditelka.b@test.cz "${PSEED//\$ME/$RB} select count(*) from porady where skola_id='$B';"
+t "ředitelka B nevidí zápis A" 0 $RB reditelka.b@test.cz "${PSEED//\$ME/$RB} select count(*) from porady where id='99999999-0000-4000-8000-0000000000a1';"
+t "zápis nejde upravit" ERR $RA reditelka@test.cz "${PSEED//\$ME/$RA} update porady set program='přepsáno' where id='99999999-0000-4000-8000-0000000000a1';"
+t "zápis nejde smazat" ERR $RA reditelka@test.cz "${PSEED//\$ME/$RA} delete from porady where id='99999999-0000-4000-8000-0000000000a1';"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
