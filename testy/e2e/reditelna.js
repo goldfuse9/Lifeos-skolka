@@ -11,7 +11,7 @@ module.exports = async () => {
   await prihlas(p, 'Ředitelna', 'reditelka@test.cz');
   const nav = await p.locator('nav[aria-label="Ředitelna"]').innerText();
   kontrola('hlavička: skutečná školka a „Ostrý provoz“', nav.includes('MŠ Sluníčko (test)') && nav.includes('Ostrý provoz'));
-  kontrola('nenapojené stránky skryté (Platby, Matrika, Nastavení…)', !/Platby|Matrika|Nastavení školky|Dokumenty|Archiv|Webové/.test(nav) && /Porady/.test(nav) && /Zápis/.test(nav));
+  kontrola('nenapojené stránky skryté (Platby, Matrika, Nastavení…)', !/Platby|Matrika|Nastavení školky|Archiv|Webové/.test(nav) && /Porady/.test(nav) && /Zápis/.test(nav) && /Dokumenty/.test(nav));
   kontrola('Přehled: dnes ve školce 1 / 3', /1 \/ 3/.test(await p.locator('body').innerText()));
   await p.click('nav button:has-text("Kartotéka dětí")'); await p.waitForTimeout(500);
   let telo = await p.locator('body').innerText();
