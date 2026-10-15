@@ -436,7 +436,7 @@
         for (;;) { var d = ok(await dotaz().range(od, od + 999)); out = out.concat(d || []); if (!d || d.length < 1000) return { data: out, error: null }; od += 1000; }
       };
       var r = await Promise.all([
-        klient().from('skoly').select('id, nazev, izo, red_izo, cast_skoly, kontakt').eq('id', u.skolaId).maybeSingle(),
+        klient().from('skoly').select('id, nazev, kratky_nazev, ico, izo, red_izo, cast_skoly, zrizovatel, rozliseni, adresa, telefon, email, datovka, web, ucet, poverenec, provozni_doba, uredni_hodiny, druh_provozu, doba_provozu, kontakt').eq('id', u.skolaId).maybeSingle(),
         klient().from('tridy').select('id, nazev, kod, barva, kapacita, provoz').order('nazev'),
         klient().from('deti').select('id, trida_id, jmeno, prijmeni, datum_narozeni, pohlavi, obcanstvi, znalost_cj, spadovy, zahajeni, po_stupen, ivp, asistent, plpp_do, alergie, variabilni_symbol, ukonceno, znacka, zastupci(id, jmeno, telefon, email, poradi, uzivatel_id), poverene_osoby(id, jmeno, zmocneni_od, zruseno), souhlasy(druh, udelen, zmeneno)').order('prijmeni'),
         ved ? klient().rpc('deti_osobni') : prazdno,
@@ -526,7 +526,13 @@
     },
     async schvalDokument(klic, html, fmt, zneni) { return ok(await klient().rpc('schval_dokument', { p_klic: klic, p_html: html || null, p_fmt: fmt || null, p_zneni: zneni })); },
     /* --------------------------------------------- platby (funkce v databázi) */
-    async ulozFinNastaveni(x) { ok(await klient().rpc('uloz_financni_nastaveni', { p_ucet: x.ucet, p_skolkovne: x.skolkovne, p_stravne_36: x.s36, p_stravne_7: x.s7, p_splatnost: x.splatnost })); },
+    async ulozFinNastaveni(x) {
+      var a = { p_ucet: x.ucet, p_skolkovne: x.skolkovne, p_stravne_36: x.s36, p_stravne_7: x.s7, p_splatnost: x.splatnost };
+      if (x.omlDni != null) Object.assign(a, { p_omluva_dni: x.omlDni, p_omluva_do: x.omlDo, p_vs_schema: x.vsSchema, p_vs_prefix: x.vsPrefix, p_vs_delka: x.vsDelka });
+      ok(await klient().rpc('uloz_financni_nastaveni', a));
+    },
+    /* Údaje školky (Nastavení): jen změněné sloupce. */
+    async ulozSkolu(radek) { ok(await klient().from('skoly').update(radek).eq('id', nactiUcet().skolaId)); },
     async vystavPredpisy(obdobi) { return ok(await klient().rpc('vystav_predpisy', { p_obdobi: obdobi })); },
     async zpracujPlatby(platby) { return ok(await klient().rpc('zpracuj_platby', { p_platby: platby })); },
     async sparujPlatbu(platba, dite) { return ok(await klient().rpc('sparuj_platbu', { p_platba: platba, p_dite: dite })); },

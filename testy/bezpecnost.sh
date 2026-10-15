@@ -373,5 +373,23 @@ t "upomínka jen po splatnosti" 1 $HA hospodarka@test.cz "reset role; set local 
 $FSET select vystav_predpisy('2026-08') \\g /dev/null
 select set_config('request.jwt.claim.sub','$HA',true) \\g /dev/null
 select zapis_upominku('$EMA');"
+echo "== nastavení školky: údaje mění vedení, stav a tarif jen správce"
+SUP() { echo "with u as (update skoly set $1 where id = '$A' returning 1) select count(*) from u;"; }
+t "ředitelka uloží adresu a IČO" 1 $RA reditelka@test.cz "$(SUP "adresa = 'Ulice 1, Praha', ico = '12345678'")"
+t "zástupkyně uloží úřední hodiny" 1 $ZA zastupce@test.cz "$(SUP "uredni_hodiny = 'Po 8–10'")"
+t "hospodářka údaje nezmění" 0 $HA hospodarka@test.cz "$(SUP "adresa = 'x'")"
+t "učitelka údaje nezmění" 0 $UA ucitelka@test.cz "$(SUP "adresa = 'x'")"
+t "rodič údaje nezmění" 0 $RODA "" "$(SUP "adresa = 'x'")"
+t "ředitelka B nezmění školku A" 0 $RB reditelka.b@test.cz "$(SUP "adresa = 'x'")"
+t "ředitelka nezmění tarif" ERR $RA reditelka@test.cz "$(SUP "tarif = 'zdarma'")"
+t "ředitelka nezmění stav školky" ERR $RA reditelka@test.cz "$(SUP "stav = 'aktivni', predplatne_do = '2099-01-01'")"
+t "prázdný název neprojde" ERR $RA reditelka@test.cz "$(SUP "nazev = '  '")"
+t "neplatný druh provozu neprojde" ERR $RA reditelka@test.cz "$(SUP "druh_provozu = 'X'")"
+t "omluvenky a VS přes nastavení plateb" "2|10:00:00|prefix_poradi|77|8" $RA reditelka@test.cz "select uloz_financni_nastaveni('19-2000145399/0800', 900, 48, 52, 15, 2, '10:00', 'prefix_poradi', '77', 8) \\g /dev/null
+select omluva_dni_predem || '|' || omluva_do || '|' || vs_schema || '|' || vs_prefix || '|' || vs_delka from financni_nastaveni where skola_id = '$A';"
+t "nastavení plateb bez nepovinných parametrů nic nepřepíše" "2|prefix_poradi" $RA reditelka@test.cz "select uloz_financni_nastaveni('19-2000145399/0800', 900, 48, 52, 15, 2, '10:00', 'prefix_poradi', '77', 8) \\g /dev/null
+select uloz_financni_nastaveni('19-2000145399/0800', 950, 48, 52, 15) \\g /dev/null
+select omluva_dni_predem || '|' || vs_schema from financni_nastaveni where skola_id = '$A';"
+t "neplatné VS schéma neprojde" ERR $RA reditelka@test.cz "select uloz_financni_nastaveni('1/0800', 900, 48, 52, 15, 1, '08:00', 'nahodne');"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
