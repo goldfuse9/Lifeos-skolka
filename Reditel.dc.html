@@ -1690,7 +1690,12 @@ class Component extends DCLogic {
     this.messages = (D.zpravy || []).map(function (z) { var d = new Date(z.odeslano); return { id: z.id, title: z.predmet, text: z.text, to: komuN(z.komu), komu: z.komu, at: self.cz(d), by: jmenoUc[z.odeslal] || '', read: 0, total: 0, app: 0, mail: 0 }; });
     this.porady = (D.porady || []).map(function (x) { return { id: x.id, date: x.den, title: x.druh, program: x.program, usneseni: x.usneseni || '', pritomni: (x.pritomni || []).join(', ') }; });
     this._seedPorady = []; this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
-    this.zapis.apps = [];
+    var zy = this.zapis.year, zr = (D.zapisRocnik || []).filter(function (x) { return x.rok === zy; })[0] || {};
+    Object.assign(this.zapis, { decided: !!zr.rozhodnuto, published: zr.zverejneno || null, sent: zr.odeslano || null, moved: !!zr.preneseno });
+    this.zapis.apps = (D.zadosti || []).filter(function (z) { return z.rok === zy; }).map(function (z) {
+      return { id: z.id, reg: z.reg_cislo, name: z.jmeno + (z.prijmeni ? ' ' + z.prijmeni : ''), birth: new Date(z.datum_narozeni + 'T00:00:00'), female: z.pohlavi === 'F',
+        spad: !!z.spadovy, sib: !!z.sourozenec, result: z.vysledek || null, email: z.email || '', vKartotece: !!z.dite_id };
+    });
     this.state.dochCls = this.classes[0] ? this.classes[0].id : '';
     this.srvSnap = this.srvStav();
   }
@@ -1718,6 +1723,47 @@ class Component extends DCLogic {
     this.urazy.forEach(function (u) { if (u.id) o.urazy[u.id] = JSON.stringify([+u.absent || 0, u.record || null, u.comment || '', u.zaznam || null]); });
     return o;
   }
+  /* Zápis v ostrém provozu: každý krok jde na server. Aplikace sama nic
+     nezveřejňuje ani neodesílá — kroky 2 a 3 jen zaznamenají, že to vedení udělalo. */
+  zapisSrvKrok(krok, zOrd, free) {
+    var self = this, SV = window.SkolkaServer, Z = this.zapis;
+    if (this._zapisBezi) return;
+    this._zapisBezi = true;
+    var hotovo = function (msg) { self._zapisBezi = false; self.forceUpdate(); if (msg) self.showToast(msg); };
+    var chyba = function (e) { self._zapisBezi = false; self.showToast('Neuloženo: ' + SV.chyba(e)); };
+    if (krok === 0) {
+      var v = zOrd.map(function (a) { return { id: a.id, vysledek: a.order <= free ? 'prijato' : 'neprijato', poradi: a.order }; });
+      SV.rozhodniZapis(Z.year, v).then(function () {
+        zOrd.forEach(function (a, i) { a.result = v[i].vysledek; }); Z.decided = true;
+        self.log('Zápis: rozhodnuto podle kritérií (' + Math.min(free, zOrd.length) + ' přijato)');
+        hotovo('Seřazeno podle kritérií — výsledek můžete klepnutím změnit');
+      }).catch(chyba);
+    } else if (krok === 1) {
+      SV.zapisKrok(Z.year, 'zverejneno').then(function (d) { Z.published = d; self.log('Zápis: seznam přijatých označen jako zveřejněný'); hotovo('Zaznamenáno. Seznam pod registračními čísly vyvěste sami — na dveře školky a na web.'); }).catch(chyba);
+    } else if (krok === 2) {
+      SV.zapisKrok(Z.year, 'odeslano').then(function (d) { Z.sent = d; self.log('Zápis: rozhodnutí označena jako odeslaná'); hotovo('Zaznamenáno. Aplikace rozhodnutí neodesílá — doručte je sami (datovou schránkou, poštou nebo osobně).'); }).catch(chyba);
+    } else if (krok === 3) {
+      SV.prevedPrijate(Z.year).then(function (n) {
+        self.log('Zápis: ' + n + ' přijatých dětí převedeno do kartotéky');
+        return self.srvZnovu().then(function () { Z = self.zapis; hotovo((n === 1 ? '1 dítě je' : n + ' dětí je') + ' v kartotéce s nástupem 1. 9. — přiřaďte jim třídu.'); });
+      }).catch(chyba);
+    }
+  }
+  zapisSrvVysledek(a) {
+    var self = this, SV = window.SkolkaServer, nov = a.result === 'prijato' ? 'neprijato' : 'prijato';
+    if (this._zapisBezi) return;
+    this._zapisBezi = true;
+    SV.zmenVysledek(a.id, nov).then(function () { self._zapisBezi = false; a.result = nov; self.log('Zápis: ' + a.reg + ' změněno na ' + (nov === 'prijato' ? 'přijato' : 'nepřijato')); self.forceUpdate(); })
+      .catch(function (e) { self._zapisBezi = false; self.showToast('Neuloženo: ' + SV.chyba(e)); });
+  }
+  /* Znovu načte data školky ze serveru (po hromadné změně na serveru). */
+  async srvZnovu() {
+    var d = new Date(), rok = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
+    var D = await window.SkolkaServer.nactiReditelnu(rok + '-09-01', this.iso(d));
+    window.__skolkaServerReditelna = D;
+    this.zeServeru(D);
+  }
+
   /* Kdo může být na poradě (ostrý provoz): vedoucí, která zápis píše, a pedagogové školky. */
   poradaKdo() {
     var me = (this.ucet && this.ucet.jmeno) || '';
@@ -2888,6 +2934,8 @@ class Component extends DCLogic {
     var self = this, st = this.state, df = st.df || {};
     var CL = this.classes, clsById = {};
     CL.forEach(function (c) { clsById[c.id] = c; });
+    /* Dítě bez třídy (např. právě převedené ze zápisu) — ať se kartotéka nerozbije. */
+    clsById['null'] = clsById['undefined'] = clsById[''] = { id: '', name: 'Bez třídy', code: '', color: '#9AA0A6', capacity: 0, provoz: 'C' };
     var S = this.store();
     var todayIso = this.iso(this.today);
     /* Alergie z kartotéky pro jídelnu a tablet (jen děti, které školku navštěvují). */
@@ -2908,7 +2956,7 @@ class Component extends DCLogic {
     var SRVON = !!(SU && SU.server && SU.server());
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
-    var SRV_SKRYT = ['zapis', 'platby', 'web', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
+    var SRV_SKRYT = ['platby', 'web', 'matrika', 'dokumenty', 'archiv', 'nastaveni'];
     var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -3387,13 +3435,13 @@ class Component extends DCLogic {
         { label: 'Nepřijato', value: String(nNe), sub: Z.sent ? 'rozhodnutí odeslána' : 'zatím nerozhodnuto', style: zStat('#FFFFFF') }
       ],
       actions: [
-        ['Rozhodnout podle kritérií', 0, function () {
+        ['Rozhodnout podle kritérií', 0, self.srv ? function () { self.zapisSrvKrok(0, zOrd, free); } : function () {
           zOrd.forEach(function (a) { a.result = a.order <= free ? 'prijato' : 'neprijato'; });
           Z.decided = true; self.log('Zápis: rozhodnuto podle kritérií (' + Math.min(free, zOrd.length) + ' přijato)'); self.forceUpdate(); self.showToast('Seřazeno podle kritérií — výsledek můžete klepnutím změnit');
         }],
-        ['Zveřejnit seznam', 1, function () { Z.published = self.iso(self.today); self.log('Zápis: zveřejněn seznam přijatých pod reg. čísly'); self.forceUpdate(); self.showToast('Seznam pod registračními čísly je na webu a na dveřích školky'); }],
-        ['Odeslat rozhodnutí', 2, function () { Z.sent = self.iso(self.today); self.log('Zápis: odeslána rozhodnutí (' + nPri + ' přijato, ' + nNe + ' nepřijato)'); self.forceUpdate(); self.showToast('Rozhodnutí odeslána — nepřijatým do datové schránky nebo poštou'); }],
-        ['Převést přijaté do kartotéky', 3, function () {
+        [self.srv ? 'Označit seznam jako zveřejněný' : 'Zveřejnit seznam', 1, self.srv ? function () { self.zapisSrvKrok(1); } : function () { Z.published = self.iso(self.today); self.log('Zápis: zveřejněn seznam přijatých pod reg. čísly'); self.forceUpdate(); self.showToast('Seznam pod registračními čísly je na webu a na dveřích školky'); }],
+        [self.srv ? 'Označit rozhodnutí jako odeslaná' : 'Odeslat rozhodnutí', 2, self.srv ? function () { self.zapisSrvKrok(2); } : function () { Z.sent = self.iso(self.today); self.log('Zápis: odeslána rozhodnutí (' + nPri + ' přijato, ' + nNe + ' nepřijato)'); self.forceUpdate(); self.showToast('Rozhodnutí odeslána — nepřijatým do datové schránky nebo poštou'); }],
+        ['Převést přijaté do kartotéky', 3, self.srv ? function () { self.zapisSrvKrok(3); } : function () {
           var refY = Z.year;
           Z.apps.filter(function (a) { return a.result === 'prijato'; }).forEach(function (a, i) {
             var ageSep = refY - a.birth.getFullYear();
@@ -3426,7 +3474,7 @@ class Component extends DCLogic {
         var stt = a.result === 'prijato' ? ['Přijato', '#EDF4E4', '#2F5212'] : a.result === 'neprijato' ? ['Nepřijato', '#FAEBE4', '#9A3412'] : ['Čeká', '#F3F4F2', '#5A5C60'];
         return { reg: a.reg, name: a.name, note: (a.age < 3 ? 'mladší 3 let · ' : a.age >= 5 ? 'povinné předškolní · ' : '') + 'nar. ' + self.cz(a.birth), age: a.age + (a.age < 5 ? ' roky' : ' let'), spad: a.spad ? 'ano' : 'ne', sib: a.sib ? 'ano' : '—', order: a.order + '.',
           state: stt[0], stateStyle: 'height: 32px; padding: 0 12px; border-radius: 16px; border: 0; font-size: 13px; font-weight: 800; cursor: ' + (Z.decided && !Z.sent && canEdit ? 'pointer' : 'default') + '; background: ' + stt[1] + '; color: ' + stt[2],
-          toggle: function () { if (!Z.decided || Z.sent || !canEdit) return; a.result = a.result === 'prijato' ? 'neprijato' : 'prijato'; self.log('Zápis: ' + a.reg + ' změněno na ' + (a.result === 'prijato' ? 'přijato' : 'nepřijato')); self.forceUpdate(); } };
+          toggle: function () { if (!Z.decided || Z.sent || !canEdit) return; if (self.srv) { self.zapisSrvVysledek(a); return; } a.result = a.result === 'prijato' ? 'neprijato' : 'prijato'; self.log('Zápis: ' + a.reg + ' změněno na ' + (a.result === 'prijato' ? 'přijato' : 'nepřijato')); self.forceUpdate(); } };
       }),
       none: zFiltered.length === 0, shown: zFiltered.length === zOrd.length ? zOrd.length + ' žádostí' : zFiltered.length + ' z ' + zOrd.length,
       criteria: [
@@ -4255,6 +4303,18 @@ class Component extends DCLogic {
         saveLabel: okZ ? 'Zapsat žádost ' + regN : 'Vyplňte jméno a RČ',
         save: function () {
           if (!okZ) return;
+          if (self.srv) {
+            if (self._zapisBezi) return;
+            self._zapisBezi = true;
+            var fz = df.first.trim(), lz = df.last.trim();
+            window.SkolkaServer.novaZadost({ rok: self.zapis.year, jmeno: fz, prijmeni: lz, rc: df.rc.trim(), narozeni: self.iso(rcZ.birth), pohlavi: rcZ.female ? 'F' : 'M', spadovy: df.spad === 'A', sourozenec: df.sib === 'A', email: (df.email || '').trim() }).then(function (r) {
+              self._zapisBezi = false;
+              self.zapis.apps.push({ id: r.id, reg: r.reg_cislo, name: fz + ' ' + lz, birth: rcZ.birth, female: rcZ.female, spad: df.spad === 'A', sib: df.sib === 'A', result: r.vysledek || null, email: (df.email || '').trim() });
+              self.log('Zápis: žádost ' + r.reg_cislo + ' (' + fz + ' ' + lz + ')');
+              self.setState({ dlg: null, df: {} }); self.showToast('Žádost ' + r.reg_cislo + ' zapsána');
+            }).catch(function (e) { self._zapisBezi = false; self.showToast('Žádost se neuložila: ' + window.SkolkaServer.chyba(e)); });
+            return;
+          }
           self.zapis.apps.push({ reg: regN, name: df.first.trim() + ' ' + df.last.trim(), birth: rcZ.birth, female: rcZ.female, spad: df.spad === 'A', sib: df.sib === 'A', result: self.zapis.decided ? 'neprijato' : null, email: (df.email || '').trim() });
           self.log('Zápis: žádost ' + regN + ' (' + df.first.trim() + ' ' + df.last.trim() + ')');
           self.setState({ dlg: null, df: {} }); self.showToast('Žádost ' + regN + ' zapsána');

@@ -440,10 +440,12 @@
         klient().rpc('dochazka_souhrn', { p_od: od, p_do: doDne }),
         klient().from('dochazka').select('dite_id, stav, prichod, odchod').eq('den', dnes()),
         klient().from('zpravy').select('id, komu, predmet, text, odeslal, odeslano').order('odeslano', { ascending: false }).limit(100),
-        klient().from('porady').select('id, den, druh, program, usneseni, pritomni').order('den', { ascending: false }).limit(300)
+        klient().from('porady').select('id, den, druh, program, usneseni, pritomni').order('den', { ascending: false }).limit(300),
+        ved ? klient().from('zadosti').select('id, rok, reg_cislo, jmeno, prijmeni, rodne_cislo, datum_narozeni, pohlavi, spadovy, sourozenec, email, poradi, vysledek, dite_id').order('reg_cislo') : prazdno,
+        ved ? klient().from('zapis_rocnik').select('rok, rozhodnuto, zverejneno, odeslano, preneseno') : prazdno
       ]);
       var D = r.map(ok);
-      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10] };
+      return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12] };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {
@@ -490,6 +492,15 @@
     async ulozPoradu(x) {
       return ok(await klient().from('porady').insert({ skola_id: nactiUcet().skolaId, den: x.den, druh: x.druh, program: x.program, usneseni: x.usneseni || null, pritomni: x.pritomni || [] }).select('id').single()).id;
     },
+    /* --------------------------------------------- zápis (přijímací řízení) */
+    async novaZadost(x) {
+      var r = ok(await klient().rpc('nova_zadost', { p_rok: x.rok, p_jmeno: x.jmeno, p_prijmeni: x.prijmeni, p_rc: x.rc, p_narozeni: x.narozeni, p_pohlavi: x.pohlavi || null, p_spadovy: !!x.spadovy, p_sourozenec: !!x.sourozenec, p_email: x.email || null }));
+      return (r && r[0]) || r;
+    },
+    async rozhodniZapis(rok, vysledky) { return ok(await klient().rpc('rozhodni_zapis', { p_rok: rok, p_vysledky: vysledky })); },
+    async zmenVysledek(id, vysledek) { ok(await klient().from('zadosti').update({ vysledek: vysledek }).eq('id', id)); },
+    async zapisKrok(rok, krok) { return ok(await klient().rpc('zapis_krok', { p_rok: rok, p_krok: krok })); },
+    async prevedPrijate(rok) { return ok(await klient().rpc('preved_prijate', { p_rok: rok })); },
     async ulozUraz(id, radek) { ok(await klient().from('urazy').update(radek).eq('id', id)); },
     async posliZpravu(komu, predmet, text, odpovedNa) {
       var radek = { skola_id: nactiUcet().skolaId, komu: komu, predmet: predmet || '', text: text, odeslal: nactiUcet().id };
