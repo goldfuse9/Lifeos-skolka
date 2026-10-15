@@ -1028,7 +1028,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <section aria-label="Historie změn" style="width: 460px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
           <div style="padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 4px">
             <h2 style="margin: 0; font-size: 18px; font-weight: 800">Historie změn</h2>
-            <span style="font-size: 13px; color: #5A5C60">Kdo co v ředitelně změnil — pro kontrolu a GDPR.</span>
+            <span style="font-size: 13px; color: #5A5C60">{{arch.sub}}</span>
           </div>
           <div style="flex-grow: 1; min-height: 0; overflow-y: auto; border-top: 1px solid #EEF0ED">
             <sc-for list="{{arch.log}}" as="l" hint-placeholder-count="6">
@@ -1654,7 +1654,9 @@ class Component extends DCLogic {
     var jmenoUc = this.jmenoUc = {}; (D.zamestnanci || []).forEach(function (z) { jmenoUc[z.id] = z.jmeno; });
     var me = this.ucet || {};
     this.users = { reditelka: { name: me.jmeno || '', role: 'ředitelka', initials: '', bg: '#E4ECCB' }, hospodarka: { name: me.jmeno || '', role: 'hospodářka', initials: '', bg: '#C9E4F5', id: 'hosp' } };
-    this.audit = [];
+    this.audit = this.archivZeServeru(D.archiv || []);
+    var SP = SK.skartacni_plan || {};
+    this.plan.forEach(function (r) { if (!r.fixed && SP[r.doc] != null && +SP[r.doc] > 0) r.years = +SP[r.doc]; });
     var os = {}; (D.osobni || []).forEach(function (o) { os[o.id] = o; });
     this.souhrn = {}; (D.souhrn || []).forEach(function (x) { (self.souhrn[x.dite_id] = self.souhrn[x.dite_id] || {})[x.mesic] = x; });
     this.srvDnes = {}; (D.dnes || []).forEach(function (x) { self.srvDnes[x.dite_id] = x; });
@@ -1736,7 +1738,25 @@ class Component extends DCLogic {
     var doba = parseFloat(String(sc.doba || '').replace(',', '.'));
     return { nazev: t(sc.nazev), kratky_nazev: t(sc.name), ico: t(sc.ico), izo: String(sc.izo || '').trim(), red_izo: String(sc.redizo || '').trim(), cast_skoly: String(sc.cast || '01').trim() || '01',
       zrizovatel: t(sc.zrizovatel), rozliseni: sc.rozliseni || 'bez', adresa: t(sc.adresa), telefon: t(sc.telefon), email: t(sc.email), datovka: t(sc.datovka), web: t(sc.web), ucet: t(sc.ucet),
-      poverenec: t(sc.poverenec), provozni_doba: t(sc.provozni), uredni_hodiny: t(sc.uredni), druh_provozu: sc.provoz || 'C', doba_provozu: isNaN(doba) ? null : doba, kontakt: t(sc.kontakt) };
+      poverenec: t(sc.poverenec), provozni_doba: t(sc.provozni), uredni_hodiny: t(sc.uredni), druh_provozu: sc.provoz || 'C', doba_provozu: isNaN(doba) ? null : doba, kontakt: t(sc.kontakt),
+      skartacni_plan: (function (P) { var o = {}; (P || []).forEach(function (r) { if (!r.fixed && +r.years > 0) o[r.doc] = Math.min(100, +r.years); }); return o; })(this.plan) };
+  }
+  /* Záznam změn z databáze (kdo, kdy, co) — bez osobních údajů. */
+  archivZeServeru(rows) {
+    var self = this, kidById = {};
+    (this.kids || []).forEach(function (k) { kidById[k.id] = k; });
+    var TAB = { deti: 'Karta dítěte', zastupci: 'Zákonný zástupce', poverene_osoby: 'Pověřená osoba', souhlasy: 'Souhlas zákonného zástupce', urazy: 'Kniha úrazů',
+      predpisy: 'Předpis platby', platby: 'Platba', nesparovane_platby: 'Ruční spárování platby', financni_nastaveni: 'Nastavení plateb', zadosti: 'Žádost o přijetí',
+      porady: 'Zápis z porady', zapis_rocnik: 'Zápis — krok řízení', dokumenty_verze: 'Schválený dokument', uzivatele: 'Účet zaměstnance', pozvanky: 'Pozvánka',
+      parovaci_kody: 'Kód pro rodiče', ucitel_trida: 'Učitelka ve třídě', udalosti_ditete: 'Událost dítěte', diety: 'Dieta' };
+    var AKCE = { INSERT: 'nový záznam', UPDATE: 'úprava', DELETE: 'smazání' };
+    var docT = {}; (this.docs || []).forEach(function (d) { docT[d.key] = d.title; });
+    return rows.map(function (r) {
+      var d = new Date(r.kdy), k = r.dite ? kidById[r.dite] : null, det = r.detail || '';
+      if (r.tabulka === 'dokumenty_verze' && det) { var kk = det.split(',')[0]; det = (docT[kk] || kk) + det.slice(kk.length); }
+      return { at: self.cz(d) + ' ' + d.getHours() + ':' + self.pad(d.getMinutes(), 2), who: r.kdo,
+        what: (TAB[r.tabulka] || r.tabulka) + ' — ' + (AKCE[r.akce] || r.akce) + (k ? ' · ' + k.first + ' ' + k.last : '') + (det ? ' · ' + det : '') };
+    });
   }
   srvFin() {
     var F = this.fin;
@@ -2294,6 +2314,7 @@ class Component extends DCLogic {
   }
 
   log(what) {
+    if (this.srv) return;
     var u = this.users[this.state ? this.state.role : 'reditelka'];
     var d = new Date();
     this.audit.unshift({ at: this.cz(d) + ' ' + d.getHours() + ':' + this.pad(d.getMinutes(), 2), who: u.name, what: what });
@@ -3079,7 +3100,7 @@ class Component extends DCLogic {
     var SRVON = !!(SU && SU.server && SU.server());
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
-    var SRV_SKRYT = ['web', 'archiv'];
+    var SRV_SKRYT = ['web'];
     var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
@@ -3970,6 +3991,11 @@ class Component extends DCLogic {
     };
 
     /* -------------------------------------------------- archiv */
+    if (this.srv && st.page === 'archiv' && !this._archNacteno) {
+      this._archNacteno = true;
+      if (role === 'reditelka') window.SkolkaServer.archivZmen().then(function (rows) { self.audit = self.archivZeServeru(rows || []); self.forceUpdate(); }).catch(function () { /* zůstane načtený stav */ });
+    }
+    if (st.page !== 'archiv') this._archNacteno = false;
     var arch = {
       plan: this.plan.map(function (r) {
         var y = +r.years || 0, last = self.syStart - y;
@@ -3978,7 +4004,8 @@ class Component extends DCLogic {
           due: y ? 'z roku ' + (last - 1) + '/' + last + ' a starší' + (r.znak === 'A' ? ' → archiv' : ' → skartační řízení') : '—',
           dueStyle: 'font-size: 13px; color: ' + (r.znak === 'A' ? '#27407A' : '#3A3C40') };
       }),
-      log: this.audit.map(function (l) { return { what: l.what, who: l.who, when: l.at }; })
+      log: this.audit.map(function (l) { return { what: l.what, who: l.who, when: l.at }; }),
+      sub: this.srv ? (role === 'reditelka' ? 'Kdo co změnil — posledních 300 změn uložených na serveru.' : 'Záznam změn vidí vedení školy.') : 'Kdo co v ředitelně změnil — pro kontrolu a GDPR.'
     };
 
     /* -------------------------------------------------- web */
