@@ -423,7 +423,7 @@
         klient().rpc('jidelnicek_kuchyne', { p_od: od, p_do: doDne }),
         klient().rpc('obedy_den', { p_den: den }),
         klient().rpc('deti_diety'),
-        klient().from('skoly').select('nazev, nahrady_obedu').eq('id', u.skolaId).maybeSingle(),
+        klient().from('skoly').select('nazev, kratky_nazev, adresa, telefon, email, web, ico, logo, nahrady_obedu').eq('id', u.skolaId).maybeSingle(),
         klient().from('uzivatele').select('id', { count: 'exact', head: true }).neq('role', 'rodic').eq('aktivni', true)
       ]);
       var D = r.slice(0, 5).map(ok);
@@ -475,7 +475,7 @@
         for (;;) { var d = ok(await dotaz().range(od, od + 999)); out = out.concat(d || []); if (!d || d.length < 1000) return { data: out, error: null }; od += 1000; }
       };
       var r = await Promise.all([
-        klient().from('skoly').select('id, nazev, kratky_nazev, ico, izo, red_izo, cast_skoly, zrizovatel, rozliseni, adresa, telefon, email, datovka, web, ucet, poverenec, provozni_doba, uredni_hodiny, druh_provozu, doba_provozu, kontakt, skartacni_plan').eq('id', u.skolaId).maybeSingle(),
+        klient().from('skoly').select('id, nazev, kratky_nazev, ico, izo, red_izo, cast_skoly, zrizovatel, rozliseni, adresa, telefon, email, datovka, web, ucet, poverenec, provozni_doba, uredni_hodiny, druh_provozu, doba_provozu, kontakt, skartacni_plan, logo').eq('id', u.skolaId).maybeSingle(),
         klient().from('tridy').select('id, nazev, kod, barva, kapacita, provoz').order('nazev'),
         klient().from('deti').select('id, trida_id, jmeno, prijmeni, datum_narozeni, pohlavi, obcanstvi, znalost_cj, spadovy, zahajeni, po_stupen, ivp, asistent, plpp_do, alergie, variabilni_symbol, ukonceno, znacka, zastupci(id, jmeno, telefon, email, poradi, uzivatel_id), poverene_osoby(id, jmeno, zmocneni_od, zruseno), souhlasy(druh, udelen, zmeneno)').order('prijmeni'),
         ved ? klient().rpc('deti_osobni') : prazdno,

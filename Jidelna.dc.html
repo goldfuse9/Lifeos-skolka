@@ -528,7 +528,8 @@ class Component extends DCLogic {
   zeServeru(D) {
     var self = this;
     if (D.katalog && D.katalog.dishes && D.katalog.ings) { this.dishes = D.katalog.dishes; this.ings = D.katalog.ings; }
-    this.school = { name: (D.skola && D.skola.nazev) || (this.ucet && this.ucet.skola) || '', nazev: (D.skola && D.skola.nazev) || '', adresa: '', telefon: '', email: '', ico: '' };
+    var SK = D.skola || {};
+    this.school = { name: SK.kratky_nazev || SK.nazev || (this.ucet && this.ucet.skola) || '', nazev: SK.nazev || '', adresa: SK.adresa || '', telefon: SK.telefon || '', email: SK.email || '', web: SK.web || '', ico: SK.ico || '', logo: SK.logo || null };
     this.nahradyOn = !(D.skola && D.skola.nahrady_obedu === false);
     this.staff = [];
     this.srvAdults = D.zamestnancu || 0;
@@ -754,13 +755,25 @@ class Component extends DCLogic {
   printDoc(title, body) {
     var sc = this.school;
     var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    /* Hlavička s logem školky vlevo nahoře a patička s kontakty — na každé stránce. */
+    var logo = typeof sc.logo === 'string' && sc.logo.length <= 200000 && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/]+={0,2}$/.test(sc.logo) ? sc.logo : '';
+    var radek = [sc.adresa, sc.ico ? 'IČO ' + sc.ico : ''].filter(Boolean).join(' · ');
+    var kontakt = [sc.telefon, sc.email, sc.web].filter(Boolean).join(' · ');
+    var d = this.today || new Date();
+    var hd = '<div class="hd">' + (logo ? '<img class="hd-logo" src="' + logo + '" alt="Logo školy">' : '') + '<div><b>' + e(sc.nazev || sc.name) + ' — školní jídelna</b>' + (radek ? '<span>' + e(radek) + '</span>' : '') + '</div></div>';
+    var ft = '<div class="pata"><span>' + e(sc.name || sc.nazev) + (kontakt ? ' · ' + e(kontakt) : '') + '</span><span>Vytištěno ' + d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear() + '</span></div>';
     var html = '<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>' + e(title) + '</title><style>'
-      + '@page{size:A4 landscape;margin:14mm}body{font:11pt/1.45 system-ui,sans-serif;color:#17181A;margin:0}'
-      + '.hd{display:flex;align-items:center;gap:14px;border-bottom:2px solid #17181A;padding-bottom:8px;margin-bottom:14px}.hd b{font-size:14pt;display:block}.hd span{font-size:9pt;color:#444}'
+      + '@page{size:A4 landscape;margin:8mm 14mm}body{font:11pt/1.45 system-ui,sans-serif;color:#17181A;margin:0}'
+      + '.hd{display:flex;align-items:center;gap:14px;border-bottom:2px solid #17181A;padding-bottom:6px}.hd-logo{height:13mm;width:auto;max-width:40mm;object-fit:contain;flex-shrink:0}.hd b{font-size:14pt;display:block}.hd span{font-size:9pt;color:#444}'
+      + '.pata{display:flex;justify-content:space-between;gap:16px;border-top:1px solid #999;padding-top:3px;font-size:7.5pt;color:#555}.ft{margin-top:14px;font-size:8.5pt;color:#666}'
       + 'h1{font-size:17pt;margin:0 0 10px}table{border-collapse:collapse;width:100%;margin-bottom:10px}th,td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top}th{background:#F1F0EA}'
-      + '.a{color:#8A4513;font-size:9pt;font-weight:700}.lg{font-size:8.5pt;color:#333}.ft{margin-top:14px;font-size:8.5pt;color:#666}'
-      + '</style></head><body><div class="hd"><div><b>' + e(sc.nazev) + ' — školní jídelna</b><span>' + e(sc.adresa) + ' · IČO ' + e(sc.ico) + ' · ' + e(sc.telefon) + '</span></div></div>'
-      + body + '</body></html>';
+      + '.a{color:#8A4513;font-size:9pt;font-weight:700}.lg{font-size:8.5pt;color:#333}'
+      + 'table.lay{margin:0}table.lay>thead>tr>td,table.lay>tbody>tr>td,table.lay>tfoot>tr>td{border:0;padding:0;background:none}'
+      + '@media print{.hd-fix{position:fixed;top:0;left:0;right:0;background:#fff}.ft-fix{position:fixed;bottom:0;left:0;right:0;background:#fff}.hd-sp{height:22mm}.ft-sp{height:9mm}}'
+      + '@media screen{body{margin:24px}.hd-sp,.ft-sp{display:none}.hd-fix{margin-bottom:14px}.ft-fix{margin-top:20px}}'
+      + '</style></head><body><div class="hd-fix">' + hd + '</div>'
+      + '<table class="lay"><thead><tr><td><div class="hd-sp"></div></td></tr></thead><tfoot><tr><td><div class="ft-sp"></div></td></tr></tfoot><tbody><tr><td>'
+      + body + '</td></tr></tbody></table><div class="ft-fix">' + ft + '</div></body></html>';
     var w = null;
     try { w = window.open('', '_blank'); } catch (err) { w = null; }
     if (w && w.document) {
