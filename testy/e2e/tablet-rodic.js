@@ -3,8 +3,9 @@ const { sql, sqlJako, stranka, konec, prihlas, kontrola } = require('./spolecne'
 const EMA = '00000000-0000-4000-8000-000000000101', OLI = '00000000-0000-4000-8000-000000000102';
 const RODA = 'aaaaaaaa-0000-4000-8000-000000000003', ROD2 = 'aaaaaaaa-0000-4000-8000-000000000008', RODB = 'bbbbbbbb-0000-4000-8000-000000000003';
 module.exports = async () => {
-  // rodič Olivera omluví zítřek (jako z LifeOS)
-  sqlJako(ROD2, '', `select omluv_dite('${OLI}', current_date + 1, current_date + 1, 'nemoc');`);
+  // rodič Olivera omluví příští školní den (jako z LifeOS) — v pátek je to pondělí, ne sobota
+  const DALSI = `current_date + case extract(isodow from current_date)::int when 5 then 3 when 6 then 2 else 1 end`;
+  sqlJako(ROD2, '', `select omluv_dite('${OLI}', ${DALSI}, ${DALSI}, 'nemoc');`);
   const t = await stranka({ width: 1194, height: 834 });
   await prihlas(t, 'Třída', 'ucitelka@test.cz');
   kontrola('tablet Sluníček otevřen', (await t.evaluate(() => location.hash)) === '#trida');

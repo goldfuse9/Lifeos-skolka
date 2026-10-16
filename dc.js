@@ -306,6 +306,9 @@ function pripojDesku(zdroj, koren, klic) {
     koren.appendChild(frag);
     vratRolovani(koren, rolky);
     vratMe(koren, ohnisko);
+    /* Pole, která šablona neplní (contenteditable), deska doplní hned —
+       dřív, než stihne dopadnout další stisk klávesy. */
+    if (instance.poVykresleni) { try { instance.poVykresleni(); } catch (e) { console.warn('poVykresleni:', e); } }
   };
 
   aktivni = { instance, klic };

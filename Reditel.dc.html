@@ -24,6 +24,8 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
 .doc-ed li{margin:0 0 .2em}
 .doc-tb button{height:34px;min-width:34px;padding:0 9px;border-radius:10px;border:0;background:transparent;font-size:14px;color:#17181A;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .doc-tb button:hover{background:#F3F4F2}
+.por-ed{outline:none;color:#17181A}.por-ed:empty:before{content:attr(data-ph);color:#8A8C90}
+.por-ed div,.por-ed p{margin:0}.por-ed ul,.por-ed ol{margin:2px 0;padding-left:1.4em}
 .doc-tb select{height:34px;border-radius:10px;border:1px solid #E5E7E4;background:#FFFFFF;font-size:13px;padding:0 6px;color:#17181A}
 </style>
 </helmet>
@@ -736,7 +738,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         </sc-for>
         <span style="flex-grow: 1"></span>
         <span style="font-size: 13px; color: #5A5C60">{{por.count}}</span>
-        <button type="button" onClick="{{por.exportYear}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Celý rok do PDF</button>
+        <button type="button" onClick="{{por.exportYear}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Celý rok — tisk / PDF</button>
       </div>
       <div style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1; min-height: 0; overflow-y: auto">
         <sc-for list="{{por.items}}" as="p" hint-placeholder-count="2">
@@ -745,10 +747,10 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span style="{{p.typeStyle}}">{{p.type}}</span>
               <span style="font-size: 17px; font-weight: 800; flex-grow: 1">{{p.title}}</span>
               <span style="font-size: 13px; color: #5A5C60">{{p.date}}</span>
-              <button type="button" onClick="{{p.pdf}}" aria-label="Uložit do PDF: {{p.title}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">PDF</button>
+              <button type="button" onClick="{{p.pdf}}" aria-label="Vytisknout nebo uložit do PDF: {{p.title}} {{p.date}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Tisk / PDF</button>
             </span>
-            <span style="font-size: 14px; line-height: 20px"><b style="font-weight: 800">Program:</b> {{p.program}}</span>
-            <span style="font-size: 14px; line-height: 20px"><b style="font-weight: 800">Usnesení:</b> {{p.usneseni}}</span>
+            <span style="font-size: 14px; line-height: 20px; white-space: pre-line"><b style="font-weight: 800">Program:</b> {{p.program}}</span>
+            <span style="font-size: 14px; line-height: 20px; white-space: pre-line"><b style="font-weight: 800">Usnesení:</b> {{p.usneseni}}</span>
             <span style="font-size: 13px; color: #5A5C60">Přítomni: {{p.pritomni}}</span>
           </article>
         </sc-for>
@@ -1121,6 +1123,22 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">{{f.label}}
               <textarea rows="3" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="border-radius: 14px; border: 1px solid #E5E7E4; padding: 12px 14px; font-size: 16px; font-weight: 500; color: #17181A; resize: none"></textarea>
             </label>
+          </sc-for>
+          <sc-for list="{{dlg.rich}}" as="f" hint-placeholder-count="1">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span id="{{f.lblId}}" style="font-size: 15px; font-weight: 800">{{f.label}}</span>
+              <div style="border: 1px solid #E5E7E4; border-radius: 14px; overflow: hidden; background: #FFFFFF">
+                <div class="doc-tb" role="toolbar" aria-label="Formátování: {{f.label}}" style="display: flex; align-items: center; gap: 2px; padding: 4px 6px; background: #F7F8F6; border-bottom: 1px solid #E5E7E4">
+                  <button type="button" aria-label="Tučně" title="Tučně (⌘B)" onMouseDown="{{f.bold}}" style="font-weight: 800">B</button>
+                  <button type="button" aria-label="Kurzíva" title="Kurzíva (⌘I)" onMouseDown="{{f.italic}}" style="font-style: italic; font-family: Georgia, serif">I</button>
+                  <button type="button" aria-label="Podtržení" title="Podtržení (⌘U)" onMouseDown="{{f.underline}}" style="text-decoration: underline">U</button>
+                  <span style="width: 1px; height: 22px; background: #E5E7E4; margin: 0 4px"></span>
+                  <button type="button" aria-label="Odrážky" title="Odrážky" onMouseDown="{{f.ul}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1" fill="currentColor"></circle><circle cx="4.5" cy="12" r="1" fill="currentColor"></circle><circle cx="4.5" cy="18" r="1" fill="currentColor"></circle></svg></button>
+                  <button type="button" aria-label="Číslování" title="Číslování" onMouseDown="{{f.ol}}" style="font-size: 12px; font-weight: 800">1.</button>
+                </div>
+                <div id="{{f.id}}" class="por-ed" role="textbox" aria-multiline="true" aria-labelledby="{{f.lblId}}" contenteditable="true" spellcheck="true" data-ph="{{f.ph}}" onInput="{{f.onInput}}" onPaste="{{f.onPaste}}" style="min-height: 88px; max-height: 220px; overflow-y: auto; padding: 12px 14px; font-size: 16px; line-height: 22px; font-weight: 500"></div>
+              </div>
+            </div>
           </sc-for>
           <sc-for list="{{dlg.choices}}" as="g" hint-placeholder-count="2">
             <div style="display: flex; flex-direction: column; gap: 8px">
@@ -2862,6 +2880,109 @@ class Component extends DCLogic {
     }
   }
 
+  /* Zápis z porady se ukládá jako jednoduchý text se značkami — **tučně**,
+     *kurzíva*, __podtržení__, řádek „- “ odrážka, „1. “ číslování. V databázi
+     tak nikdy není HTML; starší zápisy (prostý text) se zobrazí stejně. */
+  porMd(el) {
+    var esc = function (t) { return t.replace(/\u00a0/g, ' ').replace(/([\\*_])/g, '\\$1'); };
+    var inl = function (n) {
+      if (n.nodeType === 3) return esc(n.nodeValue);
+      if (n.nodeType !== 1) return '';
+      var t = n.tagName;
+      if (t === 'BR') return '\n';
+      var s = [].map.call(n.childNodes, inl).join('');
+      var m = t === 'B' || t === 'STRONG' ? '**' : t === 'I' || t === 'EM' ? '*' : t === 'U' ? '__' : '';
+      if (!m) return s;
+      return s.split('\n').map(function (l) { if (!l.trim()) return l; var a = l.match(/^\s*/)[0], b = l.match(/\s*$/)[0]; return a + m + l.trim() + m + b; }).join('\n');
+    };
+    var lines = [], cur = null;
+    var flush = function () { if (cur !== null) { lines.push(cur); cur = null; } };
+    var walk = function (box) {
+      [].forEach.call(box.childNodes, function (n) {
+        var t = n.nodeType === 1 ? n.tagName : '';
+        if (t === 'UL' || t === 'OL') {
+          flush();
+          [].filter.call(n.children, function (li) { return li.tagName === 'LI'; }).forEach(function (li, i) {
+            lines.push((t === 'OL' ? (i + 1) + '. ' : '- ') + inl(li).replace(/\s*\n\s*/g, ' ').trim());
+          });
+        } else if (t === 'DIV' || t === 'P' || /^H[1-6]$/.test(t) || t === 'BLOCKQUOTE') {
+          flush();
+          if ([].some.call(n.children, function (c) { return /^(DIV|P|UL|OL)$/.test(c.tagName); })) { walk(n); flush(); return; }
+          var s = inl(n);
+          if (s === '\n' || s === '') { lines.push(''); return; }
+          s.replace(/\n$/, '').split('\n').forEach(function (l) { lines.push(l); });
+        } else if (t === 'BR') {
+          if (cur === null) lines.push(''); else flush();
+        } else {
+          cur = (cur || '') + inl(n);
+        }
+      });
+    };
+    walk(el); flush();
+    return lines.map(function (l) { return l.replace(/\s+$/, ''); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  porHtml(md, editor) {
+    var e = function (v) { return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    var TAG = { '**': 'b', '__': 'u', '*': 'i' };
+    var inl = function (t) {
+      var out = '', st = [], i = 0;
+      var open = function (m) { st.push(m); out += '<' + TAG[m] + '>'; };
+      var close = function (m) {
+        var k = st.lastIndexOf(m), nad = st.slice(k + 1);
+        for (var j = st.length - 1; j >= k; j--) out += '</' + TAG[st[j]] + '>';
+        st = st.slice(0, k); nad.forEach(open);
+      };
+      while (i < t.length) {
+        var c = t.charAt(i);
+        if (c === '\\' && i + 1 < t.length) { out += e(t.charAt(i + 1)); i += 2; continue; }
+        var two = t.substr(i, 2), m = two === '**' || two === '__' ? two : c === '*' ? '*' : null;
+        if (m && (st.indexOf(m) !== -1 || t.indexOf(m, i + m.length) !== -1)) { if (st.indexOf(m) !== -1) close(m); else open(m); i += m.length; continue; }
+        out += e(c); i++;
+      }
+      for (var j = st.length - 1; j >= 0; j--) out += '</' + TAG[st[j]] + '>';
+      return out;
+    };
+    var out = [], list = null;
+    var end = function () { if (list) { out.push('</' + list + '>'); list = null; } };
+    String(md || '').split('\n').forEach(function (l) {
+      var ul = /^[-•] (.*)$/.exec(l), ol = ul ? null : /^\d+\. (.*)$/.exec(l);
+      if (ul || ol) {
+        var k = ul ? 'ul' : 'ol';
+        if (list !== k) { end(); out.push('<' + k + '>'); list = k; }
+        out.push('<li>' + inl((ul || ol)[1]) + '</li>'); return;
+      }
+      end();
+      if (editor) out.push(l.trim() ? '<div>' + inl(l) + '</div>' : '<div><br></div>');
+      else if (l.trim()) out.push('<p>' + inl(l) + '</p>');
+    });
+    end();
+    return out.join('');
+  }
+  /* Prostý text pro kartu v seznamu (bez značek, odrážky jako „•“). */
+  porText(md) {
+    var d = typeof document !== 'undefined' ? document.createElement('div') : null;
+    if (!d) return String(md || '');
+    return String(md || '').split('\n').map(function (l) {
+      var ul = /^[-•] (.*)$/.exec(l);
+      d.innerHTML = this.porHtml(ul ? ul[1] : l);
+      return (ul ? '• ' : '') + d.textContent;
+    }, this).join('\n');
+  }
+  /* Po vykreslení: editory zápisu dostanou svůj text a kurzor zpátky na konec. */
+  poVykresleni() {
+    var self = this;
+    (this._richFill || []).forEach(function (r) {
+      var el = document.getElementById(r[0]);
+      if (!el || el.getAttribute('data-filled') === '1') return;
+      el.innerHTML = r[1]; el.setAttribute('data-filled', '1');
+      if (self._porFocus === r[0]) {
+        self._porFocus = null; el.focus();
+        try { var rg = document.createRange(); rg.selectNodeContents(el); rg.collapse(false); var sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(rg); } catch (x) { /* nic */ }
+      }
+    });
+  }
+  porCss() { return 'td p{margin:0 0 .45em}td p:last-child{margin-bottom:0}td ul,td ol{margin:0 0 .45em;padding-left:1.3em}td li{margin:0 0 .15em}'; }
+
   poradaHtml(p) {
     var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
     var dir = (this.teachers.filter(function (t) { return t.role === 'Ředitelka'; })[0] || {}).name || '';
@@ -2870,8 +2991,8 @@ class Component extends DCLogic {
       + '<tr><th>Datum</th><td>' + this.cz(new Date(p.date)) + '</td></tr>'
       + '<tr><th>Druh jednání</th><td>' + (ped ? 'Pedagogická rada (§ 164 odst. 1 písm. e) zákona č. 561/2004 Sb.)' : 'Provozní porada') + '</td></tr>'
       + '<tr><th>Přítomni</th><td>' + e(p.pritomni) + '</td></tr>'
-      + '<tr><th>Program</th><td>' + e(p.program) + '</td></tr>'
-      + '<tr><th>Usnesení</th><td>' + e(p.usneseni || '—') + '</td></tr></table>'
+      + '<tr><th>Program</th><td>' + this.porHtml(p.program) + '</td></tr>'
+      + '<tr><th>Usnesení</th><td>' + (p.usneseni ? this.porHtml(p.usneseni) : '—') + '</td></tr></table>'
       + '<div class="sig"><div>Zapsal/a</div><div>Ověřil/a</div><div>' + e(dir) + ', ředitelka školy</div></div>';
   }
 
@@ -3990,12 +4111,12 @@ class Component extends DCLogic {
     var por = {
       years: pYears.map(function (y) { var on = y === pSel; return { label: y + '/' + (y + 1) + (y === self.syStart ? '' : ' · archiv'), on: on, style: chip(on, true), pick: function () { self.setState({ poradyYear: y }); } }; }),
       count: pList.length === 1 ? '1 zápis' : pList.length + (pList.length >= 2 && pList.length <= 4 ? ' zápisy' : ' zápisů'),
-      exportYear: function () { self.printDoc('Porady ' + pSel + '/' + (pSel + 1), pList.slice().reverse().map(function (p) { return self.poradaHtml(p); }).join('<div class="pb"></div>')); self.log('Export porad ' + pSel + '/' + (pSel + 1) + ' do PDF'); },
+      exportYear: function () { self.printDoc('Porady ' + pSel + '/' + (pSel + 1), pList.slice().reverse().map(function (p) { return self.poradaHtml(p); }).join('<div class="pb"></div>'), self.porCss()); self.log('Export porad ' + pSel + '/' + (pSel + 1) + ' do PDF'); },
       items: pList.map(function (p) {
         var ped = /pedagog/i.test(p.title);
-        return { title: p.title, date: self.cz(new Date(p.date)), program: p.program, usneseni: p.usneseni || '—', pritomni: p.pritomni,
+        return { title: p.title, date: self.cz(new Date(p.date)), program: self.porText(p.program), usneseni: p.usneseni ? self.porText(p.usneseni) : '—', pritomni: p.pritomni,
           type: ped ? 'Pedagogická rada' : 'Provozní porada', typeStyle: 'height: 24px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; flex-shrink: 0; ' + (ped ? 'background: #EBF1FA; color: #27407A' : 'background: #F3F4F2; color: #3A3C40'),
-          pdf: function () { self.printDoc(p.title + ' ' + self.cz(new Date(p.date)), self.poradaHtml(p)); self.log('Export zápisu z porady ' + self.cz(new Date(p.date)) + ' do PDF'); } };
+          pdf: function () { self.printDoc(p.title + ' ' + self.cz(new Date(p.date)), self.poradaHtml(p), self.porCss()); self.log('Export zápisu z porady ' + self.cz(new Date(p.date)) + ' do PDF'); } };
       })
     };
 
@@ -4408,7 +4529,30 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- formuláře */
     var dk = st.dlg;
-    var dlg = { open: !!dk, close: function () { self.setState({ dlg: null, df: {} }); }, inputs: [], areas: [], choices: [], summary: '', canSave: false, saveLabel: '', title: '', hasWarn: false, warn: '', hasAvatar: false, av: this.avatar({ name: '' }, 96), hasPhoto: false, photoLabel: '', onPhoto: function () {}, removePhoto: function () {}, hasInfo: false, info: [], hasExtra: false, extra: function () {}, extraLabel: '' };
+    var dlg = { open: !!dk, close: function () { self.setState({ dlg: null, df: {} }); }, inputs: [], areas: [], rich: [], choices: [], summary: '', canSave: false, saveLabel: '', title: '', hasWarn: false, warn: '', hasAvatar: false, av: this.avatar({ name: '' }, 96), hasPhoto: false, photoLabel: '', onPhoto: function () {}, removePhoto: function () {}, hasInfo: false, info: [], hasExtra: false, extra: function () {}, extraLabel: '' };
+    /* Pole s formátováním (zápis z porady). Psaní stav nepřekresluje — kurzor by
+       skočil; překreslí se jen, když se pole vyprázdní nebo zaplní (tlačítko Uložit). */
+    var richFill = [];
+    var rich = function (label, key, ph, povinne) {
+      var id = 'por-ed-' + key, get = function () { return document.getElementById(id); };
+      var sync = function (el) {
+        var D = self.state.df, bylo = !!String(D[key] || '').trim();
+        D[key] = self.porMd(el); D['_' + key] = el.innerHTML;
+        if (povinne && bylo !== !!D[key].trim()) { self._porFocus = id; self.forceUpdate(); }
+      };
+      var cmd = function (c) { return function (ev) {
+        if (ev) ev.preventDefault();
+        var el = get(); if (!el) return;
+        if (document.activeElement !== el) el.focus();
+        try { document.execCommand('styleWithCSS', false, false); } catch (x) { /* starší prohlížeč */ }
+        document.execCommand(c, false, null); sync(get() || el);
+      }; };
+      richFill.push([id, df['_' + key] != null ? df['_' + key] : self.porHtml(df[key] || '', true)]);
+      return { id: id, lblId: id + '-l', label: label, ph: ph || '',
+        onInput: function (ev) { sync(ev.currentTarget); },
+        onPaste: function (ev) { ev.preventDefault(); var t = (ev.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, t); },
+        bold: cmd('bold'), italic: cmd('italic'), underline: cmd('underline'), ul: cmd('insertUnorderedList'), ol: cmd('insertOrderedList') };
+    };
     var area = function (label, key, ph) { return { label: label, ph: ph || '', value: df[key] || '', onInput: function (e) { var o = {}; o[key] = e.target.value; self.setDF(o); } }; };
     var inp = function (label, key, ph, type, hint, hintBad) {
       return { label: label, type: type || 'text', ph: ph || '', value: df[key] || '', onInput: function (e) { var o = {}; o[key] = e.target.value; self.setDF(o); },
@@ -4561,9 +4705,9 @@ class Component extends DCLogic {
         title: 'Nový zápis z porady',
         inputs: [inp('Datum', 'date', '', 'date')],
         choices: [group('Typ', 'typ', [['Pedagogická rada', 'Pedagogická rada'], ['Provozní porada', 'Provozní porada']])].concat(this.srv ? [group('Přítomni (klepnutím odeberete)', 'prit', this.poradaKdo(), true)] : []),
-        areas: [area('Program', 'program', 'O čem se jednalo'), area('Usnesení', 'usneseni', 'Co se rozhodlo — nepovinné')],
+        rich: [rich('Program', 'program', 'O čem se jednalo', true), rich('Usnesení', 'usneseni', 'Co se rozhodlo — nepovinné')],
         canSave: okP2,
-        summary: this.srv ? (okP2 ? 'Zápis se po uložení už nedá měnit.' : 'Datum a program.') : (okP2 ? 'Přítomní se doplní sami — všichni, kdo dnes nechybí.' : 'Datum a program.'),
+        summary: this.srv ? (okP2 ? 'Zápis se po uložení už nedá měnit. Vytisknete ho tlačítkem „Tisk / PDF“.' : 'Datum a program.') : (okP2 ? 'Přítomní se doplní sami — všichni, kdo dnes nechybí.' : 'Datum a program.'),
         saveLabel: okP2 ? 'Uložit zápis' : 'Napište program',
         save: function () {
           if (!okP2) return;
@@ -4670,6 +4814,7 @@ class Component extends DCLogic {
     dlg.saveStyle = bigBtn(dlg.canSave);
     dlg.summaryFg = dlg.canSave ? '#17181A' : '#5A5C60';
 
+    this._richFill = richFill;
     return {
       school: { name: UC && UC.server && UC.skola ? UC.skola : this.school.name },
       provoz: this.srv ? { label: 'Ostrý provoz', title: 'Data ze serveru školky. Stránky, které ještě nejsou napojené (zápis, platby, matrika, dokumenty…), se nezobrazují.' } : { label: 'Zkušební provoz', title: 'Všechno funguje, ale nic neodchází ven' },
