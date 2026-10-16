@@ -2697,3 +2697,11 @@ drop policy if exists skolka_fotky_nahrat on storage.objects;
 create policy skolka_fotky_nahrat on storage.objects for insert to authenticated with check (bucket_id = 'fotky' and public.smi_spravovat_fotku(name));
 drop policy if exists skolka_fotky_smazat on storage.objects;
 create policy skolka_fotky_smazat on storage.objects for delete to authenticated using (bucket_id = 'fotky' and public.smi_spravovat_fotku(name));
+
+-- Doplněk 16. 10. 2026: LOGO ŠKOLKY (viz migrace-2026-10-16-logo.sql)
+alter table skoly add column if not exists logo text;
+alter table skoly drop constraint if exists skoly_logo;
+alter table skoly add constraint skoly_logo check (
+  logo is null or (length(logo) <= 200000 and logo ~ '^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$')
+) not valid;
+grant update (logo) on skoly to authenticated;
