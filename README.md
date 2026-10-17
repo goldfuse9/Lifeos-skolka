@@ -132,6 +132,14 @@ práva podle role (ředitelka / učitelka / hospodářka / rodič) přes RLS,
 učitelky a hospodářka nevidí rodná čísla, každá změna osobních údajů jde
 do `audit_log`. Ověřeno na PostgreSQL 16.
 
+### Platby z banky a QR pro rodiče
+
+Platby se z účtu školky (Fio API) stahují a párují **samy každých 15 minut**
+(Edge Function `supabase/functions/banka-sync` + pg_cron); ředitelka napojí banku
+tokenem v Platby → Platby z banky, hospodářka může stáhnout hned. Rodič v LifeOS
+zavolá `moje_platby()` a dostane částku k úhradě, VS a hotový řetězec QR platby.
+Zprovoznění v [`docs/PLATBY-Z-BANKY.md`](docs/PLATBY-Z-BANKY.md).
+
 ### Finanční modul (`server/`)
 
 Školkovné a stravné pro ostrý provoz: Python (`Decimal`) + PostgreSQL

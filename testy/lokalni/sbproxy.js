@@ -129,6 +129,12 @@ http.createServer((req, res) => {
     return;
   }
   if (req.url.startsWith('/storage/v1/')) return storage(req, res);
+  // /functions/v1/<název> → lokálně spuštěná Edge Function (deno), jen když je zadán FUNCTIONS_PORT
+  if (req.url.startsWith('/functions/v1/') && process.env.FUNCTIONS_PORT) {
+    const f = http.request({ host: '127.0.0.1', port: +process.env.FUNCTIONS_PORT, path: '/', method: req.method, headers: req.headers }, (r) => { res.writeHead(r.statusCode, r.headers); r.pipe(res); });
+    f.on('error', (e) => { res.writeHead(502, cors); res.end(JSON.stringify({ chyba: String(e) })); });
+    return req.pipe(f);
+  }
   if (!req.url.startsWith('/rest/v1')) { res.writeHead(404, cors); return res.end('{}'); }
   const opts = { host: '127.0.0.1', port: +(process.env.PGRST_PORT || 3001), path: req.url.slice('/rest/v1'.length) || '/', method: req.method, headers: Object.assign({}, req.headers, { host: '127.0.0.1:3001' }) };
   const p = http.request(opts, (r) => { res.writeHead(r.statusCode, r.headers); r.pipe(res); });

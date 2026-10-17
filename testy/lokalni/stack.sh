@@ -39,7 +39,7 @@ server-port = $PR
 CONF
 pgrep -f "postgrest $STAV/pgrst.conf" >/dev/null || (setsid nohup "$PGRST" "$STAV/pgrst.conf" > "$STAV/pgrst.log" 2>&1 </dev/null &)
 # 4) proxy (/rest/v1 → PostgREST, /auth/v1 emulace)
-pgrep -f "sbproxy.js $DB" >/dev/null || (TEST_DB=$DB PGRST_PORT=$PR PROXY_PORT=$PX setsid nohup node sbproxy.js "$DB" > "$STAV/proxy.log" 2>&1 </dev/null &)
+pgrep -f "sbproxy.js $DB" >/dev/null || (TEST_DB=$DB PGRST_PORT=$PR PROXY_PORT=$PX FUNCTIONS_PORT=${FUNCTIONS_PORT:-8000} setsid nohup node sbproxy.js "$DB" > "$STAV/proxy.log" 2>&1 </dev/null &)
 # 5) statický web
 pgrep -f "http.server $WEB" >/dev/null || (cd ../.. && setsid nohup python3 -m http.server "$WEB" > "$STAV/web.log" 2>&1 </dev/null &)
 sleep 2

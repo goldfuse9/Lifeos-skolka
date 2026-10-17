@@ -638,6 +638,16 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               <span style="display: flex; gap: 8px; font-size: 13px"><span style="color: #5A5C60; flex-grow: 1">{{x.k}}</span><span style="font-weight: 700; text-align: right">{{x.v}}</span></span>
             </sc-for>
           </section>
+          <sc-if value="{{pay.bankaShow}}" hint-placeholder-val="{{false}}">
+            <section aria-label="Platby z banky" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Platby z banky</h2><sc-if value="{{pay.canSettings}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{pay.bankaEdit}}" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">{{pay.bankaEditLabel}}</button></sc-if></div>
+              <sc-for list="{{pay.bankaLines}}" as="x" hint-placeholder-count="2">
+                <span style="display: flex; gap: 8px; font-size: 13px"><span style="color: #5A5C60; flex-grow: 1">{{x.k}}</span><span style="{{x.style}}">{{x.v}}</span></span>
+              </sc-for>
+              <sc-if value="{{pay.bankaOn}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{pay.bankaSync}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Načíst platby z banky teď</button>
+              <span style="font-size: 12px; color: #5A5C60; line-height: 17px">Jinak se platby stahují a párují samy každých 15 minut.</span></sc-if>
+            </section>
+          </sc-if>
         </aside>
       </div>
     </sc-if>
@@ -1856,6 +1866,7 @@ class Component extends DCLogic {
     this.nespar = (F.nespar || []).map(function (n) { return { platbaId: n.platba_id, duvod: n.duvod, vyreseno: !!n.vyreseno }; });
     this.upominky = (F.upominky || []).map(function (u) { return { kidId: u.dite_id, obdobi: u.obdobi, kanal: u.kanal, kdy: self.iso(new Date(u.odeslano)) }; });
     this.srvSaldo = {}; (F.konta || []).forEach(function (k) { self.srvSaldo[k.dite_id] = h(k.saldo); });
+    this.banka = F.banka || null;
   }
   openFinSet() {
     var F = this.fin, kc = function (h) { return h ? String(h / 100).replace('.', ',') : ''; };
@@ -1892,6 +1903,16 @@ class Component extends DCLogic {
       self.showToast('Upomínka odeslána do aplikace LifeOS: ' + sApp.length + (bez ? ' · ' + bez + ' bez aplikace — ozvěte se jim jinak' : ''));
     }).catch(function (e) { self._finBezi = false; self.forceUpdate(); self.showToast('Upomínku se nepodařilo odeslat: ' + SV.chyba(e)); });
   }
+  /* Platby z banky hned (jinak je server stahuje sám každých 15 minut). */
+  finZBanky() {
+    var self = this;
+    this.finSrv(function () { return window.SkolkaServer.nactiZBanky(); }, function (r) {
+      var v = (r && r.vysledek) || {}, sp = (v.presne || 0) + (v.preplatek || 0) + (v.nedoplatek || 0);
+      self.log('Platby z banky: ' + sp + ' spárováno, ' + (v.nesparovano || 0) + ' nespárováno');
+      self.showToast(sp || v.nesparovano ? 'Z banky: ' + sp + ' spárováno' + (v.nesparovano ? ', ' + v.nesparovano + ' k ručnímu přiřazení' : '') : 'Žádné nové platby');
+    });
+  }
+  openBankaSet() { this.setState({ dlg: 'bankaSet', df: { token: '', aktivni: this.banka && this.banka.aktivni === false ? 'ne' : 'ano' } }); }
   /* Akce plateb na serveru; po každé se data plateb načtou znovu. */
   finSrv(akce, hotovo) {
     var self = this;
@@ -3945,6 +3966,19 @@ class Component extends DCLogic {
       }),
       noUnmatched: !this.nespar.some(function (n) { return !n.vyreseno; }),
       canSettings: role === 'reditelka', goSettings: self.srv ? function () { self.openFinSet(); } : go('nastaveni'),
+      bankaShow: !!self.srv, bankaOn: !!(self.banka && self.banka.aktivni), bankaOff: !(self.banka && self.banka.aktivni),
+      bankaEdit: function () { self.openBankaSet(); }, bankaEditLabel: self.banka ? 'Upravit' : 'Napojit',
+      bankaSync: function () { self.finZBanky(); },
+      bankaLines: (function () {
+        var B = self.banka;
+        if (!B) return [{ k: 'Stav', v: 'nenapojeno — výpis nahrajte ručně' }];
+        var cas = B.posledni_beh ? new Date(B.posledni_beh) : null, V = B.posledni_vysledek || {};
+        var out = [{ k: 'Banka', v: 'Fio · token …' + (B.token_konec || '') + (B.aktivni ? '' : ' · vypnuto') },
+          { k: 'Naposledy', v: cas ? self.cz(cas) + ' ' + String(cas.getHours()).padStart(2, '0') + ':' + String(cas.getMinutes()).padStart(2, '0') : 'zatím ne' }];
+        if (B.posledni_chyba) out.push({ k: 'Chyba', v: B.posledni_chyba, bad: true });
+        else if (cas) out.push({ k: 'Výsledek', v: ((V.presne || 0) + (V.preplatek || 0) + (V.nedoplatek || 0)) + ' spárováno · ' + (V.nesparovano || 0) + ' ručně' });
+        return out.map(function (x) { return { k: x.k, v: x.v, style: 'font-weight: 700; text-align: right' + (x.bad ? '; color: #9A3412' : '') }; });
+      })(),
       setup: [
         { k: 'Účet školky', v: F.ucet || 'chybí' },
         { k: 'Školkovné', v: self.fmtH(F.skolkovne) + ' / měsíc' },
@@ -4747,6 +4781,26 @@ class Component extends DCLogic {
           K.ended = { date: df.date, reason: reason };
           self.log('Ukončena docházka: ' + K.first + ' ' + K.last + ' — ' + reason.toLowerCase());
           self.setState({ dlg: null, df: {}, kidId: null, editAll: false }); self.showToast(K.first + ' ' + K.last + ': docházka ukončena');
+        }
+      });
+    }
+    if (dk === 'bankaSet') {
+      var tok = String(df.token || '').replace(/\s/g, ''), maB = !!this.banka;
+      var tokOk = /^[A-Za-z0-9]{20,200}$/.test(tok), okB = tokOk || (maB && !tok);
+      Object.assign(dlg, {
+        title: maB ? 'Napojení banky' : 'Napojit banku',
+        inputs: [inp('Token pro API z Fio internetového bankovnictví', 'token', maB ? 'Nechte prázdné, token zůstane stejný' : 'Vložte celý token (64 znaků)', 'password',
+          tok ? (tokOk ? 'Token vypadá správně' : 'Token nevypadá správně — zkopírujte ho celý') : 'Fio: Nastavení → API → Přidat token, jen pro čtení, platnost nejvýš 180 dní.', !!tok && !tokOk)],
+        choices: [group('Stahovat platby samy', 'aktivni', [['ano', 'Zapnuto'], ['ne', 'Vypnuto']])],
+        canSave: okB,
+        summary: okB ? 'Token uvidí jen server školky — z aplikace ho už nikdo nepřečte. Platby se stáhnou do 15 minut.' : 'Vložte token z internetového bankovnictví.',
+        saveLabel: okB ? 'Uložit' : 'Vložte token',
+        save: function () {
+          if (!okB) return;
+          self.finSrv(function () { return window.SkolkaServer.ulozNapojeniBanky(tok, df.aktivni !== 'ne'); }, function () {
+            self.log('Napojení banky ' + (tok ? 'uloženo' : 'upraveno') + (df.aktivni === 'ne' ? ' (vypnuto)' : ''));
+            self.setState({ dlg: null, df: {} }); self.showToast('Napojení banky uloženo');
+          });
         }
       });
     }
