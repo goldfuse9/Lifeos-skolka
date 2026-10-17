@@ -2372,20 +2372,33 @@ begin
       insert into predpis_polozky values (pid, por, 'skolkovne', 'Školkovné ' || mesic, 1, nf.skolkovne, nf.skolkovne);
       celkem := celkem + nf.skolkovne;
     end if;
-    -- stravné: dny s přihlášeným jídlem bez včas omluvených, po věkových skupinách
+    -- stravné po věkových skupinách:
+    --  a) dny v docházce s přihlášeným jídlem (bez včas omluvených),
+    --  b) dny, kdy se podle jídelníčku vařil oběd a dítě v docházce vůbec není
+    --     (nepřišlo a nikdo ho neodhlásil) — kuchyně s ním počítala, obědy_den ho
+    --     započítala, tak se účtuje jako neodhlášený oběd. Dny bez jídelníčku
+    --     (prázdniny, zavřeno, školka bez jídelny v aplikaci) se neúčtují.
     for x in
-      select k.kat, count(*)::int as dny, sz.cena from (
-        select case when extract(year from age(make_date(extract(year from y.den)::int + case when extract(month from y.den) >= 9 then 1 else 0 end, 8, 31), d.datum_narozeni)) >= 7 then '7+' else '3-6' end as kat
+      select k.kat, k.neodhlaseno, count(*)::int as dny, sz.cena from (
+        select y.den, false as neodhlaseno
           from dochazka y
          where y.dite_id = d.id and y.den between od and dokdy and y.strava_prihlasena
            and not (y.omluva_zadana is not null
                     and (y.omluva_zadana at time zone 'Europe/Prague') <= ((y.den - nf.omluva_dni_predem) + nf.omluva_do))
-      ) k left join sazby_stravneho sz on sz.skola_id = s and sz.kategorie = k.kat
-      group by k.kat, sz.cena order by k.kat
+        union all
+        select j.den, true
+          from jidelnicek j
+         where j.skola_id = s and j.chod = 'obed' and j.zverejneno and j.den between od and dokdy
+           and d.trida_id is not null and j.den >= d.zahajeni and (d.ukonceno is null or j.den <= d.ukonceno)
+           and not exists (select 1 from dochazka y where y.dite_id = d.id and y.den = j.den)
+      ) z
+      cross join lateral (select case when extract(year from age(make_date(extract(year from z.den)::int + case when extract(month from z.den) >= 9 then 1 else 0 end, 8, 31), d.datum_narozeni)) >= 7 then '7+' else '3-6' end as kat, z.neodhlaseno) k
+      left join sazby_stravneho sz on sz.skola_id = s and sz.kategorie = k.kat
+      group by k.kat, k.neodhlaseno, sz.cena order by k.kat, k.neodhlaseno
     loop
       if x.cena is null then raise exception 'Školka nemá cenu stravného pro kategorii % let.', x.kat; end if;
       por := por + 1;
-      insert into predpis_polozky values (pid, por, 'stravne', 'Stravné ' || x.kat || ' let', x.dny, x.cena, round(x.cena * x.dny, 2));
+      insert into predpis_polozky values (pid, por, 'stravne', 'Stravné ' || x.kat || ' let' || case when x.neodhlaseno then ' — neodhlášené obědy (dítě chybělo bez omluvy)' else '' end, x.dny, x.cena, round(x.cena * x.dny, 2));
       celkem := celkem + round(x.cena * x.dny, 2);
     end loop;
     update predpisy set castka = celkem, stav = case when celkem = 0 then 'zaplaceno' else 'otevreno' end where id = pid;
@@ -2920,3 +2933,5 @@ $$;
 revoke execute on function uloz_napojeni_banky(text, boolean), stav_napojeni_banky(), muze_stahnout_z_banky(), moje_platby(), zpracuj_platby(jsonb) from anon, public;
 grant execute on function uloz_napojeni_banky(text, boolean), stav_napojeni_banky(), muze_stahnout_z_banky(), moje_platby(), zpracuj_platby(jsonb) to authenticated;
 grant execute on function cz_iban(text), spayd_text(text, int), ucet_klic(text) to authenticated;
+
+-- Doplněk 17. 10. 2026 (b): STRAVNÉ ZA NEODHLÁŠENÉ OBĚDY (viz migrace-2026-10-17b-stravne.sql) — vystav_predpisy výše už je nová.
