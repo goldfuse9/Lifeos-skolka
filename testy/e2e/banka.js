@@ -49,6 +49,24 @@ module.exports = async () => {
   kontrola('rodič Emy nemá co platit', sqlJako(ROD_EMA, '', `select coalesce(qr, '-') || '|' || k_uhrade from moje_platby();`) === '-|0');
   kontrola('rodič nevidí stav banky', sqlJako(ROD_OLI, '', `select coalesce(stav_napojeni_banky()::text, '-');`) === '-');
 
+  // kdo smí funkci banka-sync spustit (přímo, bez ředitelny)
+  const crypto = require('crypto'), b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const podpis = (pl) => { const h = b64({ alg: 'HS256', typ: 'JWT' }), q = b64(Object.assign({ exp: Math.floor(Date.now() / 1000) + 3600 }, pl)); return h + '.' + q + '.' + crypto.createHmac('sha256', 'tajny-testovaci-klic-pro-postgrest-0123456789').update(h + '.' + q).digest('base64url'); };
+  const zavolej = (hl) => new Promise((ok) => {
+    const r = http.request({ host: '127.0.0.1', port: +(process.env.PROXY_PORT || 3002), method: 'POST', path: '/functions/v1/banka-sync', headers: Object.assign({ 'Content-Type': 'application/json' }, hl) }, (res) => { let t = ''; res.on('data', (c) => (t += c)); res.on('end', () => ok({ s: res.statusCode, t })); });
+    r.on('error', (e) => ok({ s: 0, t: String(e) })); r.end('{}');
+  });
+  const jako = (uid, role) => ({ Authorization: 'Bearer ' + podpis(uid ? { sub: uid, role: 'authenticated' } : { role: role || 'anon' }) });
+  kontrola('funkce bez přihlášení: 401', (await zavolej({})).s === 401);
+  kontrola('funkce se špatným heslem cronu: 401', (await zavolej({ 'x-cron-secret': 'hadam' })).s === 401);
+  kontrola('funkce s veřejným klíčem (anon): 403', (await zavolej(jako(null, 'anon'))).s === 403);
+  kontrola('funkce jako rodič: 403', (await zavolej(jako(ROD_EMA))).s === 403);
+  kontrola('funkce jako učitelka: 403', (await zavolej(jako('aaaaaaaa-0000-4000-8000-000000000002'))).s === 403);
+  kontrola('funkce s podvrženým podpisem: 403', (await zavolej({ Authorization: 'Bearer ' + podpis({ sub: RA, role: 'authenticated' }).slice(0, -4) + 'AAAA' })).s === 403);
+  const cron = await zavolej({ 'x-cron-secret': 'lokalni-cron' });
+  kontrola('cron se správným heslem projde všechny napojené školky', cron.s === 200 && /"skolek":1/.test(cron.t), cron.t.slice(0, 120));
+  kontrola('odpověď funkce neobsahuje token', !cron.t.includes('DOBRYtoken'));
+
   // vypnutí
   await panel.locator('button:has-text("Upravit")').click(); await p.waitForTimeout(300);
   await d.locator('button:has-text("Vypnuto")').click();

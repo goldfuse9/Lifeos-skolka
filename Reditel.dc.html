@@ -1866,6 +1866,7 @@ class Component extends DCLogic {
     this.nespar = (F.nespar || []).map(function (n) { return { platbaId: n.platba_id, duvod: n.duvod, vyreseno: !!n.vyreseno }; });
     this.upominky = (F.upominky || []).map(function (u) { return { kidId: u.dite_id, obdobi: u.obdobi, kanal: u.kanal, kdy: self.iso(new Date(u.odeslano)) }; });
     this.srvSaldo = {}; (F.konta || []).forEach(function (k) { self.srvSaldo[k.dite_id] = h(k.saldo); });
+    this.bankaChybi = F.banka === false;   // migrace 2026-10-17-banka ještě neproběhla
     this.banka = F.banka || null;
   }
   openFinSet() {
@@ -3966,7 +3967,7 @@ class Component extends DCLogic {
       }),
       noUnmatched: !this.nespar.some(function (n) { return !n.vyreseno; }),
       canSettings: role === 'reditelka', goSettings: self.srv ? function () { self.openFinSet(); } : go('nastaveni'),
-      bankaShow: !!self.srv, bankaOn: !!(self.banka && self.banka.aktivni), bankaOff: !(self.banka && self.banka.aktivni),
+      bankaShow: !!self.srv && !self.bankaChybi, bankaOn: !!(self.banka && self.banka.aktivni), bankaOff: !(self.banka && self.banka.aktivni),
       bankaEdit: function () { self.openBankaSet(); }, bankaEditLabel: self.banka ? 'Upravit' : 'Napojit',
       bankaSync: function () { self.finZBanky(); },
       bankaLines: (function () {

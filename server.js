@@ -498,12 +498,12 @@
         fin ? vse(function () { return klient().from('upominky').select('dite_id, obdobi, kanal, odeslano').order('odeslano').order('id'); }) : prazdno,
         fin ? klient().from('konta').select('dite_id, saldo') : prazdno,
         ved ? klient().rpc('archiv_zmen', { p_limit: 300 }) : prazdno,
-        /* napojení banky — bez migrace 2026-10-17-banka prostě není */
-        fin ? klient().rpc('stav_napojeni_banky').then(function (x) { return x.error ? { data: null, error: null } : x; }) : prazdno
+        /* napojení banky — bez migrace 2026-10-17-banka funkce není a panel se neukáže */
+        fin ? klient().rpc('stav_napojeni_banky').then(function (x) { return x.error ? { data: false, error: null } : x; }) : prazdno
       ]);
       var D = r.map(ok);
       return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12], dokumenty: D[13],
-        archiv: D[22], fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21], banka: Array.isArray(D[23]) ? null : D[23] } : null };
+        archiv: D[22], fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21], banka: D[23] === false ? false : Array.isArray(D[23]) ? null : D[23] } : null };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {

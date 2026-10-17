@@ -2729,7 +2729,7 @@ create or replace function uloz_napojeni_banky(p_token text, p_aktivni boolean d
 language plpgsql security definer set search_path = public as $$
 declare s uuid := moje_skola(); t text := nullif(btrim(coalesce(p_token, '')), '');
 begin
-  if moje_role() not in ('reditelka', 'zastupce') then raise exception 'Napojení banky nastavuje vedení školy.'; end if;
+  if moje_role() is null or moje_role() not in ('reditelka', 'zastupce') or s is null then raise exception 'Napojení banky nastavuje vedení školy.'; end if;
   if t is not null and (length(t) < 20 or length(t) > 200 or t !~ '^[A-Za-z0-9]+$') then raise exception 'Token z banky nevypadá správně — zkopírujte ho celý.'; end if;
   if t is null then   -- jen zapnout / vypnout, token zůstává
     update banka_napojeni set aktivni = coalesce(p_aktivni, true), upraveno = now(), upravil = auth.uid() where skola_id = s;
@@ -2790,10 +2790,11 @@ begin
     vsn := ltrim(regexp_replace(coalesce(x.vs, ''), '\D', '', 'g'), '0');
     did := null;
     if vsn <> '' then select id into did from deti where skola_id = p_skola and ltrim(coalesce(variabilni_symbol, ''), '0') = vsn limit 1; end if;
-    -- … nebo podle VS napsaného do zprávy (rodič ho dal do poznámky), jen když sedí na jediné dítě
+    -- … nebo podle VS napsaného do zprávy (rodič ho dal do poznámky), jen když sedí na jediné dítě;
+    -- krátké VS (1–3 číslice) se ve zprávě nehledají — „1“ nebo „10“ je tam skoro vždycky
     if did is null and coalesce(x.zprava, '') ~ '\d' then
       select count(*), min(id::text)::uuid into n, did from deti
-       where skola_id = p_skola and coalesce(variabilni_symbol, '') <> ''
+       where skola_id = p_skola and length(ltrim(coalesce(variabilni_symbol, ''), '0')) >= 4
          and x.zprava ~ ('(^|\D)0*' || ltrim(variabilni_symbol, '0') || '(\D|$)');
       if n <> 1 then did := null; end if;
     end if;
