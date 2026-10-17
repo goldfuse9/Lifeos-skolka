@@ -11,6 +11,8 @@ const bezi = (port) => new Promise((ok) => { const r = http.request({ host: '127
 module.exports = async () => {
   if (!(await bezi(+(process.env.FUNCTIONS_PORT || 8000)))) { console.log('SKIP  banka: Edge Function neběží (testy/lokalni/banka.sh)'); return; }
   const pM = sql(`select to_char(date_trunc('month', current_date) - interval '1 month', 'YYYY-MM')`);
+  // jen školkovné (900 Kč): celý měsíc je v kalendáři zavřený, stravné se nepočítá
+  sql(`insert into kalendar_skoly (skola_id, den, otevreno) select '00000000-0000-4000-8000-000000000001', g::date, false from generate_series(to_date('${pM}-01', 'YYYY-MM-DD'), to_date('${pM}-01', 'YYYY-MM-DD') + interval '1 month' - interval '1 day', interval '1 day') g on conflict do nothing`);
   sqlJako(RA, 'reditelka@test.cz', `select vystav_predpisy('${pM}');`);
 
   const p = await stranka({ width: 1366, height: 900 });

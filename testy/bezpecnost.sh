@@ -327,14 +327,16 @@ t "přímá změna nastavení neprojde" ERR $RA reditelka@test.cz "update financ
 t "ředitelka vystaví předpisy za září (3 děti)" 3 $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09');"
 t "podruhé nic nezdvojí" 0 $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
 select vystav_predpisy('2026-09');"
-t "stravné: jen obědy bez včasné omluvy (2 × 48 Kč)" "2|96.00|996.00" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
+t "stravné předem: provozní dny září (21 × 48 Kč, bez svátku 28. 9.)" "21|1008.00|1908.00" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
 select q.mnozstvi || '|' || q.castka || '|' || p.castka from predpisy p join predpis_polozky q on q.predpis_id = p.id and q.druh = 'stravne' where p.dite_id = '$EMA';"
-t "podvojnost: pohyby dítěte = předpis" "996.00|996.00" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
+t "podvojnost: pohyby dítěte = předpis" "1908.00|1908.00" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
 select (select sum(castka) from ucetni_pohyby where md = 'dite:$EMA') || '|' || (select castka from predpisy where dite_id = '$EMA');"
 t "hospodářka předpisy vystaví" 3 $HA hospodarka@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
 $FSET select set_config('request.jwt.claim.sub','$HA',true) \\g /dev/null
 select vystav_predpisy('2026-09');"
-t "běžící měsíc vystavit nejde" ERR $RA reditelka@test.cz "$FSET select vystav_predpisy(to_char(current_date, 'YYYY-MM'));"
+t "běžící měsíc jde vystavit předem" 1 $RA reditelka@test.cz "$FSET select (vystav_predpisy(to_char(current_date, 'YYYY-MM')) > 0)::int;"
+t "příští měsíc jde vystavit předem" 1 $RA reditelka@test.cz "$FSET select (vystav_predpisy(to_char(current_date + interval '1 month', 'YYYY-MM')) > 0)::int;"
+t "za dva měsíce dopředu nejde" ERR $RA reditelka@test.cz "$FSET select vystav_predpisy(to_char(current_date + interval '2 month', 'YYYY-MM'));"
 t "učitelka předpisy nevystaví" ERR $UA ucitelka@test.cz "select vystav_predpisy('2026-09');"
 t "rodič předpisy nevystaví" ERR $RODA "" "select vystav_predpisy('2026-09');"
 t "přímý zápis do účetní knihy neprojde" ERR $HA hospodarka@test.cz "insert into ucetni_pohyby (skola_id, datum, md, dal, castka, popis) values ('$A', current_date, 'banka', 'dite:$EMA', 1000, 'podvrh');"
@@ -343,13 +345,13 @@ update predpisy set stav = 'zaplaceno';"
 t "přímá platba neprojde" ERR $HA hospodarka@test.cz "insert into platby (skola_id, datum, castka) values ('$A', current_date, 100);"
 PL() { echo "select zpracuj_platby('[{\"datum\":\"2026-10-05\",\"castka\":$1,\"vs\":\"$2\",\"protiucet\":\"123/0800\",\"nazev\":\"RODIC\",\"doklad\":\"$3\"}]')"; }
 t "platba přesně: konto 0, předpis zaplacen" "1|0.00|zaplaceno" $RA reditelka@test.cz "${DOCH//\$ME/$RA} $FSET select vystav_predpisy('2026-09') \\g /dev/null
-select set_config('t.r', ($(PL 996 260001 D1))->>'presne', true) \\g /dev/null
+select set_config('t.r', ($(PL 1908 260001 D1))->>'presne', true) \\g /dev/null
 select current_setting('t.r') || '|' || (select saldo from konta where dite_id='$EMA') || '|' || (select stav from predpisy where dite_id='$EMA');"
 t "stejný doklad podruhé se přeskočí" 1 $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
 $(PL 900 260001 D1) \\g /dev/null
 select ($(PL 900 260001 D1))->>'duplicita';"
 t "přeplatek zůstane na kontě" "1|100.00" $RA reditelka@test.cz "$FSET select vystav_predpisy('2026-09') \\g /dev/null
-select set_config('t.r', ($(PL 1000 260003 D2))->>'preplatek', true) \\g /dev/null
+select set_config('t.r', (zpracuj_platby(jsonb_build_array(jsonb_build_object('datum', '2026-10-05', 'castka', (select castka + 100 from predpisy where dite_id = '$TOB'), 'vs', '260003', 'protiucet', '123/0800', 'nazev', 'RODIC', 'doklad', 'D2'))))->>'preplatek', true) \\g /dev/null
 select current_setting('t.r') || '|' || (select saldo from konta where dite_id='$TOB');"
 t "neznámý VS → nespárovaná, ruční spárování" "1|nedoplatek|true" $HA hospodarka@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
 $FSET select vystav_predpisy('2026-09') \\g /dev/null
@@ -373,6 +375,7 @@ select set_config('request.jwt.claim.sub','$RODA',true) \\g /dev/null
 select count(*) from predpisy;"
 t "upomínka jen po splatnosti" 1 $HA hospodarka@test.cz "reset role; set local role authenticated; select set_config('request.jwt.claim.sub','$RA',true) \\g /dev/null
 $FSET select vystav_predpisy('2026-08') \\g /dev/null
+reset role; update predpisy set splatnost = current_date - 1; set local role authenticated;
 select set_config('request.jwt.claim.sub','$HA',true) \\g /dev/null
 select zapis_upominku('$EMA');"
 echo "== nastavení školky: údaje mění vedení, stav a tarif jen správce"
@@ -493,16 +496,32 @@ t "moje_platby: rodič Emy vidí jen Emu" "1|$EMA" $RODA "" "select count(*) || 
 t "moje_platby: ředitelka nic (je pro rodiče)" 0 $RA reditelka@test.cz "select count(*) from moje_platby();"
 t "moje_platby: rodič B nevidí děti školky A" 0 $RODB "" "select count(*) from moje_platby() where dite_id in ('$EMA', '$OLI');"
 t "VS ve zprávě: krátké VS (1–3 číslice) se nepáruje" "1" $HA hospodarka@test.cz "reset role; update deti set variabilni_symbol = '7' where id = '$EMA'; set local role authenticated; select (zpracuj_platby('[{\"datum\":\"2026-10-01\",\"castka\":100,\"vs\":\"\",\"zprava\":\"skolkovne za 7 mesicu\",\"doklad\":\"t-kratky\"}]')->>'nesparovano');"
-echo "== stravné: neodhlášený oběd (dítě chybělo bez omluvy a v docházce není) se účtuje"
-MP="(date_trunc('month', current_date) - interval '1 month')::date"
-SSEED="reset role; delete from dochazka where dite_id = '$EMA' and den >= $MP and den < date_trunc('month', current_date); delete from jidelnicek where skola_id = '$A' and den >= $MP and den < date_trunc('month', current_date);
-insert into jidelnicek (skola_id, den, chod, zverejneno) select '$A', $MP + i, 'obed', true from generate_series(0, 2) i;
-insert into dochazka (dite_id, den, stav, prichod) values ('$EMA', $MP, 'pritomen', '08:00');
-insert into dochazka (dite_id, den, stav, strava_prihlasena, omluva_zadana) values ('$EMA', $MP + 1, 'omluven', false, ($MP - 2)::timestamptz);
+echo "== provozní kalendář a platby předem"
+t "státní svátky 2027: Velikonoce 26. 3. a 29. 3." "2027-03-26|2027-03-29" $RA reditelka@test.cz "select string_agg(den::text, '|' order by den) from statni_svatky(2027) where nazev like 'Vel%';"
+t "28. 10. je zavřeno, 27. 10. otevřeno" "f|t" $RA reditelka@test.cz "select je_provozni_den('$A', '2026-10-28')::text::char || '|' || je_provozni_den('$A', '2026-10-27')::text::char;"
+t "ředitelka otevře svátek" 1 $RA reditelka@test.cz "select nastav_kalendar('2026-10-28', '2026-10-28', 'otevreno', 'Provoz zajištěn');"
+t "zástupkyně zavře prázdniny (jen 5 všedních dní, víkend je zavřený tak jako tak)" 5 $ZA zastupce@test.cz "select nastav_kalendar('2026-12-28', '2027-01-03', 'zavreno', 'Vánoce');"
+t "hospodářka kalendář nemění" ERR $HA hospodarka@test.cz "select nastav_kalendar('2026-10-28', '2026-10-28', 'otevreno');"
+t "učitelka kalendář nemění" ERR $UA ucitelka@test.cz "select nastav_kalendar('2026-10-28', '2026-10-28', 'otevreno');"
+t "rodič kalendář nemění" ERR $RODA "" "select nastav_kalendar('2026-10-28', '2026-10-28', 'otevreno');"
+t "přímý zápis do kalendáře neprojde" ERR $RA reditelka@test.cz "insert into kalendar_skoly (skola_id, den, otevreno) values ('$A', '2026-10-28', true);"
+t "ředitelka B kalendář školky A nevidí" 0 $RB reditelka.b@test.cz "reset role; insert into kalendar_skoly (skola_id, den, otevreno) values ('$A', '2026-10-28', true); set local role authenticated; select count(*) from kalendar_skoly;"
+KSEED="reset role; insert into kalendar_skoly (skola_id, den, otevreno, poznamka) values ('$A', '2026-10-28', true, 'otevřeno'), ('$A', '2026-10-26', false, 'volno'); set local role authenticated;"
+t "otevřený svátek se počítá, zavřený den ne (říjen 21 → 21)" "21" $HA hospodarka@test.cz "$KSEED select vystav_predpisy('2026-10') \\g /dev/null
+select q.mnozstvi from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and p.obdobi = '2026-10' and q.druh = 'stravne';"
+VSEED="reset role; delete from dochazka where dite_id = '$EMA' and den between '2026-10-01' and '2026-10-31';
+insert into dochazka (dite_id, den, stav, strava_prihlasena) values ('$EMA', '2026-10-20', 'omluven', false), ('$EMA', '2026-10-21', 'omluven', false), ('$EMA', '2026-10-22', 'omluven', true), ('$EMA', '2026-10-28', 'omluven', false);
 set local role authenticated;"
-t "předpis: 1 snězený + 1 neodhlášený oběd, omluvený a den bez jídelníčku ne" "1|1" $HA hospodarka@test.cz "$SSEED select vystav_predpisy(to_char($MP, 'YYYY-MM')) \\g /dev/null
-select coalesce(sum(q.mnozstvi) filter (where q.druh = 'stravne' and q.popis not like '%neodhlášené%'), 0)::int || '|' || coalesce(sum(q.mnozstvi) filter (where q.popis like '%neodhlášené%'), 0)::int from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and p.obdobi = to_char($MP, 'YYYY-MM');"
-t "nezveřejněný jídelníček se neúčtuje" "1|0" $HA hospodarka@test.cz "$SSEED reset role; update jidelnicek set zverejneno = false where skola_id = '$A' and den >= $MP and den < date_trunc('month', current_date); set local role authenticated; select vystav_predpisy(to_char($MP, 'YYYY-MM')) \\g /dev/null
-select coalesce(sum(q.mnozstvi) filter (where q.druh = 'stravne' and q.popis not like '%neodhlášené%'), 0)::int || '|' || coalesce(sum(q.mnozstvi) filter (where q.popis like '%neodhlášené%'), 0)::int from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and p.obdobi = to_char($MP, 'YYYY-MM');"
+t "odpočet v dalším předpisu: jen včas odhlášené provozní dny (2 × 48)" "2|-96.00|1764.00" $HA hospodarka@test.cz "$VSEED select vystav_predpisy('2026-10') \\g /dev/null
+select vystav_predpisy('2026-11') \\g /dev/null
+select q.mnozstvi || '|' || q.castka || '|' || p.castka from predpisy p join predpis_polozky q on q.predpis_id = p.id and q.druh = 'vratka' where p.dite_id = '$EMA' and p.obdobi = '2026-11';"
+t "konto po dvou předpisech = součet předpisů (odpočet se nezapočte dvakrát)" "-3672.00|otevreno" $HA hospodarka@test.cz "$VSEED select vystav_predpisy('2026-10') \\g /dev/null
+select vystav_predpisy('2026-11') \\g /dev/null
+select (select saldo from konta where dite_id = '$EMA') || '|' || (select stav from predpisy where dite_id = '$EMA' and obdobi = '2026-11');"
+t "bez předchozího placení předem se nic neodečítá" 0 $HA hospodarka@test.cz "$VSEED select vystav_predpisy('2026-11') \\g /dev/null
+select count(*) from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and q.druh = 'vratka';"
+t "omluvenka na zavřený den (svátek) se nezapíše" "2027-10-27,2027-10-29" $RODA "" "select string_agg(den::text, ',' order by den) from omluv_dite('$EMA', '2027-10-27', '2027-10-29', 'nemoc');"
+t "kuchyně: v zavřený den je odhlášeno všechno" "t" $KA kucharka@test.cz "select (sum(deti) = sum(odhlaseno))::text::char from obedy_den('2026-10-28');"
+t "kuchyně: den provozu se svátkem" "false|Vznik Československa" $KA kucharka@test.cz "select (den_provozu('2026-10-28')->>'provozni') || '|' || (den_provozu('2026-10-28')->>'svatek');"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]

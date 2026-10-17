@@ -6,8 +6,10 @@ const RA = 'aaaaaaaa-0000-4000-8000-000000000001';
 const gpcRadek = (castkaHal, vs, nazev, doklad, ddmmyy) => '075' + '0000002000145399' + '0000001234567890' + String(doklad).padStart(13, '0')
   + String(castkaHal).padStart(12, '0') + '2' + String(vs).padStart(10, '0') + '0800000000' + '0000000000' + '000000' + (nazev + ' '.repeat(20)).slice(0, 20) + '0' + '0203' + ddmmyy;
 module.exports = async () => {
-  const pM = sql(`select to_char(date_trunc('month', current_date) - interval '1 month', 'YYYY-MM')`);
-  sql(`insert into dochazka (dite_id, den, stav, strava_prihlasena) values ('${EMA}', '${pM}-02', 'pritomen', true), ('${EMA}', '${pM}-03', 'pritomen', true) on conflict do nothing`);
+  // platí se předem: běžný měsíc, školkovné + stravné za provozní dny (svátky ne)
+  const pM = sql(`select to_char(current_date, 'YYYY-MM')`);
+  const dny = +sql(`select count(*) from generate_series(date_trunc('month', current_date), date_trunc('month', current_date) + interval '1 month' - interval '1 day', interval '1 day') g where je_provozni_den('00000000-0000-4000-8000-000000000001', g::date)`);
+  const emaKc = 900 + 48 * dny;
   const p = await stranka({ width: 1366, height: 900 });
   await prihlas(p, 'Ředitelna', 'reditelka@test.cz'); await p.waitForTimeout(800);
   await p.click('nav button:has-text("Platby")'); await p.waitForTimeout(600);
@@ -24,17 +26,17 @@ module.exports = async () => {
   // předpisy
   await p.click('button:has-text("Vystavit předpisy za")'); await p.waitForTimeout(2000);
   kontrola('předpisy vystaveny pro 3 děti', sql(`select count(*) from predpisy where obdobi = '${pM}'`) === '3');
-  kontrola('Ema: školkovné + 2 obědy = 996 Kč', sql(`select castka from predpisy where dite_id = '${EMA}' and obdobi = '${pM}'`) === '996.00');
+  kontrola(`Ema: školkovné + ${dny} obědů předem = ${emaKc} Kč`, sql(`select castka from predpisy where dite_id = '${EMA}' and obdobi = '${pM}'`) === emaKc + '.00');
   kontrola('předpisy vidět v tabulce', (await p.locator('body').innerText()).includes('Ema Testová'));
   // výpis z banky
   const dd = sql(`select to_char(current_date, 'DDMMYY')`);
-  const vypis = ['0740000002000145399MS SLUNICKO TEST', gpcRadek(99600, '260001', 'TESTOVA JANA', 101, dd), gpcRadek(50000, '777', 'NEZNAMY PLATCE', 102, dd),
+  const vypis = ['0740000002000145399MS SLUNICKO TEST', gpcRadek(emaKc * 100, '260001', 'TESTOVA JANA', 101, dd), gpcRadek(50000, '777', 'NEZNAMY PLATCE', 102, dd),
     '075' + '0000002000145399' + '0000009876543210' + '0000000000103' + '000000150000' + '1' + '0000000000' + '0300000000' + '0000000000' + '000000' + 'NAKUP PAPIRNICTVI   ' + '0' + '0203' + dd].join('\r\n');
   await p.setInputFiles('#vypis-gpc', { name: 'vypis.gpc', mimeType: 'text/plain', buffer: Buffer.from(vypis) }); await p.waitForTimeout(2500);
   const dl = await p.locator('[role=dialog]').innerText().catch(() => '');
   kontrola('import: 1 přesně, 1 nespárovaná, 1 odchozí', /Zaplaceno přesně\s*1/.test(dl) && /Nespárováno[^\n]*\s*1/.test(dl) && /Odchozí[^\n]*\s*1/.test(dl), dl.replace(/\n/g, ' | ').slice(0, 200));
   kontrola('Ema: předpis zaplacen, konto 0', sql(`select stav from predpisy where dite_id = '${EMA}' and obdobi = '${pM}'`) === 'zaplaceno' && sql(`select saldo from konta where dite_id = '${EMA}'`) === '0.00');
-  kontrola('kniha: platba MD banka / Dal dítě', sql(`select count(*) from ucetni_pohyby where md = 'banka' and dal = 'dite:${EMA}' and castka = 996`) === '1');
+  kontrola('kniha: platba MD banka / Dal dítě', sql(`select count(*) from ucetni_pohyby where md = 'banka' and dal = 'dite:${EMA}' and castka = ${emaKc}`) === '1');
   await p.locator('[role=dialog] button:has-text("Zavřít"), [role=dialog] button[aria-label="Zavřít"]').first().click().catch(() => p.keyboard.press('Escape')); await p.waitForTimeout(300);
   // stejný výpis znovu → nic dvakrát
   await p.setInputFiles('#vypis-gpc', { name: 'vypis.gpc', mimeType: 'text/plain', buffer: Buffer.from(vypis) }); await p.waitForTimeout(2500);
@@ -46,6 +48,7 @@ module.exports = async () => {
   kontrola('ruční spárování: platba u Olivera, vyřešeno', sql(`select count(*) from platby where dite_id = '${OLI}' and castka = 500`) === '1' && sql(`select count(*) from nesparovane_platby where vyreseno`) === '1');
   // upomínka: dluh po splatnosti (předpisy za starší měsíc)
   sqlJako(RA, 'reditelka@test.cz', `select vystav_predpisy(to_char(date_trunc('month', current_date) - interval '2 month', 'YYYY-MM'));`);
+  sql(`update predpisy set splatnost = current_date - 1 where obdobi = to_char(date_trunc('month', current_date) - interval '2 month', 'YYYY-MM')`);
   await p.reload(); await prihlas(p, 'Ředitelna', 'reditelka@test.cz').catch(() => {}); await p.waitForTimeout(800);
   await p.click('nav button:has-text("Platby")'); await p.waitForTimeout(600);
   const radek = p.locator('div:has(> span > span:text-is("Oliver Zkušební"))').first();
