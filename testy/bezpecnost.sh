@@ -493,5 +493,16 @@ t "moje_platby: rodič Emy vidí jen Emu" "1|$EMA" $RODA "" "select count(*) || 
 t "moje_platby: ředitelka nic (je pro rodiče)" 0 $RA reditelka@test.cz "select count(*) from moje_platby();"
 t "moje_platby: rodič B nevidí děti školky A" 0 $RODB "" "select count(*) from moje_platby() where dite_id in ('$EMA', '$OLI');"
 t "VS ve zprávě: krátké VS (1–3 číslice) se nepáruje" "1" $HA hospodarka@test.cz "reset role; update deti set variabilni_symbol = '7' where id = '$EMA'; set local role authenticated; select (zpracuj_platby('[{\"datum\":\"2026-10-01\",\"castka\":100,\"vs\":\"\",\"zprava\":\"skolkovne za 7 mesicu\",\"doklad\":\"t-kratky\"}]')->>'nesparovano');"
+echo "== stravné: neodhlášený oběd (dítě chybělo bez omluvy a v docházce není) se účtuje"
+MP="(date_trunc('month', current_date) - interval '1 month')::date"
+SSEED="reset role; delete from dochazka where dite_id = '$EMA' and den >= $MP and den < date_trunc('month', current_date); delete from jidelnicek where skola_id = '$A' and den >= $MP and den < date_trunc('month', current_date);
+insert into jidelnicek (skola_id, den, chod, zverejneno) select '$A', $MP + i, 'obed', true from generate_series(0, 2) i;
+insert into dochazka (dite_id, den, stav, prichod) values ('$EMA', $MP, 'pritomen', '08:00');
+insert into dochazka (dite_id, den, stav, strava_prihlasena, omluva_zadana) values ('$EMA', $MP + 1, 'omluven', false, ($MP - 2)::timestamptz);
+set local role authenticated;"
+t "předpis: 1 snězený + 1 neodhlášený oběd, omluvený a den bez jídelníčku ne" "1|1" $HA hospodarka@test.cz "$SSEED select vystav_predpisy(to_char($MP, 'YYYY-MM')) \\g /dev/null
+select coalesce(sum(q.mnozstvi) filter (where q.druh = 'stravne' and q.popis not like '%neodhlášené%'), 0)::int || '|' || coalesce(sum(q.mnozstvi) filter (where q.popis like '%neodhlášené%'), 0)::int from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and p.obdobi = to_char($MP, 'YYYY-MM');"
+t "nezveřejněný jídelníček se neúčtuje" "1|0" $HA hospodarka@test.cz "$SSEED reset role; update jidelnicek set zverejneno = false where skola_id = '$A' and den >= $MP and den < date_trunc('month', current_date); set local role authenticated; select vystav_predpisy(to_char($MP, 'YYYY-MM')) \\g /dev/null
+select coalesce(sum(q.mnozstvi) filter (where q.druh = 'stravne' and q.popis not like '%neodhlášené%'), 0)::int || '|' || coalesce(sum(q.mnozstvi) filter (where q.popis like '%neodhlášené%'), 0)::int from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and p.obdobi = to_char($MP, 'YYYY-MM');"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
