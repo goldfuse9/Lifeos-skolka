@@ -84,6 +84,11 @@
       }).catch(function () { overuji = false; });
     }, 0);
   }
+  /* Školní rok (září–srpen), do kterého patří dnešek — pro kalendář svátků. */
+  function skolniRok() {
+    var d = dnes(), y = +d.slice(0, 4), m = +d.slice(5, 7), z = m >= 9 ? y : y - 1;
+    return { od: z + '-09-01', do: (z + 1) + '-08-31' };
+  }
   function dnes() {
     var d = new Date();
     return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();
@@ -422,13 +427,14 @@
         klient().from('jidelna_katalog').select('data').eq('skola_id', u.skolaId).maybeSingle(),
         klient().rpc('jidelnicek_kuchyne', { p_od: od, p_do: doDne }),
         klient().rpc('obedy_den', { p_den: den }),
+        klient().rpc('den_provozu', { p_den: den }).then(function (x) { return x.error ? { data: null, error: null } : x; }),
         klient().rpc('deti_diety'),
         klient().from('skoly').select('nazev, kratky_nazev, adresa, telefon, email, web, ico, logo, nahrady_obedu').eq('id', u.skolaId).maybeSingle(),
         klient().from('uzivatele').select('id', { count: 'exact', head: true }).neq('role', 'rodic').eq('aktivni', true)
       ]);
-      var D = r.slice(0, 5).map(ok);
-      if (r[5].error) throw r[5].error;
-      return { katalog: D[0] ? D[0].data : null, menu: D[1], obedy: D[2], diety: D[3], skola: D[4], zamestnancu: r[5].count || 0, den: den };
+      var D = r.slice(0, 6).map(ok);
+      if (r[6].error) throw r[6].error;
+      return { katalog: D[0] ? D[0].data : null, menu: D[1], obedy: D[2], provoz: D[3], diety: D[4], skola: D[5], zamestnancu: r[6].count || 0, den: den };
     },
     async ulozChody(chody) { return ok(await klient().rpc('uloz_chody', { p_chody: chody })); },
     async ulozKatalog(data) {
@@ -499,11 +505,13 @@
         fin ? klient().from('konta').select('dite_id, saldo') : prazdno,
         ved ? klient().rpc('archiv_zmen', { p_limit: 300 }) : prazdno,
         /* napojení banky — bez migrace 2026-10-17-banka funkce není a panel se neukáže */
-        fin ? klient().rpc('stav_napojeni_banky').then(function (x) { return x.error ? { data: false, error: null } : x; }) : prazdno
+        fin ? klient().rpc('stav_napojeni_banky').then(function (x) { return x.error ? { data: false, error: null } : x; }) : prazdno,
+        /* provozní kalendář (svátky a výjimky) na školní rok — bez migrace 2026-10-17c prázdno */
+        klient().rpc('kalendar_skoly_obdobi', { p_od: skolniRok().od, p_do: skolniRok().do }).then(function (x) { return x.error ? { data: false, error: null } : x; })
       ]);
       var D = r.map(ok);
       return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12], dokumenty: D[13],
-        archiv: D[22], fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21], banka: D[23] === false ? false : Array.isArray(D[23]) ? null : D[23] } : null };
+        archiv: D[22], kalendar: D[24], fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21], banka: D[23] === false ? false : Array.isArray(D[23]) ? null : D[23] } : null };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {
@@ -575,6 +583,9 @@
     },
     /* Údaje školky (Nastavení): jen změněné sloupce. */
     async ulozSkolu(radek) { ok(await klient().from('skoly').update(radek).eq('id', nactiUcet().skolaId)); },
+    /* Provoz školky: dny od–do otevřít (i ve svátek), zavřít, nebo vrátit na výchozí (svátky zavřeno). */
+    async nastavKalendar(od, doDne, stav, poznamka) { return ok(await klient().rpc('nastav_kalendar', { p_od: od, p_do: doDne, p_stav: stav, p_poznamka: poznamka || null })); },
+    async kalendar() { var r = skolniRok(); return ok(await klient().rpc('kalendar_skoly_obdobi', { p_od: r.od, p_do: r.do })); },
     async vystavPredpisy(obdobi) { return ok(await klient().rpc('vystav_predpisy', { p_obdobi: obdobi })); },
     async zpracujPlatby(platby) { return ok(await klient().rpc('zpracuj_platby', { p_platby: platby })); },
     /* Napojení banky (Fio): token uloží databáze, přečíst ho z aplikace nejde. Prázdný token = nechat stávající. */

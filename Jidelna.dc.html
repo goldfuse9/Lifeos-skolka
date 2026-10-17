@@ -534,6 +534,8 @@ class Component extends DCLogic {
     this.staff = [];
     this.srvAdults = D.zamestnancu || 0;
     this.srvDen = D.den;
+    /* Zavřený den (svátek, prázdniny) — kuchyně nevaří. */
+    this.srvZavreno = D.provoz && D.provoz.provozni === false ? (D.provoz.poznamka || D.provoz.svatek || 'školka je zavřená') : null;
     this.CLASSES = (D.obedy || []).map(function (c) { return { id: c.trida_id, name: c.trida, color: c.barva || '#C9CCC8', n: c.deti }; });
     this.srvOdhl = {}; (D.obedy || []).forEach(function (c) { self.srvOdhl[c.trida_id] = c.odhlaseno; });
     var nazvy = {}; this.A.forEach(function (x, i) { if (x) { nazvy[x[0]] = i; nazvy[x[1]] = i; nazvy[x[2].toLowerCase()] = i; } });
@@ -1031,13 +1033,13 @@ class Component extends DCLogic {
     });
     var dnes = {
       dayLabel: cap(DNY[sd.getDay()]) + ' ' + sd.getDate() + '. ' + MES[sd.getMonth()],
-      meals: meals, rows: rows, countNote: info.isToday ? 'podle docházky z tabletů' : 'podle ohlášených omluv',
+      meals: meals, rows: rows, countNote: this.srvZavreno ? 'Zavřeno — ' + this.srvZavreno + ' · nevaří se' : info.isToday ? 'podle docházky z tabletů' : 'podle ohlášených omluv',
       diets: dietRows, noDiets: dietRows.length === 0,
       hasAway: awayDiets.length > 0, away: 'Dnes chybí: ' + awayDiets.map(function (k) { return k.name; }).join(', ') + ' — náhradu nevaříte.'
     };
     var statStyle = function (warn) { return 'border: 0; text-align: left; cursor: pointer; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #17181A; background: ' + (warn ? '#FCF4EF' : '#FFFFFF'); };
     var stats = [
-      { label: 'Obědů', value: String(kidsTotal + adults), sub: kidsTotal + ' dětí · ' + adults + ' dospělých', subFg: '#5A5C60', style: statStyle(false), go: function () {} },
+      this.srvZavreno ? { label: 'Obědů', value: '0', sub: 'Zavřeno — ' + this.srvZavreno, subFg: '#8A4513', style: statStyle(true), go: function () {} } : { label: 'Obědů', value: String(kidsTotal + adults), sub: kidsTotal + ' dětí · ' + adults + ' dospělých', subFg: '#5A5C60', style: statStyle(false), go: function () {} },
       { label: 'Odhlášeno', value: String(excTotal), sub: info.isToday ? 'omluvené děti z docházky' : 'odhlášky do 7:30', subFg: '#5A5C60', style: statStyle(false), go: function () {} },
       { label: 'Náhrady', value: String(dietRows.reduce(function (a, r) { return a + r.kids.split(', ').length; }, 0)), sub: missingToday ? 'porcí · chybí ' + missingToday + ' — doplnit' : 'porcí · všechny připravené', subFg: missingToday ? '#8A4513' : '#5A5C60', style: statStyle(missingToday), go: go('diety', { weekOff: 0 }) },
       { label: 'Příští týden', value: nextW && nextW.published ? 'Hotovo' : 'Návrh', sub: nextW && nextW.published ? 'zveřejněno rodičům' : 'jídelníček zatím nevidí rodiče', subFg: nextW && nextW.published ? '#5A5C60' : '#8A4513', style: statStyle(!(nextW && nextW.published)), go: go('jidelnicek', { weekOff: 1 }) }
