@@ -414,8 +414,22 @@ document.addEventListener('click', (e) => { // zachycení: odkaz na desku vždy 
   if (klic) otevri(klic);
 }, true);
 
+/* Odkaz z QR štítku majetku: #majetek/IT-2026-0012. Číslo počká v sessionStorage,
+   otevře se ředitelna (karta položky), u učitelky tablet (při inventuře se rovnou
+   zapíše jako nalezené). Nepřihlášený se nejdřív přihlásí. */
+function zStitku(h) {
+  const m = /^majetek\/([A-Za-z]{2,4}-\d{4}-\d{4,})$/.exec(h || '');
+  if (!m) return null;
+  try { sessionStorage.setItem('skolka-majetek-kod', m[1].toUpperCase()); } catch (e) { /* bez úložiště to nepůjde */ }
+  const u = nactiUcet();
+  if (!u) return 'prihlaseni';
+  return u.desky.includes('reditel') ? 'reditel' : u.desky.includes('trida') ? 'trida' : u.desky[0];
+}
+
 window.addEventListener('hashchange', () => {
   const klic = (location.hash || '').slice(1);
+  const kam = zStitku(klic);
+  if (kam) { otevri(kam); return; }
   if (PODLE_JMENA[klic]) otevri(klic, true);
 });
 
@@ -444,6 +458,8 @@ async function zEmailu() {
 (async () => {
   try { await zEmailu(); } catch (e) { /* nic */ }
   const zacatek = (location.hash || '').slice(1);
+  const kam = zStitku(zacatek);
+  if (kam) { otevri(kam, false, kam === 'prihlaseni'); return; }
   otevri(PODLE_JMENA[zacatek] ? zacatek : 'prihlaseni', true, !PODLE_JMENA[zacatek]);
 })();
 

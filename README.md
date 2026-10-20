@@ -132,6 +132,16 @@ práva podle role (ředitelka / učitelka / hospodářka / rodič) přes RLS,
 učitelky a hospodářka nevidí rodná čísla, každá změna osobních údajů jde
 do `audit_log`. Ověřeno na PostgreSQL 16.
 
+### Majetek a inventarizace
+
+Ředitelna → Školka → **Majetek**: evidence s čísly `KATEGORIE-ROK-POŘADÍ`
+(IT-2026-0012), filtry podle tříd, místností, kategorií a stavu, karta položky
+s historií, QR štítky na arch A4 (počet štítků na archu volitelný, i načatý
+arch), import ze staré evidence (Excel/CSV), revize a servis, vyřazení
+s protokolem a **inventura** — učitelky skenují na tabletu své třídy, ostatní
+místnosti se skenují v ředitelně, rozdíly se vyřeší a vytiskne se inventurní
+soupis. Podrobnosti v [`docs/MAJETEK.md`](docs/MAJETEK.md).
+
 ### Platby z banky a QR pro rodiče
 
 Platby se z účtu školky (Fio API) stahují a párují **samy každých 15 minut**
@@ -139,6 +149,17 @@ Platby se z účtu školky (Fio API) stahují a párují **samy každých 15 min
 tokenem v Platby → Platby z banky, hospodářka může stáhnout hned. Rodič v LifeOS
 zavolá `moje_platby()` a dostane částku k úhradě, VS a hotový řetězec QR platby.
 Zprovoznění v [`docs/PLATBY-Z-BANKY.md`](docs/PLATBY-Z-BANKY.md).
+
+### Pokročilé finance a export pro účetní
+
+Platby mají záložky **Předpisy · Další platby · Přeplatky a vratky · Pokladna ·
+Slevy a prominutí · Uzávěrka a export**. Měsíční předpisy předem (viz provozní
+kalendář) dostanou číslo dokladu, slevy a prominutí ředitelky a storno.
+Jednorázové platby (výlety, pomůcky, kroužky, fond) pro třídu, přihlášené na akci
+nebo vybrané děti, storno protizápisem, pokladní doklady s číselnou řadou,
+vratky přeplatků hromadným příkazem pro banku (ABO), uzávěrka měsíce a **ZIP
+s CSV pro účetní** (deník s předkontací, předpisy, úhrady, pokladní kniha, vratky,
+saldokonto, rekapitulace). Podrobnosti v [`docs/FINANCE.md`](docs/FINANCE.md).
 
 ### Finanční modul (`server/`)
 

@@ -76,6 +76,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <sc-if value="{{meMenu.reditelna}}" hint-placeholder-val="{{false}}">
             <a role="menuitem" href="Reditel.dc.html" style="min-height: 44px; padding: 0 12px; border-radius: 12px; display: flex; align-items: center; font-size: 15px; font-weight: 600; text-decoration: none; color: #17181A">Ředitelna</a>
           </sc-if>
+          <button type="button" role="menuitem" onClick="{{meMenu.majetek}}" style="min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; display: flex; align-items: center; font-size: 15px; font-weight: 600; cursor: pointer; color: #17181A; font-family: inherit">Majetek třídy</button>
           <button type="button" role="menuitem" onClick="{{meMenu.logout}}" style="min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; cursor: pointer; color: #8A4513; text-align: left"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 17l-5-5 5-5"></path><path d="M5 12h11"></path></svg>Odhlásit</button>
         </div>
       </sc-if>
@@ -678,6 +679,75 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           <div style="font-size: 16px; color: #5A5C60">Nastavte, kdy máte čas. Rodiče si pak sami vyberou termín.</div>
         </sc-if>
       </section></sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ MAJETEK TŘÍDY / INVENTURA -->
+  <sc-if value="{{tab.isMajetek}}" hint-placeholder-val="{{false}}">
+    <div style="flex-grow: 1; min-height: 0; display: flex; gap: 18px">
+      <sc-if value="{{mj.scanning}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Skenování" style="width: 440px; flex-shrink: 0; background: #FFFFFF; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 22px; font-weight: 700">{{mj.title}}</h2><span style="font-size: 15px; color: #5A5C60">{{mj.roomName}} · zkontrolováno {{mj.prog}}</span></div>
+          <button type="button" onClick="{{mj.kamera}}" style="min-height: 72px; border-radius: 26px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 19px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path><path d="M8 12h8"></path></svg>
+            Skenovat kamerou
+          </button>
+          <sc-if value="{{mj.hasLast}}" hint-placeholder-val="{{false}}"><div aria-live="polite" style="{{mj.lastStyle}}">{{mj.last}}</div></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="mj-kod" style="font-size: 15px; font-weight: 700">Štítek nejde načíst? Napište číslo</label>
+            <div style="display: flex; gap: 8px">
+              <input id="mj-kod" type="text" autocomplete="off" autocapitalize="characters" value="{{mj.kod}}" onInput="{{mj.onKod}}" placeholder="Např. NAB-2023-0004" style="flex-grow: 1; min-width: 0; height: 56px; border-radius: 16px; border: 1.5px solid #E5E7E4; padding: 0 16px; font-size: 17px; color: #17181A">
+              <button type="button" onClick="{{mj.zapsat}}" style="height: 56px; padding: 0 18px; border-radius: 16px; border: 0; background: #F3F4F2; font-size: 16px; font-weight: 800; cursor: pointer; color: #17181A">Zapsat</button>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="mj-bez" style="font-size: 15px; font-weight: 700">Věc bez štítku</label>
+            <div style="display: flex; gap: 8px">
+              <input id="mj-bez" type="text" value="{{mj.bez}}" onInput="{{mj.onBez}}" placeholder="Co to je, např. koloběžka" style="flex-grow: 1; min-width: 0; height: 56px; border-radius: 16px; border: 1.5px solid #E5E7E4; padding: 0 16px; font-size: 17px; color: #17181A">
+              <button type="button" onClick="{{mj.zapsatBez}}" style="height: 56px; padding: 0 18px; border-radius: 16px; border: 0; background: #F3F4F2; font-size: 16px; font-weight: 800; cursor: pointer; color: #17181A">Zapsat</button>
+            </div>
+          </div>
+          <div style="flex-grow: 1"></div>
+          <sc-if value="{{mj.askDone}}" hint-placeholder-val="{{false}}">
+            <div role="alertdialog" aria-label="Dokončit místnost" style="padding: 14px; border-radius: 18px; background: #FBF1DD; display: flex; flex-direction: column; gap: 10px">
+              <span style="font-size: 15px; font-weight: 700; color: #6B4A00">{{mj.doneText}}</span>
+              <div style="display: flex; gap: 8px"><button type="button" onClick="{{mj.doneNo}}" style="flex-grow: 1; height: 52px; border-radius: 26px; border: 0; background: #FFFFFF; font-size: 15px; font-weight: 800; cursor: pointer; color: #17181A">Ještě ne</button><button type="button" onClick="{{mj.doneYes}}" style="flex-grow: 1; height: 52px; border-radius: 26px; border: 0; background: #DDEBCF; color: #2F5212; font-size: 15px; font-weight: 800; cursor: pointer">Hotovo</button></div>
+            </div>
+          </sc-if>
+          <button type="button" onClick="{{mj.done}}" style="min-height: 60px; border-radius: 30px; border: 0; background: #EDF4E4; color: #2F5212; font-size: 17px; font-weight: 800; cursor: pointer">Hotovo s místností</button>
+        </section>
+      </sc-if>
+      <sc-if value="{{mj.roomDone}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Inventura" style="width: 440px; flex-shrink: 0; background: #FFFFFF; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 700">{{mj.title}}</h2>
+          <div style="padding: 14px 16px; border-radius: 18px; background: #EDF4E4; color: #2F5212; font-size: 16px; font-weight: 700">{{mj.roomName}} je hotová. Rozdíly vyřeší ředitelna.</div>
+        </section>
+      </sc-if>
+      <section aria-label="Majetek místnosti" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 26px; display: flex; flex-direction: column; overflow: hidden">
+        <div style="padding: 16px 20px 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #EEF0ED">
+          <sc-if value="{{mj.noInv}}" hint-placeholder-val="{{true}}"><h2 style="margin: 0; font-size: 22px; font-weight: 700; flex-grow: 1">{{mj.title}}</h2><span style="font-size: 15px; color: #5A5C60">{{mj.prog}}</span></sc-if>
+          <sc-if value="{{mj.inv}}" hint-placeholder-val="{{false}}"><sc-for list="{{mj.filters}}" as="f" hint-placeholder-count="3"><button type="button" onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}">{{f.label}}</button></sc-for></sc-if>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+          <sc-for list="{{mj.rows}}" as="i" hint-placeholder-count="6">
+            <div style="padding: 11px 20px; border-bottom: 1px solid #F3F4F2; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <sc-if value="{{i.showIcon}}" hint-placeholder-val="{{false}}"><span style="{{i.iconStyle}}"><sc-if value="{{i.found}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></sc-if></span></sc-if>
+                <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{i.name}}</span><span style="font-size: 13px; color: #5A5C60">{{i.inv}}</span></span>
+                <span style="{{i.pill.style}}">{{i.pill.t}}</span>
+                <sc-if value="{{i.canZav}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{i.openZav}}" aria-expanded="{{i.zavOpen}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 1.5px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Nahlásit závadu</button></sc-if>
+              </div>
+              <sc-if value="{{i.zavOpen}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; gap: 8px">
+                  <input type="text" aria-label="Co se stalo s {{i.name}}" value="{{i.zavText}}" onInput="{{i.onZav}}" placeholder="Co se stalo, např. prasklá noha" style="flex-grow: 1; min-width: 0; height: 52px; border-radius: 16px; border: 1.5px solid #E5E7E4; padding: 0 16px; font-size: 16px; color: #17181A">
+                  <button type="button" onClick="{{i.sendZav}}" style="height: 52px; padding: 0 18px; border-radius: 16px; border: 0; background: #FAEBE4; color: #9A3412; font-size: 15px; font-weight: 800; cursor: pointer">Nahlásit</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{mj.empty}}" hint-placeholder-val="{{false}}"><div style="padding: 40px; text-align: center; font-size: 16px; color: #5A5C60">{{mj.emptyText}}</div></sc-if>
+        </div>
+      </section>
     </div>
   </sc-if>
 
@@ -1400,6 +1470,7 @@ class Component extends DCLogic {
 
   componentDidMount() {
     var self = this;
+    this.mjNacti().catch(function () { /* majetek se načte při otevření záložky */ });
     if (this.srv) this.nactiOdkazy(this.albums.map(function (a) { return a.photos[0] && a.photos[0].path; }).filter(Boolean));
     if (!this.srv) return;
     /* Tablet zapnutý přes půlnoc: nový den = načíst znovu (jinak by se včerejší
@@ -1429,6 +1500,7 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount() {
+    if (this._mjKonec) this._mjKonec();
     if (this._stopSrv) this._stopSrv();
     if (this._stopZpr) this._stopZpr();
     clearInterval(this._hlidejDen);
@@ -1673,6 +1745,189 @@ class Component extends DCLogic {
     }
     return zp;
   }
+
+  /* ------------------------------------------------ majetek třídy a inventura
+     Učitelka vidí majetek místností své třídy, hlásí závady a při inventuře
+     skenuje štítky (kamerou přes BarcodeDetector, nebo číslem). Ve zkušebním
+     provozu sdílí evidenci s ředitelnou (store().maj), naostro je na serveru. */
+  mjM() {
+    if (this.srv) return this.mjSrv || null;
+    return this.store().maj || null;
+  }
+  mjNacti() {
+    var self = this;
+    if (!this.srv) { this.mjOdkaz(); return Promise.resolve(); }
+    return window.SkolkaServer.nactiMajetek(true).then(function (D) {
+      var M = { kat: (D.kategorie || []).map(function (k) { return { kod: k.kod, nazev: k.nazev }; }),
+        mist: (D.mistnosti || []).map(function (m) { return { id: m.id, nazev: m.nazev, trida: m.trida_id || null, aktivni: m.aktivni !== false }; }),
+        pol: (D.polozky || []).map(function (p) { return { id: p.id, cislo: p.cislo, kat: p.kategorie, nazev: p.nazev, druh: p.druh || '', mist: p.mistnost_id || null, stav: p.stav || 'ok', komu: p.zapujceno_komu || '' }; }),
+        inv: D.inventura ? { id: D.inventura.id, kDatu: D.inventura.k_datu } : null, invM: {}, zaz: {},
+        nal: (D.nalezy || []).map(function (n) { return { id: n.id, mist: n.mistnost_id, popis: n.popis, vyreseno: n.vyreseno || null }; }) };
+      (D.invMistnosti || []).forEach(function (x) { M.invM[x.mistnost_id] = { kdo: x.kontroluje || '', hotovo: x.hotovo || null }; });
+      (D.zaznamy || []).forEach(function (z) { M.zaz[z.polozka_id] = { vys: z.vysledek, v: z.nalezeno_v || null, vyreseno: z.vyreseno || null }; });
+      self.mjSrv = M; self.mjOdkaz(); self.forceUpdate();
+    });
+  }
+  mjMistnost() {
+    var M = this.mjM(), c = this.state.viewCls;
+    if (!M) return null;
+    return M.mist.filter(function (m) { return m.trida === c && m.aktivni; })[0] || null;
+  }
+  /* Místně totéž co funkce databáze (zkušební provoz). */
+  mjLok(op, a) {
+    var M = this.mjM(), now = new Date().toISOString(), me = this.me || '';
+    var fail = function (m) { throw new Error(m); };
+    if (!M) fail('Evidence majetku zatím není — založí ji ředitelna.');
+    var mN = function (id) { var m = M.mist.filter(function (x) { return x.id === id; })[0]; return m ? m.nazev : 'bez místnosti'; };
+    if (op === 'nahlas_zavadu') {
+      var p = M.pol.filter(function (x) { return x.id === a.p_id; })[0]; if (!p) fail('Položka nenalezena.');
+      if (!String(a.p_popis || '').trim()) fail('Napište, co se stalo.');
+      p.stav = 'poskozeno'; M.poh = M.poh || []; M.poh.unshift({ pol: p.id, kdy: now, druh: 'zavada', popis: 'Závada: ' + a.p_popis.trim(), kdo: me }); return null;
+    }
+    if (!M.inv || M.inv.id !== a.p_inventura) fail('Inventura neprobíhá.');
+    if (!M.invM[a.p_mistnost]) fail('Místnost v inventuře není.');
+    if (op === 'inventura_sken') {
+      var mm = /([A-Za-z]{2,4}-\d{4}-\d{4,})\s*$/.exec(String(a.p_kod || ''));
+      if (!mm) return { vysledek: 'neznamy', kod: String(a.p_kod || '').slice(0, 60) };
+      var c = mm[1].toUpperCase(), q = M.pol.filter(function (x) { return x.cislo === c; })[0];
+      if (!q) return { vysledek: 'neznamy', kod: c };
+      if (q.stav === 'vyrazeno') return { vysledek: 'vyrazeno', cislo: q.cislo, nazev: q.nazev };
+      var vys = q.mist === a.p_mistnost ? 'nalezeno' : 'jinde', z = M.zaz[q.id];
+      if (z && z.vys === vys && z.v === a.p_mistnost) return { vysledek: 'uz', cislo: q.cislo, nazev: q.nazev };
+      M.zaz[q.id] = { vys: vys, v: a.p_mistnost, kdy: now, vyreseno: null };
+      return { vysledek: vys, cislo: q.cislo, nazev: q.nazev, patri: mN(q.mist) };
+    }
+    if (op === 'inventura_bez_stitku') { if (!String(a.p_popis || '').trim()) fail('Napište, co to je.'); M.nal.push({ id: 'n' + Date.now(), mist: a.p_mistnost, popis: a.p_popis.trim(), kdy: now, vyreseno: null, pol: null }); return null; }
+    if (op === 'inventura_mistnost_hotova') {
+      var n = 0;
+      M.pol.forEach(function (x) { if (x.mist === a.p_mistnost && x.stav !== 'vyrazeno' && x.stav !== 'zapujceno' && !M.zaz[x.id]) { M.zaz[x.id] = { vys: 'chybi', v: null, kdy: now, vyreseno: null }; n++; } });
+      M.invM[a.p_mistnost].hotovo = now; return n;
+    }
+    fail('Neznámá akce.');
+  }
+  mjOp(op, args) {
+    var self = this;
+    var p = this.srv
+      ? window.SkolkaServer.majetekRpc(op, args).then(function (r) { return self.mjNacti().then(function () { return r; }); })
+      : new Promise(function (res) { res(self.mjLok(op, args)); }).then(function (r) { self.saveStore(); return r; });
+    return p.then(function (r) { self.forceUpdate(); return r; });
+  }
+  mjChyba(e) { return this.srv && window.SkolkaServer.chyba ? window.SkolkaServer.chyba(e) : (e && e.message) || String(e); }
+  /* Jeden načtený štítek → výsledek do pruhu nad seznamem (a do okna kamery). */
+  mjSken(kod, cb) {
+    var self = this, M = this.mjM(), R = this.mjMistnost();
+    if (!M || !M.inv || !R) { if (cb) cb('Inventura teď neprobíhá.', false); return; }
+    this.mjOp('inventura_sken', { p_inventura: M.inv.id, p_mistnost: R.id, p_kod: kod }).then(function (r) {
+      var T = { nalezeno: ['Nalezeno', true], jinde: ['Patří jinam (' + (r.patri || '') + ') — zapsáno, vyřeší ředitelka', false], uz: ['Už zapsáno', true], neznamy: ['Tohle číslo v evidenci není', false], vyrazeno: ['Vyřazená položka', false] }[r.vysledek];
+      var msg = (r.cislo || r.kod || '') + ' · ' + (r.nazev ? r.nazev + ' · ' : '') + T[0];
+      self.setState({ mjLast: { text: msg, ok: T[1] }, mjKod: '' });
+      if (cb) cb(msg, T[1]);
+    }).catch(function (e) { var m = self.mjChyba(e); self.showToast(m); if (cb) cb(m, false); });
+  }
+  mjKamera() {
+    var self = this;
+    if (typeof window === 'undefined' || !('BarcodeDetector' in window)) {
+      this.showToast('Tady kamera štítky číst neumí. Naskenujte štítek fotoaparátem tabletu (otevře odkaz v aplikaci), nebo napište číslo.');
+      return;
+    }
+    var det;
+    try { det = new window.BarcodeDetector({ formats: ['qr_code'] }); } catch (e) { this.showToast('Čtení QR kódů tu nejde zapnout — napište číslo ze štítku.'); return; }
+    var box = document.createElement('div');
+    box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Skenování štítků');
+    box.style.cssText = "position:fixed;inset:0;z-index:50;background:#17181A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:'Plus Jakarta Sans',sans-serif";
+    var video = document.createElement('video'); video.setAttribute('playsinline', ''); video.muted = true;
+    video.style.cssText = 'width:min(92vw,720px);max-height:66vh;object-fit:cover;border-radius:28px;background:#26282C';
+    var info = document.createElement('div'); info.setAttribute('aria-live', 'polite');
+    info.style.cssText = 'color:#FFFFFF;font-size:20px;font-weight:700;text-align:center;min-height:56px;padding:0 24px;max-width:720px';
+    info.textContent = 'Namiřte na QR štítek';
+    var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Hotovo';
+    btn.style.cssText = 'height:60px;padding:0 40px;border-radius:30px;border:0;background:#DCE6F2;color:#1F3A5C;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit';
+    box.appendChild(video); box.appendChild(info); box.appendChild(btn); document.body.appendChild(box);
+    var stream = null, stop = false, last = '', lastT = 0;
+    var konec = function () { stop = true; if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); if (box.parentNode) box.parentNode.removeChild(box); self._mjKonec = null; };
+    btn.onclick = konec; this._mjKonec = konec;
+    var loop = function () {
+      if (stop) return;
+      det.detect(video).then(function (codes) {
+        var c = codes && codes[0] && codes[0].rawValue, t = Date.now();
+        if (c && (c !== last || t - lastT > 4000)) { last = c; lastT = t; self.mjSken(c, function (msg, ok) { info.textContent = msg; info.style.color = ok ? '#BFE3A5' : '#F7C9A8'; try { if (navigator.vibrate) navigator.vibrate(ok ? 60 : [40, 60, 40]); } catch (e) { /* nic */ } }); }
+      }).catch(function () { /* další snímek */ }).then(function () { if (!stop) setTimeout(loop, 250); });
+    };
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(function (s) { stream = s; video.srcObject = s; return video.play(); })
+      .then(loop)
+      .catch(function (e) { info.textContent = 'Kameru se nepodařilo zapnout (' + (e && e.name ? e.name : e) + '). Povolte ji v prohlížeči, nebo napište číslo ze štítku.'; info.style.color = '#F7C9A8'; });
+  }
+  /* Štítek naskenovaný fotoaparátem tabletu otevře #majetek/<číslo>. */
+  mjOdkaz() {
+    var kod = null;
+    try { kod = sessionStorage.getItem('skolka-majetek-kod'); } catch (e) { kod = null; }
+    if (!kod) return;
+    var M = this.mjM();
+    if (this.srv && !M) return;
+    try { sessionStorage.removeItem('skolka-majetek-kod'); } catch (e) { /* nic */ }
+    this.state.tab = 'majetek';
+    var R = this.mjMistnost();
+    if (M && M.inv && R && M.invM[R.id] && !M.invM[R.id].hotovo) { var self = this; setTimeout(function () { self.mjSken(kod); }, 0); return; }
+    var p = M ? M.pol.filter(function (x) { return x.cislo === kod; })[0] : null;
+    this.state.mjZav = null;
+    this.state.toast = p ? kod + ' · ' + p.nazev : 'Položka ' + kod + ' patří do jiné místnosti, nebo v evidenci není.';
+  }
+
+  mjVals(st) {
+    var self = this, M = this.mjM(), R = this.mjMistnost();
+    var out = { ready: !!M, notReady: !M, inv: false, noInv: true, roomName: R ? R.nazev : '', noRoom: !!M && !R, hasRoom: !!R };
+    if (!M || !R) return Object.assign(out, { rows: [], empty: true, emptyText: !M ? (this.srv ? 'Načítám…' : 'Evidenci majetku založí ředitelna (Ředitelna → Majetek).') : 'Třída nemá v evidenci majetku svou místnost — požádejte ředitelnu.' });
+    var IV = M.inv && M.invM[R.id] ? M.inv : null, hot = IV ? !!M.invM[R.id].hotovo : false;
+    var ST = { ok: ['V pořádku', '#EDF4E4', '#2F5212'], poskozeno: ['Poškozeno', '#FAEBE4', '#9A3412'], oprava: ['V opravě', '#F7F0DA', '#5C4300'], zapujceno: ['Zapůjčeno', '#EBF1FA', '#27407A'] };
+    var pill = function (t, bg, fg) { return { t: t, style: 'height: 30px; padding: 0 12px; border-radius: 15px; display: inline-flex; align-items: center; font-size: 13px; font-weight: 800; flex-shrink: 0; white-space: nowrap; background: ' + bg + '; color: ' + fg }; };
+    var mine = M.pol.filter(function (p) { return p.mist === R.id && p.stav !== 'vyrazeno'; });
+    var cizi = IV ? M.pol.filter(function (p) { return M.zaz[p.id] && M.zaz[p.id].vys === 'jinde' && M.zaz[p.id].v === R.id; }) : [];
+    var f = st.mjFilter || 'ceka';
+    var rows = mine.concat(cizi).map(function (p) {
+      var z = IV ? M.zaz[p.id] : null, jinde = p.mist !== R.id, found = !!(z && (z.vys === 'nalezeno' || jinde));
+      var pl = IV ? (jinde ? pill('Odjinud — vyřeší ředitelna', '#FBF1DD', '#6B4A00') : z && z.vys === 'chybi' ? pill('Chybí', '#FAEBE4', '#9A3412') : found ? pill('Nalezeno', '#EDF4E4', '#2F5212') : p.stav === 'zapujceno' ? pill('Zapůjčeno', '#EBF1FA', '#27407A') : pill('Čeká', '#F3F4F2', '#5A5C60'))
+        : pill.apply(null, ST[p.stav] || ST.ok);
+      var zav = st.mjZav === p.id;
+      return { id: p.id, inv: p.cislo, name: p.nazev, pill: pl, found: found, jinde: jinde, f: found,
+        iconStyle: 'width: 32px; height: 32px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; ' + (found ? 'background: #3BA55C; color: #FFFFFF' : 'background: #FFFFFF; border: 2px solid #D5D7D3'),
+        showIcon: !!IV, canZav: !IV && p.stav !== 'poskozeno' && !jinde, zavOpen: zav,
+        openZav: function () { self.setState({ mjZav: zav ? null : p.id, mjZavText: '' }); },
+        zavText: st.mjZavText || '', onZav: function (e) { self.state.mjZavText = e.target.value; },
+        sendZav: function () {
+          var t = String(self.state.mjZavText || '').trim(); if (!t) { self.showToast('Napište, co se stalo.'); return; }
+          self.mjOp('nahlas_zavadu', { p_id: p.id, p_popis: t }).then(function () { self.setState({ mjZav: null, mjZavText: '' }); self.showToast('Závada nahlášena ředitelně'); }).catch(function (e) { self.showToast(self.mjChyba(e)); });
+        } };
+    });
+    var shown = !IV ? rows : rows.filter(function (r) { return f === 'vse' ? true : f === 'ceka' ? !r.found : r.found; });
+    var nFound = rows.filter(function (r) { return r.found && !r.jinde; }).length, nExp = mine.filter(function (p) { return p.stav !== 'zapujceno'; }).length;
+    var chip = function (on) { return 'height: 40px; padding: 0 14px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4'); };
+    return Object.assign(out, {
+      inv: !!IV, noInv: !IV, scanning: !!IV && !hot, roomDone: !!IV && hot,
+      title: IV ? 'Inventura k ' + this.czIso(IV.kDatu) : 'Majetek · ' + R.nazev,
+      prog: IV ? nFound + ' / ' + nExp : mine.length + ' ks',
+      filters: [['ceka', 'Zbývá'], ['nalez', 'Nalezeno'], ['vse', 'Vše · ' + rows.length]].map(function (x) { var on = f === x[0]; return { label: x[1], on: on, style: chip(on), pick: function () { self.setState({ mjFilter: x[0] }); } }; }),
+      rows: shown, empty: !shown.length, emptyText: IV ? (f === 'ceka' ? 'Všechno zkontrolováno.' : 'Zatím nic.') : 'V místnosti zatím nic není.',
+      hasLast: !!st.mjLast, last: st.mjLast ? st.mjLast.text : '',
+      lastStyle: 'padding: 14px 16px; border-radius: 18px; font-size: 16px; font-weight: 700; ' + (st.mjLast && st.mjLast.ok ? 'background: #EDF4E4; color: #2F5212' : 'background: #FBF1DD; color: #6B4A00'),
+      kod: st.mjKod || '', onKod: function (e) { self.state.mjKod = e.target.value; if (/[A-Za-z]{2,4}-\d{4}-\d{4}\s*$/.test(e.target.value)) self.mjSken(e.target.value.trim()); },
+      zapsat: function () { var k = String(self.state.mjKod || '').trim(); if (k) self.mjSken(k); },
+      kamera: function () { self.mjKamera(); },
+      bez: st.mjBez || '', onBez: function (e) { self.state.mjBez = e.target.value; },
+      zapsatBez: function () {
+        var t = String(self.state.mjBez || '').trim(); if (!t) { self.showToast('Napište, co to je.'); return; }
+        self.mjOp('inventura_bez_stitku', { p_inventura: IV.id, p_mistnost: R.id, p_popis: t }).then(function () { self.setState({ mjBez: '', mjLast: { text: 'Bez štítku: ' + t + ' — zapsáno, ředitelna ji založí', ok: true } }); }).catch(function (e) { self.showToast(self.mjChyba(e)); });
+      },
+      askDone: !!st.mjAskDone,
+      done: function () { self.setState({ mjAskDone: true }); },
+      doneNo: function () { self.setState({ mjAskDone: false }); },
+      doneYes: function () {
+        self.mjOp('inventura_mistnost_hotova', { p_inventura: IV.id, p_mistnost: R.id }).then(function (n) { self.setState({ mjAskDone: false, mjLast: null }); self.showToast(R.nazev + ' hotovo' + (n ? ' · ' + n + ' chybí' : ' · všechno na místě')); }).catch(function (e) { self.setState({ mjAskDone: false }); self.showToast(self.mjChyba(e)); });
+      },
+      doneText: 'Co se nenašlo (' + Math.max(0, nExp - nFound) + '), bude zapsané jako chybějící.'
+    });
+  }
+  czIso(iso) { var d = new Date(String(iso).slice(0, 10) + 'T00:00:00'); return d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear(); }
 
   renderVals() {
     var self = this, st = this.state, f = st.f || {};
@@ -2251,6 +2506,9 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- záložky */
     var TABS = [['trida', 'Třída'], ['dochazka', 'Docházka'], ['kniha', 'Třídní kniha'], ['zpravy', 'Zprávy'], ['fotky', 'Fotky'], ['akce', 'Akce'], ['schuzky', 'Schůzky']].filter(function (x) { return self.srv ? true : x[0] !== 'zpravy'; });
+    /* Majetek: záložka „Inventura“, když běží a třída má co kontrolovat; jinak jen z menu (Majetek třídy). */
+    var MJ = this.mjM(), MJR = this.mjMistnost(), mjBezi = !!(MJ && MJ.inv && MJR && MJ.invM[MJR.id] && !MJ.invM[MJR.id].hotovo);
+    if (mjBezi || st.tab === 'majetek') TABS.push(['majetek', mjBezi ? 'Inventura' : 'Majetek']);
     var zp = this.zpravyView();
     var tabBadge = { dochazka: counts.expected ? String(counts.expected) : '', zpravy: zp.noveCelkem ? String(zp.noveCelkem) : '' };
     var tabs = TABS.map(function (t) {
@@ -2260,7 +2518,7 @@ class Component extends DCLogic {
         pick: function () { if (self.srv && (t[0] === 'akce' || t[0] === 'schuzky')) self.nactiAkce(); self.setState({ tab: t[0], undo: null, move: t[0] === 'trida' ? self.state.move : false, albumId: t[0] === 'fotky' ? self.state.albumId : null }); },
         style: 'height: 44px; padding: 0 13px; border-radius: 22px; border: 0; font-size: 15px; cursor: pointer; color: #17181A; display: inline-flex; align-items: center; white-space: nowrap; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '700' : '500') };
     });
-    var tab = { isZpravy: st.tab === 'zpravy', isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
+    var tab = { isMajetek: st.tab === 'majetek', isZpravy: st.tab === 'zpravy', isTrida: st.tab === 'trida', isDochazka: st.tab === 'dochazka', isKniha: st.tab === 'kniha', isFotky: st.tab === 'fotky', isAkce: st.tab === 'akce', isSchuzky: st.tab === 'schuzky' };
 
     /* -------------------------------------------------- přesun dětí */
     var movePicked = st.movePick.map(function (id) { return self.byId[id]; }).filter(Boolean);
@@ -2741,7 +2999,9 @@ class Component extends DCLogic {
           yes: function () { var run = self._attRun; self._attRun = null; self.setState({ attAsk: null }); if (run) run(); },
           no: function () { self._attRun = null; self.setState({ attAsk: null }); } };
       })(),
+      mj: this.mjVals(st),
       meMenu: { open: !!st.meMenu, reditelna: !!this.ucet && this.ucet.desky.indexOf('reditel') !== -1,
+        majetek: function () { self.setState({ meMenu: false, tab: 'majetek', mjZav: null }); if (self.srv) self.mjNacti().catch(function (e) { self.showToast(self.mjChyba(e)); }); },
         toggle: function () { self.setState({ meMenu: !self.state.meMenu }); },
         logout: function () { self.setState({ meMenu: false }); if (window.SkolkaUcet) window.SkolkaUcet.odhlas(); } },
       dlg: dlg, gal: gal, viewer: viewer, akce: akce, meet: meet, kons: kons,

@@ -55,7 +55,8 @@ t "rodič Emy nezmění alergie Olivera" ERR $RODA "" "select uprav_udaje_rodice
 t "rodič Emy nezmění alergie Adama (B)" ERR $RODA "" "select uprav_udaje_rodicem('$ADAM', 'x');"
 # příští školní den (v pátek pondělí) — o víkendu omluva nic nevrací
 DALSI_DEN="(current_date + case extract(isodow from current_date)::int when 5 then 3 when 6 then 2 else 1 end)"
-t "rodič Emy omluví Emu" 1 $RODA "" "select count(*) from omluv_dite('$EMA', $DALSI_DEN + 7, $DALSI_DEN + 7, 'nemoc');"
+PROVOZ_ZA_TYDEN="(select min(g)::date from generate_series(current_date + 7, current_date + 21, interval '1 day') g where je_provozni_den('$A', g::date))"
+t "rodič Emy omluví Emu (provozní den za týden, ne svátek)" 1 $RODA "" "select count(*) from omluv_dite('$EMA', $PROVOZ_ZA_TYDEN, $PROVOZ_ZA_TYDEN, 'nemoc');"
 t "rodič nezapíše docházku napřímo" ERR $RODA "" "insert into dochazka (dite_id, den, stav, prichod) values ('$EMA', current_date + 30, 'pritomen', '08:00');"
 t "rodič nevidí účty zaměstnanců" 0 $RODA "" "select count(*) from uzivatele where role<>'rodic';"
 t "rodič nevolá zamestnanci_skoly" ERR $RODA "" "select count(*) from zamestnanci_skoly();"
@@ -523,5 +524,43 @@ select count(*) from predpis_polozky q join predpisy p on p.id = q.predpis_id wh
 t "omluvenka na zavřený den (svátek) se nezapíše" "2027-10-27,2027-10-29" $RODA "" "select string_agg(den::text, ',' order by den) from omluv_dite('$EMA', '2027-10-27', '2027-10-29', 'nemoc');"
 t "kuchyně: v zavřený den je odhlášeno všechno" "t" $KA kucharka@test.cz "select (sum(deti) = sum(odhlaseno))::text::char from obedy_den('2026-10-28');"
 t "kuchyně: den provozu se svátkem" "false|Vznik Československa" $KA kucharka@test.cz "select (den_provozu('2026-10-28')->>'provozni') || '|' || (den_provozu('2026-10-28')->>'svatek');"
+echo "== pokročilé finance: pokladna, vratky, slevy, uzávěrka"
+PK="reset role; insert into pokladna (skola_id, cislo, datum, druh, castka, ucel) values ('$A', 'PPD-T-1', current_date, 'prijem', 100, 'test'); insert into fin_vratky (skola_id, dite_id, castka, zpusob, cislo) values ('$A', '$EMA', 10, 'pokladna', 'VR-T-1'), ('$A', '$OLI', 10, 'pokladna', 'VR-T-2'); insert into fin_upravy (skola_id, dite_id, typ, plati_od, duvod) values ('$A', '$EMA', 'osvobozeni', current_date, 'test'); set local role authenticated;"
+t "hospodářka vidí pokladnu" 1 $HA hospodarka@test.cz "$PK select count(*) from pokladna;"
+t "učitelka nevidí pokladnu" 0 $UA ucitelka@test.cz "$PK select count(*) from pokladna;"
+t "rodič nevidí pokladnu" 0 $RODA "" "$PK select count(*) from pokladna;"
+t "ředitelka B nevidí pokladnu A" 0 $RB reditelka.b@test.cz "$PK select count(*) from pokladna;"
+t "přímý zápis do pokladny neprojde" ERR $HA hospodarka@test.cz "insert into pokladna (skola_id, cislo, datum, druh, castka, ucel) values ('$A', 'X', current_date, 'prijem', 1, 'x');"
+t "rodič nevystaví pokladní doklad" ERR $RODA "" "select pokladna_prijem('$EMA', 100, current_date, 'x', '');"
+t "učitelka nevystaví pokladní doklad" ERR $UA ucitelka@test.cz "select pokladna_prijem('$EMA', 100, current_date, 'x', '');"
+t "rodič vidí jen vratku svého dítěte" 1 $RODA "" "$PK select count(*) from fin_vratky;"
+t "rodič vidí slevu svého dítěte" 1 $RODA "" "$PK select count(*) from fin_upravy;"
+t "kuchařka slevy nevidí" 0 $KA kucharka@test.cz "$PK select count(*) from fin_upravy;"
+t "hospodářka slevu neudělí" ERR $HA hospodarka@test.cz "select uloz_upravu('$EMA', 'osvobozeni', 0, current_date, null, 'x', '');"
+t "ředitelka A nevrátí přeplatek dítěti B" ERR $RA reditelka@test.cz "select vrat_preplatek('$ADAM', 1, 'pokladna', '');"
+t "ředitelka A nevystaví platbu dítěti B (přeskočí)" 0 $RA reditelka@test.cz "select nova_hromadna_platba('x', 'akce', 10, current_date + 7, array['$ADAM']::uuid[], null);"
+t "běžící měsíc uzavřít nejde" ERR $RA reditelka@test.cz "select uzavri_obdobi(to_char(current_date, 'YYYY-MM'));"
+t "hospodářka uzávěrku neotevře" ERR $HA hospodarka@test.cz "reset role; insert into fin_uzaverky (skola_id, obdobi) values ('$A', '2026-01'); set local role authenticated; select otevri_obdobi('2026-01');"
+t "uzávěrku nejde smazat přímo" ERR $RA reditelka@test.cz "reset role; insert into fin_uzaverky (skola_id, obdobi) values ('$A', '2026-01'); set local role authenticated; with x as (delete from fin_uzaverky returning 1) select count(*) from x;"
+t "do uzavřeného měsíce nejde pokladní doklad" ERR $HA hospodarka@test.cz "reset role; insert into fin_uzaverky (skola_id, obdobi) values ('$A', to_char(current_date, 'YYYY-MM')); set local role authenticated; select pokladna_prijem('$EMA', 100, current_date, 'x', '');"
+t "účetní pohyb nejde přepsat" ERR $RA reditelka@test.cz "with x as (update ucetni_pohyby set castka = 1 returning 1) select count(*) from x;"
+ZSET="select uloz_financni_nastaveni('19-2000145399/0800', 900, 48, 52, 15) \\g /dev/null
+"
+t "předpis předem má číslo PR a druh měsíční" "3|3" $RA reditelka@test.cz "$ZSET select vystav_predpisy('2026-10') \\g /dev/null
+select count(*) filter (where cislo like 'PR-2026-%') || '|' || count(*) filter (where druh = 'mesicni') from predpisy where obdobi = '2026-10';"
+t "sleva ředitelky: školkovné 50 %" "450.00" $RA reditelka@test.cz "$ZSET select uloz_upravu('$EMA', 'procento', 50, '2026-10-01', null, 'Sociální důvody', '') \\g /dev/null
+select vystav_predpisy('2026-10') \\g /dev/null
+select q.castka from predpis_polozky q join predpisy p on p.id = q.predpis_id where p.dite_id = '$EMA' and p.obdobi = '2026-10' and q.druh = 'skolkovne';"
+t "jednorázová platba neblokuje měsíční předpis" "2" $RA reditelka@test.cz "$ZSET select nova_hromadna_platba('Výlet', 'akce', 100, current_date + 7, array['$EMA']::uuid[], null) \\g /dev/null
+select vystav_predpisy(to_char(current_date, 'YYYY-MM')) \\g /dev/null
+select count(*) from predpisy where dite_id = '$EMA' and obdobi = to_char(current_date, 'YYYY-MM');"
+t "storno vrátí konto přesně na nulu" "0.00" $RA reditelka@test.cz "$ZSET select vystav_predpisy('2026-10') \\g /dev/null
+select storno_predpisu((select id from predpisy where dite_id = '$EMA' and obdobi = '2026-10'), 'test') \\g /dev/null
+select saldo from konta where dite_id = '$EMA';"
+t "storno předpisu, z něhož další měsíc odečetl obědy, nejde" ERR $RA reditelka@test.cz "$ZSET reset role; insert into dochazka (dite_id, den, stav, strava_prihlasena) values ('$EMA', '2026-10-20', 'omluven', false) on conflict (dite_id, den) do update set strava_prihlasena = false; set local role authenticated;
+select vystav_predpisy('2026-10') \\g /dev/null
+select vystav_predpisy('2026-11') \\g /dev/null
+select storno_predpisu((select id from predpisy where dite_id = '$EMA' and obdobi = '2026-10'), 'x');"
+t "hospodářka předkontaci nemění" ERR $HA hospodarka@test.cz "select uloz_financni_ucetni('{}', 0);"
 echo "---- $OK PASS, $KO FAIL"
 [[ $KO == 0 ]]
