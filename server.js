@@ -467,6 +467,37 @@
     async pozviZamestnance(x) { return ok(await klient().rpc('pozvi_zamestnance', { p_jmeno: x.jmeno, p_email: x.email, p_role: x.role, p_trida: x.trida || null })); },
     async nastavUcetZamestnance(uid, aktivni) { return ok(await klient().rpc('nastav_ucet_zamestnance', { p_uzivatel: uid, p_aktivni: !!aktivni })); },
 
+    /* --------------------------------------------- majetek a inventarizace
+       Ředitelna (vedení, hospodářka) načte celou evidenci; tablet učitelky jen
+       místnosti svých tříd (to hlídá databáze). Měnit jde jen funkcemi. */
+    async nactiMajetek(tablet) {
+      var vse = async function (dotaz) {
+        var out = [], od = 0;
+        for (;;) { var d = ok(await dotaz().range(od, od + 999)); out = out.concat(d || []); if (!d || d.length < 1000) return out; od += 1000; }
+      };
+      var u = nactiUcet();
+      if (!tablet && u && (u.role === 'reditelka' || u.role === 'zastupce' || u.role === 'hospodarka')) {
+        var kat0 = ok(await klient().from('majetek_kategorie').select('kod').limit(1));
+        if (!kat0.length) await klient().rpc('majetek_priprav');
+      }
+      var inv = ok(await klient().from('inventury').select('id, k_datu, zahajena, uzavrena, komise').order('zahajena', { ascending: false }).limit(10));
+      var bezi = inv.filter(function (i) { return !i.uzavrena; })[0] || null;
+      var r = await Promise.all([
+        klient().from('majetek_kategorie').select('kod, nazev, poradi').order('poradi'),
+        klient().from('mistnosti').select('id, nazev, trida_id, poradi, aktivni').order('poradi').order('nazev'),
+        vse(function () { return klient().from('majetek').select('id, cislo, kategorie, rok, poradi, nazev, druh, mistnost_id, odpovida, vyrobce, seriove, porizeno, cena, dodavatel, doklad, ucetni_druh, zaruka_do, financovani, puvodni_cislo, poznamka, stav, zapujceno_komu, zapujceno_do, vyrazeno, duvod_vyrazeni, stitek_tisk').order('cislo'); }),
+        tablet ? Promise.resolve([]) : vse(function () { return klient().from('majetek_pohyby').select('id, polozka_id, kdy, druh, popis, kdo').order('kdy', { ascending: false }); }),
+        tablet ? { data: [] } : klient().from('majetek_kontroly').select('id, polozka_id, nazev, interval_mesicu, posledni, dalsi, poznamka').order('dalsi'),
+        bezi ? klient().from('inventura_mistnosti').select('mistnost_id, kontroluje, hotovo').eq('inventura_id', bezi.id) : { data: [] },
+        bezi ? vse(function () { return klient().from('inventura_zaznamy').select('polozka_id, vysledek, nalezeno_v, kdy, vyreseno').eq('inventura_id', bezi.id).order('polozka_id'); }) : Promise.resolve([]),
+        bezi ? klient().from('inventura_nalezy').select('id, mistnost_id, popis, kdy, vyreseno, polozka_id').eq('inventura_id', bezi.id).order('kdy') : { data: [] }
+      ]);
+      var D = r.map(function (x) { return Array.isArray(x) ? x : ok(x); });
+      return { kategorie: D[0], mistnosti: D[1], polozky: D[2], pohyby: D[3], kontroly: D[4], inventury: inv, inventura: bezi,
+        invMistnosti: D[5], zaznamy: D[6], nalezy: D[7] };
+    },
+    async majetekRpc(fn, args) { return ok(await klient().rpc(fn, args || {})); },
+
     /* --------------------------------------------- ředitelna: data školky
        Načte vše, co ředitelna v ostrém provozu ukazuje (kartotéka, třídy,
        zaměstnanci, kniha úrazů, souhrn docházky, dnešek, zprávy). Rodná čísla

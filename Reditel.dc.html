@@ -652,6 +652,467 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
       </div>
     </sc-if>
 
+    <!-- ========================================================== MAJETEK
+         Evidence majetku, QR štítky a inventarizace (migrace 2026-10-20). -->
+    <sc-if value="{{is.majetek}}" hint-placeholder-val="{{false}}">
+      <sc-if value="{{maj.loading}}" hint-placeholder-val="{{false}}">
+        <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #5A5C60">Načítám majetek…</div>
+      </sc-if>
+      <sc-if value="{{maj.showTabs}}" hint-placeholder-val="{{true}}">
+        <div role="tablist" aria-label="Majetek" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+          <sc-for list="{{maj.tabs}}" as="t" hint-placeholder-count="5">
+            <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+          </sc-for>
+          <span style="flex-grow: 1"></span>
+          <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}">
+            <button type="button" onClick="{{maj.goImport}}" style="{{maj.btn}}">Import z Excelu</button>
+            <button type="button" onClick="{{maj.goStitky}}" style="{{maj.btn}}">Tisk štítků · {{maj.noBez}}</button>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ---------------------------------------------- seznam -->
+      <sc-if value="{{maj.isList}}" hint-placeholder-val="{{true}}">
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+          <sc-for list="{{maj.stats}}" as="s" hint-placeholder-count="4">
+            <div style="{{s.style}}">
+              <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{s.label}}</span>
+              <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em">{{s.value}}</span>
+              <span style="font-size: 13px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.sub}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Seznam majetku" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+            <div style="padding: 12px 20px 10px; border-bottom: 1px solid #EEF0ED; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap">
+                <input type="search" aria-label="Hledat v majetku" value="{{maj.q}}" onInput="{{maj.onQ}}" placeholder="Název, inventární, sériové nebo původní číslo" style="height: 36px; width: 300px; box-sizing: border-box; border-radius: 18px; border: 2px solid #E5E7E4; padding: 0 14px; font-size: 14px; color: #17181A; background: #F8F9F7">
+                <sc-for list="{{maj.rooms}}" as="r" hint-placeholder-count="6">
+                  <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.on}}" style="{{r.style}}"><sc-if value="{{r.hasDot}}" hint-placeholder-val="{{true}}"><span style="{{r.dotStyle}}"></span></sc-if>{{r.label}}</button>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap">
+                <sc-for list="{{maj.cats}}" as="c" hint-placeholder-count="6">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+                <span style="width: 1px; height: 24px; background: #E5E7E4; margin: 0 4px"></span>
+                <sc-for list="{{maj.stavy}}" as="c" hint-placeholder-count="4">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 24px 124px minmax(0, 1fr) 118px 100px 104px; gap: 10px; padding: 9px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+              <span></span><span>Inv. číslo</span><span>Název</span><span>Místnost</span><span style="text-align: right">Cena</span><span>Stav</span>
+            </div>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+              <sc-for list="{{maj.rows}}" as="r" hint-placeholder-count="10">
+                <div style="display: grid; grid-template-columns: 24px 124px minmax(0, 1fr) 118px 100px 104px; gap: 10px; padding: 8px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                  <input type="checkbox" aria-label="Vybrat {{r.inv}}" checked="{{r.sel}}" onChange="{{r.toggle}}" style="width: 18px; height: 18px; accent-color: #1F3A5C">
+                  <button type="button" onClick="{{r.open}}" style="border: 0; background: transparent; padding: 0; text-align: left; font-family: inherit; font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; color: #1F3A5C; cursor: pointer">{{r.inv}}</button>
+                  <button type="button" onClick="{{r.open}}" style="border: 0; background: transparent; padding: 0; text-align: left; font-family: inherit; color: #17181A; cursor: pointer; display: flex; flex-direction: column; min-width: 0"><span style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{r.sub}}</span></button>
+                  <span style="display: flex; align-items: center; gap: 6px; min-width: 0"><span style="{{r.dotStyle}}"></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.room}}</span></span>
+                  <span style="text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{r.price}}</span>
+                  <span><span style="{{r.stStyle}}">{{r.st}}</span></span>
+                </div>
+              </sc-for>
+              <sc-if value="{{maj.empty}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 40px; text-align: center; font-size: 15px; color: #5A5C60">{{maj.emptyText}}</div>
+              </sc-if>
+            </div>
+            <div style="padding: 10px 20px; border-top: 1px solid #EEF0ED; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #3A3C40; flex-wrap: wrap">
+              <span style="flex-grow: 1">{{maj.foot}}</span>
+              <sc-if value="{{maj.hasSel}}" hint-placeholder-val="{{false}}">
+                <button type="button" onClick="{{maj.selNone}}" style="{{maj.btnSmall}}">Zrušit výběr</button>
+                <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.selMove}}" style="{{maj.btnSmall}}">Přesunout</button></sc-if>
+                <button type="button" onClick="{{maj.selPrint}}" style="height: 34px; padding: 0 14px; border-radius: 17px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Tisk štítků pro vybrané</button>
+              </sc-if>
+              <button type="button" onClick="{{maj.selAll}}" style="{{maj.btnSmall}}">Vybrat zobrazené</button>
+              <button type="button" onClick="{{maj.export}}" style="{{maj.btnSmall}}">Export pro účetní (.csv)</button>
+            </div>
+          </section>
+          <aside style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+            <section aria-label="Podle kategorií" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+              <h2 style="margin: 0; font-size: 16px; font-weight: 800">Podle kategorií</h2>
+              <sc-for list="{{maj.byCat}}" as="b" hint-placeholder-count="5">
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <span style="display: flex; gap: 8px; font-size: 13px"><span style="flex-grow: 1; font-weight: 700">{{b.label}}</span><span style="color: #5A5C60">{{b.n}} ks</span><span style="font-weight: 700; width: 96px; text-align: right; font-variant-numeric: tabular-nums">{{b.value}}</span></span>
+                  <span style="height: 6px; border-radius: 3px; background: #F3F4F2; display: block"><span style="{{b.bar}}"></span></span>
+                </div>
+              </sc-for>
+            </section>
+            <section aria-label="Vyžaduje pozornost" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow-y: auto">
+              <h2 style="margin: 0; font-size: 16px; font-weight: 800">Vyžaduje pozornost</h2>
+              <sc-for list="{{maj.att}}" as="t" hint-placeholder-count="3">
+                <button type="button" onClick="{{t.go}}" style="{{t.style}}"><span style="font-size: 14px; font-weight: 800">{{t.title}}</span><span style="font-size: 12px; color: #3A3C40">{{t.sub}}</span></button>
+              </sc-for>
+              <sc-if value="{{maj.noAtt}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #2F5212; font-weight: 700">Nic — závady, kontroly i zápůjčky jsou v pořádku.</span></sc-if>
+            </section>
+          </aside>
+        </div>
+      </sc-if>
+
+      <!-- ---------------------------------------------- karta položky -->
+      <sc-if value="{{maj.isCard}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <button type="button" onClick="{{maj.card.back}}" aria-label="Zpět na seznam majetku" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E5E7E4; display: flex; align-items: center; justify-content: center; color: #17181A; cursor: pointer; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+            <span style="font-size: 13px; font-weight: 600; color: #5A5C60">{{maj.card.kicker}}<span style="font-weight: 800; color: #1F3A5C">{{maj.card.cislo}}</span></span>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">{{maj.card.title}}</h2>
+          </div>
+          <span style="{{maj.card.stStyle}}">{{maj.card.st}}</span>
+          <sc-if value="{{maj.card.canEdit}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.card.edit}}" style="{{maj.btn}}">Upravit údaje</button></sc-if>
+        </div>
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+            <section aria-label="Údaje" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 18px">
+              <sc-for list="{{maj.card.facts}}" as="f" hint-placeholder-count="12">
+                <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                  <span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.05em">{{f.k}}</span>
+                  <span style="font-size: 15px; font-weight: 700; overflow-wrap: anywhere">{{f.v}}</span>
+                </div>
+              </sc-for>
+            </section>
+            <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+              <section aria-label="Historie" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800">Historie</h3>
+                <sc-for list="{{maj.card.hist}}" as="h" hint-placeholder-count="5">
+                  <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; font-size: 14px; padding-bottom: 7px; border-bottom: 1px solid #F3F4F2">
+                    <span style="color: #5A5C60; font-variant-numeric: tabular-nums">{{h.d}}</span>
+                    <span style="display: flex; flex-direction: column; gap: 1px"><span style="font-weight: 700">{{h.what}}</span><span style="font-size: 12px; color: #5A5C60">{{h.who}}</span></span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{maj.card.noHist}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #5A5C60">Zatím nic.</span></sc-if>
+              </section>
+              <section aria-label="Revize a servis" style="width: 340px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto">
+                <div style="display: flex; align-items: center"><h3 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Revize a servis</h3><sc-if value="{{maj.card.canEdit}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.card.addKon}}" style="{{maj.btnSmall}}">+ Kontrola</button></sc-if></div>
+                <sc-for list="{{maj.card.kon}}" as="k" hint-placeholder-count="1">
+                  <div style="{{k.style}}">
+                    <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 800">{{k.t}}</span><span style="font-size: 12px; color: #3A3C40">{{k.s}}</span></span>
+                    <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{k.done}}" style="height: 32px; padding: 0 10px; border-radius: 16px; border: 0; background: #FFFFFF; font-size: 12px; font-weight: 800; cursor: pointer; color: #17181A; flex-shrink: 0">Hotovo</button></sc-if>
+                  </div>
+                </sc-for>
+                <sc-if value="{{maj.card.hasGar}}" hint-placeholder-val="{{false}}"><div style="padding: 12px 14px; border-radius: 16px; background: #F3F4F2; font-size: 14px; font-weight: 800">{{maj.card.gar}}</div></sc-if>
+                <sc-if value="{{maj.card.noKon}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #5A5C60">Bez pravidelných kontrol.</span></sc-if>
+              </section>
+            </div>
+          </div>
+          <aside style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto">
+            <section aria-label="QR štítek" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; align-items: center">
+              <h3 style="margin: 0; font-size: 16px; font-weight: 800; align-self: flex-start">QR štítek</h3>
+              <div style="width: 240px; border: 1px solid #E5E7E4; border-radius: 12px; padding: 10px; box-sizing: border-box; display: flex; gap: 10px; align-items: center">
+                <svg width="86" height="86" viewBox="{{maj.card.qrView}}" role="img" aria-label="QR kód štítku {{maj.card.cislo}}" shape-rendering="crispEdges" style="flex-shrink: 0"><rect x="-2" y="-2" width="{{maj.card.qrSize}}" height="{{maj.card.qrSize}}" fill="#FFFFFF"></rect><path d="{{maj.card.qrPath}}" fill="#17181A"></path></svg>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <span style="font-size: 10px; font-weight: 700; color: #5A5C60">{{school.name}}</span>
+                  <span style="font-size: 14px; font-weight: 800">{{maj.card.cislo}}</span>
+                  <span style="font-size: 11px; color: #3A3C40; line-height: 14px">{{maj.card.title}} · {{maj.card.room}}</span>
+                </span>
+              </div>
+              <span style="font-size: 12px; color: #5A5C60; text-align: center; line-height: 17px">{{maj.card.labelNote}}</span>
+              <sc-if value="{{maj.card.canEdit}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.card.printLabel}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">{{maj.card.printLabelText}}</button></sc-if>
+            </section>
+            <sc-if value="{{maj.card.hasActions}}" hint-placeholder-val="{{true}}">
+              <section aria-label="Co s položkou" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+                <h3 style="margin: 0 0 2px; font-size: 16px; font-weight: 800">Co s položkou</h3>
+                <sc-for list="{{maj.card.actions}}" as="a" hint-placeholder-count="4">
+                  <button type="button" onClick="{{a.go}}" style="{{a.style}}"><span style="font-size: 14px; font-weight: 800">{{a.t}}</span><span style="font-size: 12px; font-weight: 500; color: #5A5C60">{{a.s}}</span></button>
+                </sc-for>
+              </section>
+            </sc-if>
+          </aside>
+        </div>
+      </sc-if>
+
+      <!-- ---------------------------------------------- tisk štítků -->
+      <sc-if value="{{maj.isStitky}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Nastavení tisku" style="width: 460px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <button type="button" onClick="{{maj.st.back}}" aria-label="Zpět na majetek" style="width: 40px; height: 40px; border-radius: 20px; background: #F3F4F2; border: 0; display: flex; align-items: center; justify-content: center; color: #17181A; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+              <h2 style="margin: 0; font-size: 20px; font-weight: 800">Tisk QR štítků</h2>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800">Co tisknout</h3>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                <sc-for list="{{maj.st.what}}" as="w" hint-placeholder-count="4"><button type="button" onClick="{{w.pick}}" aria-pressed="{{w.on}}" style="{{w.style}}">{{w.label}}</button></sc-for>
+              </div>
+              <sc-if value="{{maj.st.isMist}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                  <sc-for list="{{maj.st.mists}}" as="w" hint-placeholder-count="4"><button type="button" onClick="{{w.pick}}" aria-pressed="{{w.on}}" style="{{w.style}}">{{w.label}}</button></sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800">Arch A4 — štítků na archu</h3>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+                <sc-for list="{{maj.st.presets}}" as="p" hint-placeholder-count="5">
+                  <button type="button" onClick="{{p.pick}}" aria-pressed="{{p.on}}" style="{{p.style}}"><span style="font-size: 16px; font-weight: 800">{{p.title}}</span><span style="font-size: 12px; font-weight: 600; color: #5A5C60">{{p.sub}}</span></button>
+                </sc-for>
+              </div>
+              <sc-if value="{{maj.st.custom}}" hint-placeholder-val="{{false}}">
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; border-radius: 16px; background: #F8F9F7">
+                  <sc-for list="{{maj.st.customFields}}" as="f" hint-placeholder-count="4">
+                    <div style="display: flex; flex-direction: column; gap: 4px">
+                      <span style="font-size: 13px; font-weight: 700">{{f.label}}</span>
+                      <div style="display: flex; align-items: center; gap: 6px">
+                        <button type="button" onClick="{{f.minus}}" aria-label="{{f.label}} méně" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: #FFFFFF; font-size: 18px; font-weight: 700; cursor: pointer; color: #17181A">−</button>
+                        <span style="min-width: 40px; text-align: center; font-size: 16px; font-weight: 800">{{f.value}}</span>
+                        <button type="button" onClick="{{f.plus}}" aria-label="{{f.label}} více" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: #FFFFFF; font-size: 18px; font-weight: 700; cursor: pointer; color: #17181A">+</button>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <span style="font-size: 13px; color: #3A3C40; font-weight: 700">{{maj.st.customNote}}</span>
+                </div>
+              </sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800">Začít od štítku</h3>
+              <div style="display: flex; align-items: center; gap: 10px">
+                <button type="button" onClick="{{maj.st.startMinus}}" aria-label="Začít o štítek dřív" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F4F2; font-size: 20px; font-weight: 700; cursor: pointer; color: #17181A">−</button>
+                <span style="min-width: 44px; text-align: center; font-size: 22px; font-weight: 800">{{maj.st.start}}</span>
+                <button type="button" onClick="{{maj.st.startPlus}}" aria-label="Začít o štítek později" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #F3F4F2; font-size: 20px; font-weight: 700; cursor: pointer; color: #17181A">+</button>
+                <span style="font-size: 13px; color: #5A5C60; line-height: 18px">Načatý arch? Klepněte v náhledu na první volný štítek.</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800">Na štítku</h3>
+              <sc-for list="{{maj.st.opts}}" as="o" hint-placeholder-count="2">
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; min-height: 30px; cursor: pointer"><input type="checkbox" checked="{{o.on}}" onChange="{{o.toggle}}" style="width: 20px; height: 20px; accent-color: #1F3A5C">{{o.label}}</label>
+              </sc-for>
+              <span style="font-size: 12px; color: #5A5C60">QR kód a inventární číslo jsou vždy. U malých štítků se text vynechá sám.</span>
+            </div>
+            <div style="flex-grow: 1"></div>
+            <div style="padding: 12px 14px; border-radius: 16px; background: #EBF1FA; color: #27407A; font-size: 14px; font-weight: 700">{{maj.st.summary}}</div>
+            <div style="display: flex; gap: 8px">
+              <button type="button" onClick="{{maj.st.test}}" style="flex-grow: 1; height: 52px; border-radius: 26px; border: 0; background: #F3F4F2; font-size: 15px; font-weight: 800; cursor: pointer; color: #17181A">Zkušební tisk</button>
+              <button type="button" onClick="{{maj.st.print}}" aria-disabled="{{maj.st.cant}}" style="flex-grow: 2; height: 52px; border-radius: 26px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 15px; font-weight: 800; cursor: pointer">Tisk / uložit PDF</button>
+            </div>
+          </section>
+          <section aria-label="Náhled archu" style="flex-grow: 1; min-width: 0; background: #EEF0ED; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden">
+            <div style="width: 524px; height: 692px; box-sizing: border-box; background: #FFFFFF; box-shadow: 0 8px 28px rgba(23,24,26,0.14); padding: 10px; display: grid; gap: 2px; {{maj.st.gridStyle}}">
+              <sc-for list="{{maj.st.cells}}" as="c" hint-placeholder-count="24">
+                <button type="button" onClick="{{c.pick}}" aria-label="{{c.aria}}" style="{{c.style}}">
+                  <sc-if value="{{c.filled}}" hint-placeholder-val="{{false}}">
+                    <svg viewBox="{{c.qrView}}" aria-hidden="true" shape-rendering="crispEdges" style="{{c.qrStyle}}"><rect x="-2" y="-2" width="{{c.qrSize}}" height="{{c.qrSize}}" fill="#FFFFFF"></rect><path d="{{c.qrPath}}" fill="#17181A"></path></svg>
+                    <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0; text-align: left">
+                      <sc-if value="{{c.showSchool}}" hint-placeholder-val="{{false}}"><span style="font-size: 7px; font-weight: 700; color: #5A5C60">{{c.school}}</span></sc-if>
+                      <span style="{{c.invStyle}}">{{c.inv}}</span>
+                      <sc-if value="{{c.showName}}" hint-placeholder-val="{{false}}"><span style="font-size: 7.5px; color: #3A3C40; line-height: 9px; overflow: hidden">{{c.name}}</span></sc-if>
+                    </span>
+                  </sc-if>
+                  <sc-if value="{{c.used}}" hint-placeholder-val="{{false}}"><span style="font-size: 9px; font-weight: 700; color: #8A8C90">použito</span></sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <span style="font-size: 13px; color: #3A3C40">{{maj.st.sheetNote}}</span>
+          </section>
+        </div>
+      </sc-if>
+
+      <!-- ---------------------------------------------- import -->
+      <sc-if value="{{maj.isImport}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <button type="button" onClick="{{maj.imp.back}}" aria-label="Zpět na majetek" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E5E7E4; display: flex; align-items: center; justify-content: center; color: #17181A; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <h2 style="margin: 0; font-size: 22px; font-weight: 800; flex-grow: 1">Import ze staré evidence (Excel, CSV, jiný systém)</h2>
+          <label for="maj-import-soubor" style="height: 44px; padding: 0 18px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Vybrat soubor</label>
+          <input id="maj-import-soubor" type="file" accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" onChange="{{maj.imp.onFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none">
+          <button type="button" onClick="{{maj.imp.sample}}" style="{{maj.btn}}">Vzorová tabulka</button>
+        </div>
+        <sc-if value="{{maj.imp.hasFail}}" hint-placeholder-val="{{false}}">
+          <div role="alert" style="padding: 14px 18px; border-radius: 18px; background: #FAEBE4; color: #9A3412; font-size: 15px; font-weight: 600">{{maj.imp.file}}: {{maj.imp.fail}}</div>
+        </sc-if>
+        <sc-if value="{{maj.imp.has}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+            <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+              <section aria-label="Sloupce" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800">{{maj.imp.file}} · {{maj.imp.info}}</h3>
+                <sc-for list="{{maj.imp.map}}" as="m" hint-placeholder-count="5">
+                  <div style="display: grid; grid-template-columns: 170px minmax(0, 1fr) 220px; gap: 12px; align-items: center; font-size: 14px; padding: 5px 0; border-bottom: 1px solid #F3F4F2">
+                    <span style="font-weight: 800">{{m.col}}</span><span style="color: #3A3C40; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.ex}}</span><span style="font-weight: 700; color: #1F3A5C">→ {{m.to}}</span>
+                  </div>
+                </sc-for>
+              </section>
+              <sc-if value="{{maj.imp.hasKat}}" hint-placeholder-val="{{false}}">
+                <section aria-label="Kategorie" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px">
+                  <h3 style="margin: 0; font-size: 16px; font-weight: 800">Kategorie — co ve vašem souboru znamená co</h3>
+                  <sc-for list="{{maj.imp.katVals}}" as="v" hint-placeholder-count="3">
+                    <div style="display: flex; flex-direction: column; gap: 6px">
+                      <span style="font-size: 14px; font-weight: 700">„{{v.from}}“ <span style="color: #5A5C60; font-weight: 500">· {{v.n}} ×</span></span>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{v.chips}}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for></div>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-if>
+              <sc-if value="{{maj.imp.noKatCol}}" hint-placeholder-val="{{false}}">
+                <section aria-label="Kategorie pro všechno" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px">
+                  <h3 style="margin: 0; font-size: 16px; font-weight: 800">Soubor nemá sloupec s druhem — jakou kategorii dát všemu?</h3>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{maj.imp.defK}}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for></div>
+                </section>
+              </sc-if>
+              <sc-if value="{{maj.imp.hasMist}}" hint-placeholder-val="{{false}}">
+                <section aria-label="Místnosti" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px">
+                  <h3 style="margin: 0; font-size: 16px; font-weight: 800">Místnosti</h3>
+                  <sc-for list="{{maj.imp.mistVals}}" as="v" hint-placeholder-count="3">
+                    <div style="display: flex; flex-direction: column; gap: 6px">
+                      <span style="font-size: 14px; font-weight: 700">„{{v.from}}“ <span style="color: #5A5C60; font-weight: 500">· {{v.n}} ×</span></span>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{v.chips}}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button></sc-for></div>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-if>
+            </div>
+            <aside style="width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px">
+              <section aria-label="Co se stane" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800">Co se stane</h3>
+                <sc-for list="{{maj.imp.check}}" as="c" hint-placeholder-count="4">
+                  <div style="{{c.style}}"><span style="font-size: 20px; font-weight: 800; min-width: 44px">{{c.n}}</span><span style="font-size: 13px; line-height: 17px">{{c.t}}</span></div>
+                </sc-for>
+              </section>
+              <section aria-label="Inventární čísla" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; font-size: 13px; color: #3A3C40; line-height: 19px">Každá položka dostane nové číslo <b>kategorie-rok-pořadí</b> (rok pořízení, chybí-li, rok importu). Staré číslo zůstane v kartě jako „Původní číslo“ a dá se podle něj hledat. Po importu se otevře tisk štítků.</section>
+              <button type="button" onClick="{{maj.imp.run}}" style="{{maj.imp.runStyle}}">{{maj.imp.runLabel}}</button>
+            </aside>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <!-- ---------------------------------------------- inventura -->
+      <sc-if value="{{maj.isInv}}" hint-placeholder-val="{{false}}">
+        <sc-if value="{{maj.inv.notRunning}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; gap: 18px">
+            <section aria-label="Nová inventura" style="flex-grow: 1; background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+              <h3 style="margin: 0; font-size: 20px; font-weight: 800">Inventura teď neprobíhá</h3>
+              <span style="font-size: 15px; color: #3A3C40; line-height: 22px; max-width: 640px">Při inventuře se jde místnost po místnosti a skenují se štítky: učitelky na tabletu své třídy, ostatní místnosti tady (čtečkou nebo napsáním čísla). Co se nenajde, je „chybí“, co je jinde, se dá přesunout. Na konci inventurní soupis k podpisu komise.</span>
+              <sc-if value="{{maj.inv.canStart}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.inv.start}}" style="{{maj.btnPrimary}}">Zahájit inventuru</button></sc-if>
+            </section>
+            <section aria-label="Předchozí inventury" style="width: 360px; background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+              <h3 style="margin: 0; font-size: 16px; font-weight: 800">Předchozí inventury</h3>
+              <sc-for list="{{maj.inv.hist}}" as="h" hint-placeholder-count="1"><div style="padding: 10px 12px; border-radius: 14px; background: #F3F4F2; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 800">{{h.t}}</span><span style="font-size: 12px; color: #3A3C40">{{h.s}}</span></div></sc-for>
+              <sc-if value="{{maj.inv.noHist}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #5A5C60">Zatím žádná.</span></sc-if>
+            </section>
+          </div>
+        </sc-if>
+        <sc-if value="{{maj.inv.running}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1"><h3 style="margin: 0; font-size: 20px; font-weight: 800">{{maj.inv.title}}</h3><span style="font-size: 13px; color: #5A5C60">{{maj.inv.sub}}</span></div>
+            <button type="button" onClick="{{maj.inv.soupis}}" style="{{maj.btn}}">Inventurní soupis (PDF)</button>
+            <button type="button" onClick="{{maj.inv.close}}" title="{{maj.inv.closeHint}}" style="{{maj.inv.closeStyle}}">Uzavřít inventuru</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px">
+            <sc-for list="{{maj.inv.stats}}" as="s" hint-placeholder-count="5">
+              <div style="{{s.style}}"><span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{s.label}}</span><span style="font-size: 24px; font-weight: 800">{{s.value}}</span><span style="font-size: 13px; color: #5A5C60">{{s.sub}}</span></div>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+            <section aria-label="Místnosti" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 190px minmax(0, 1fr) 190px; gap: 12px; padding: 12px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+                <span>Místnost</span><span>Kontroluje</span><span>Hotovo</span><span>Rozdíly</span><span></span>
+              </div>
+              <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+                <sc-for list="{{maj.inv.rooms}}" as="r" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 190px minmax(0, 1fr) 190px; gap: 12px; padding: 11px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                    <span style="display: flex; align-items: center; gap: 8px; font-weight: 800"><span style="{{r.dotStyle}}"></span>{{r.name}}</span>
+                    <span style="color: #3A3C40">{{r.who}}</span>
+                    <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; font-weight: 700">{{r.prog}}</span><span style="height: 8px; border-radius: 4px; background: #F3F4F2; display: block"><span style="{{r.bar}}"></span></span></span>
+                    <span style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{r.diffs}}" as="d" hint-placeholder-count="1"><span style="{{d.style}}">{{d.t}}</span></sc-for></span>
+                    <span style="display: flex; gap: 6px; justify-content: flex-end">
+                      <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{r.assign}}" style="{{maj.btnSmall}}">Kdo</button></sc-if>
+                      <sc-if value="{{r.canScan}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{r.scan}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Skenovat</button></sc-if>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+            <aside style="width: 380px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+              <section aria-label="Rozdíly k vyřešení" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-height: 0; overflow-y: auto">
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800">{{maj.inv.todoTitle}}</h3>
+                <sc-for list="{{maj.inv.todo}}" as="t" hint-placeholder-count="3">
+                  <div style="padding: 10px 12px; border-radius: 16px; background: {{t.bg}}; color: {{t.fg}}; display: flex; flex-direction: column; gap: 6px">
+                    <span style="display: flex; flex-direction: column; gap: 1px"><span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em">{{t.kind}}</span><span style="font-size: 14px; font-weight: 800; color: #17181A">{{t.title}}</span><span style="font-size: 12px; color: #3A3C40">{{t.sub}}</span></span>
+                    <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}">
+                      <span style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{t.acts}}" as="a" hint-placeholder-count="2"><button type="button" onClick="{{a.go}}" style="height: 32px; padding: 0 10px; border-radius: 16px; border: 0; background: #FFFFFF; font-size: 12px; font-weight: 800; cursor: pointer; color: #17181A">{{a.l}}</button></sc-for></span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <sc-if value="{{maj.inv.noTodo}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; color: #5A5C60">Zatím žádné.</span></sc-if>
+              </section>
+              <sc-if value="{{maj.inv.hasKomise}}" hint-placeholder-val="{{true}}">
+                <section aria-label="Inventarizační komise" style="background: #FFFFFF; border-radius: 24px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+                  <h3 style="margin: 0 0 2px; font-size: 16px; font-weight: 800">Inventarizační komise</h3>
+                  <sc-for list="{{maj.inv.komise}}" as="k" hint-placeholder-count="3"><span style="font-size: 14px"><b>{{k.t}}</b> · {{k.role}}</span></sc-for>
+                </section>
+              </sc-if>
+            </aside>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <!-- ---------------------------------------------- revize a servis -->
+      <sc-if value="{{maj.isRev}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Revize a servis" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid #EEF0ED">
+            <span style="flex-grow: 1; font-size: 14px; color: #3A3C40">Pravidelné kontroly — elektrorevize, hasicí přístroje, herní prvky na zahradě, servis spotřebičů. Do 30 dní se ukážou v Přehledu.</span>
+            <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.rev.add}}" style="{{maj.btnPrimary}}">+ Nová kontrola</button></sc-if>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+            <sc-for list="{{maj.rev.rows}}" as="r" hint-placeholder-count="4">
+              <div style="{{r.rowStyle}}">
+                <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 15px; font-weight: 800">{{r.t}}</span><span style="font-size: 13px; color: #3A3C40; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.s}}</span></span>
+                <span style="{{r.whenStyle}}">{{r.when}}</span>
+                <span style="display: flex; flex-direction: column; font-size: 12px; color: #5A5C60"><span>{{r.every}}</span><span>{{r.last}}</span></span>
+                <span style="display: flex; gap: 6px; justify-content: flex-end">
+                  <sc-if value="{{r.hasPol}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{r.open}}" style="{{maj.btnSmall}}">Karta</button></sc-if>
+                  <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{r.edit}}" style="{{maj.btnSmall}}">Upravit</button><button type="button" onClick="{{r.done}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Hotovo</button></sc-if>
+                </span>
+              </div>
+            </sc-for>
+            <sc-if value="{{maj.rev.empty}}" hint-placeholder-val="{{false}}"><div style="padding: 40px; text-align: center; font-size: 15px; color: #5A5C60">Žádné kontroly. Přidejte třeba elektrorevizi spotřebičů.</div></sc-if>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- ---------------------------------------------- vyřazené -->
+      <sc-if value="{{maj.isVyr}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Vyřazený majetek" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: grid; grid-template-columns: 140px minmax(0, 1fr) 110px minmax(0, 1fr) 110px 190px; gap: 12px; padding: 12px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+            <span>Inv. číslo</span><span>Název</span><span>Vyřazeno</span><span>Důvod</span><span style="text-align: right">Cena</span><span></span>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+            <sc-for list="{{maj.vyr.rows}}" as="r" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 140px minmax(0, 1fr) 110px minmax(0, 1fr) 110px 190px; gap: 12px; padding: 10px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                <span style="font-weight: 800; color: #3A3C40">{{r.inv}}</span><span style="font-weight: 700">{{r.name}}</span><span>{{r.date}}</span><span style="color: #3A3C40">{{r.why}}</span><span style="text-align: right">{{r.price}}</span>
+                <span style="display: flex; gap: 6px; justify-content: flex-end"><button type="button" onClick="{{r.open}}" style="{{maj.btnSmall}}">Karta</button><button type="button" onClick="{{r.print}}" style="{{maj.btnSmall}}">Protokol</button></span>
+              </div>
+            </sc-for>
+            <sc-if value="{{maj.vyr.empty}}" hint-placeholder-val="{{false}}"><div style="padding: 40px; text-align: center; font-size: 15px; color: #5A5C60">Nic vyřazeného.</div></sc-if>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- ---------------------------------------------- místnosti a kategorie -->
+      <sc-if value="{{maj.isSet}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Místnosti" style="flex: 1 1 0; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto">
+            <div style="display: flex; align-items: center"><h3 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Místnosti</h3><sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.set.addRoom}}" style="{{maj.btnSmall}}">+ Místnost</button></sc-if></div>
+            <sc-for list="{{maj.set.rooms}}" as="r" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #F8F9F7">
+                <span style="{{r.dotStyle}}"></span><span style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 15px; font-weight: 800">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.sub}}</span></span>
+                <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{r.edit}}" style="{{maj.btnSmall}}">Upravit</button></sc-if>
+              </div>
+            </sc-for>
+          </section>
+          <section aria-label="Kategorie" style="flex: 1 1 0; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto">
+            <div style="display: flex; align-items: center"><h3 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Kategorie a začátek čísla</h3><sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{maj.set.addCat}}" style="{{maj.btnSmall}}">+ Kategorie</button></sc-if></div>
+            <sc-for list="{{maj.set.cats}}" as="c" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: #F8F9F7">
+                <span style="min-width: 52px; height: 30px; padding: 0 8px; box-sizing: border-box; border-radius: 10px; background: #E6EDF6; color: #1F3A5C; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center">{{c.kod}}</span>
+                <span style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 15px; font-weight: 800">{{c.name}}</span><span style="font-size: 12px; color: #5A5C60">{{c.sub}}</span></span>
+                <sc-if value="{{maj.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{c.edit}}" style="{{maj.btnSmall}}">Přejmenovat</button></sc-if>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+      </sc-if>
+    </sc-if>
+
     <!-- ========================================================== ZPRÁVY -->
     <sc-if value="{{is.zpravy}}" hint-placeholder-val="{{false}}">
       <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
@@ -1171,6 +1632,24 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
               </div>
             </div>
           </sc-for>
+          <sc-for list="{{dlg.inputs2}}" as="f" hint-placeholder-count="1">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800">{{f.label}}
+              <input type="{{f.type}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}" onChange="{{f.onInput}}" style="height: 52px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 17px; font-weight: 500; color: #17181A">
+              <sc-if value="{{f.hasHint}}" hint-placeholder-val="{{false}}">
+                <span style="{{f.hintStyle}}">{{f.hint}}</span>
+              </sc-if>
+            </label>
+          </sc-for>
+          <sc-for list="{{dlg.choices2}}" as="g" hint-placeholder-count="1">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 15px; font-weight: 800">{{g.label}}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{g.chips}}" as="c" hint-placeholder-count="3">
+                  <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
           <sc-if value="{{dlg.hasExtra}}" hint-placeholder-val="{{false}}">
             <button type="button" onClick="{{dlg.extra}}" style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 20px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer; color: #17181A">{{dlg.extraLabel}}</button>
           </sc-if>
@@ -1642,12 +2121,14 @@ class Component extends DCLogic {
     this.srv = !!(this.ucet && this.ucet.server && SRVR && window.SkolkaServer);
     if (this.srv) this.zeServeru(SRVR);
     this.srvZp = { zpravy: [], precteni: [] }; this.zpPotv = {};
+    if (!this.srv) this.majOtevriOdkaz();
   }
 
   /* Zprávy (ostrý provoz): konverzace s rodiči a učitelkami, živě. */
   componentDidMount() {
     var self = this;
     if (!this.srv) return;
+    this.majNacti().catch(function () { /* majetek se zkusí znovu při otevření */ });
     this.nactiZpravy();
     this._stopZpr = window.SkolkaServer.sledujZpravy(function () { self.nactiZpravy(); });
   }
@@ -3289,6 +3770,950 @@ class Component extends DCLogic {
     }
   }
 
+  /* ================================================================ MAJETEK
+     Evidence majetku a inventarizace. Číslo položky je KATEGORIE-ROK-POŘADÍ
+     (IT-2026-0012): rok pořízení, pořadí zvlášť pro kategorii a rok.
+     Ve zkušebním provozu žije model v úložišti prohlížeče sdíleném s tablety
+     (store().maj), v ostrém provozu na serveru — tam se mění jen databázovými
+     funkcemi (supabase/migrace-2026-10-20-majetek.sql). Místní engine níž
+     (majLok) dělá totéž co ty funkce, se stejnými názvy a parametry. */
+  majM() {
+    if (this.srv) return this.majSrv || (this.majSrv = { kat: [], mist: [], pol: [], poh: [], kon: [], inv: null, invHist: [], invM: {}, zaz: {}, nal: [], nacteno: false });
+    var S = this.store();
+    if (!S.maj) { S.maj = this.majSeed(); this.saveStore(); }
+    return S.maj;
+  }
+  majNacti() {
+    var self = this;
+    if (!this.srv) return Promise.resolve();
+    return window.SkolkaServer.nactiMajetek().then(function (D) { self.majSrv = self.majZeServeru(D); self.majOtevriOdkaz(); self.forceUpdate(); });
+  }
+  majZeServeru(D) {
+    var self = this, num = function (x) { return x == null || x === '' ? null : Number(x); };
+    var M = {
+      kat: (D.kategorie || []).map(function (k) { return { kod: k.kod, nazev: k.nazev }; }),
+      mist: (D.mistnosti || []).map(function (m) { return { id: m.id, nazev: m.nazev, trida: m.trida_id || null, aktivni: m.aktivni !== false }; }),
+      pol: (D.polozky || []).map(function (p) {
+        return { id: p.id, cislo: p.cislo, kat: p.kategorie, nazev: p.nazev, druh: p.druh || '', mist: p.mistnost_id || null, odpovida: p.odpovida || '', vyrobce: p.vyrobce || '',
+          seriove: p.seriove || '', porizeno: p.porizeno || '', cena: num(p.cena), dodavatel: p.dodavatel || '', doklad: p.doklad || '', ud: p.ucetni_druh || 'oe',
+          zaruka: p.zaruka_do || '', financ: p.financovani || '', puvodni: p.puvodni_cislo || '', pozn: p.poznamka || '', stav: p.stav || 'ok',
+          komu: p.zapujceno_komu || '', doDne: p.zapujceno_do || '', vyrazeno: p.vyrazeno || '', duvodV: p.duvod_vyrazeni || '', stitek: p.stitek_tisk || null };
+      }),
+      poh: (D.pohyby || []).map(function (x) { return { pol: x.polozka_id, kdy: x.kdy, druh: x.druh, popis: x.popis, kdo: (self.jmenoUc || {})[x.kdo] || '' }; }),
+      kon: (D.kontroly || []).map(function (k) { return { id: k.id, pol: k.polozka_id || null, nazev: k.nazev, interval: k.interval_mesicu, posledni: k.posledni || '', dalsi: k.dalsi, pozn: k.poznamka || '' }; }),
+      inv: D.inventura ? { id: D.inventura.id, kDatu: D.inventura.k_datu, zahajena: D.inventura.zahajena, komise: D.inventura.komise || [] } : null,
+      invHist: (D.inventury || []).filter(function (i) { return i.uzavrena; }).map(function (i) { return { id: i.id, kDatu: i.k_datu, zahajena: i.zahajena, uzavrena: String(i.uzavrena).slice(0, 10), komise: i.komise || [] }; }),
+      invM: {}, zaz: {},
+      nal: (D.nalezy || []).map(function (n) { return { id: n.id, mist: n.mistnost_id, popis: n.popis, kdy: n.kdy, vyreseno: n.vyreseno || null, pol: n.polozka_id || null }; }),
+      nacteno: true
+    };
+    (D.invMistnosti || []).forEach(function (x) { M.invM[x.mistnost_id] = { kdo: x.kontroluje || '', hotovo: x.hotovo || null }; });
+    (D.zaznamy || []).forEach(function (z) { M.zaz[z.polozka_id] = { vys: z.vysledek, v: z.nalezeno_v || null, kdy: z.kdy, vyreseno: z.vyreseno || null }; });
+    return M;
+  }
+
+  /* Ukázková evidence: místnosti z tříd + kuchyně, kancelář, zahrada, sklad. */
+  majSeed() {
+    var self = this, t = this.today, Y = t.getFullYear();
+    var d = function (dd) { return self.iso(self.addDays(t, -dd)); };
+    var M = { kat: [['IT', 'IT'], ['NAB', 'Nábytek'], ['VYB', 'Vybavení tříd'], ['HRA', 'Hračky a pomůcky'], ['KUC', 'Kuchyně'], ['ZAH', 'Zahrada'], ['TEX', 'Textil'], ['UKL', 'Úklid a údržba']].map(function (k) { return { kod: k[0], nazev: k[1] }; }),
+      mist: [], pol: [], poh: [], kon: [], inv: null, invHist: [], invM: {}, zaz: {}, nal: [], cis: {}, nid: 1 };
+    this.classes.forEach(function (c) { M.mist.push({ id: 'm-' + c.id, nazev: c.name, trida: c.id, aktivni: true }); });
+    [['kuchyne', 'Kuchyně'], ['kancelar', 'Kancelář'], ['zahrada', 'Zahrada'], ['sklad', 'Sklad']].forEach(function (m) { M.mist.push({ id: 'm-' + m[0], nazev: m[1], trida: null, aktivni: true }); });
+    var cl = this.classes.map(function (c) { return 'm-' + c.id; }), c0 = cl[0], c1 = cl[1] || cl[0], c2 = cl[2] || cl[0];
+    var add = function (kat, porizeno, nazev, druh, mist, cena, extra, ks) {
+      for (var i = 0; i < (ks || 1); i++) {
+        var rok = +porizeno.slice(0, 4), key = kat + '-' + rok;
+        M.cis[key] = (M.cis[key] || 0) + 1;
+        var p = Object.assign({ id: 'p' + (M.nid++), cislo: key + '-' + self.pad(M.cis[key], 4), kat: kat, nazev: nazev, druh: druh, mist: mist, odpovida: '', vyrobce: '', seriove: '', porizeno: porizeno,
+          cena: cena, dodavatel: '', doklad: '', ud: cena > 40000 ? 'dhm' : cena >= 1000 ? 'ddhm' : 'oe', zaruka: '', financ: '', puvodni: '', pozn: '', stav: 'ok', komu: '', doDne: '', vyrazeno: '', duvodV: '', stitek: porizeno + 'T10:00:00' }, extra || {});
+        M.pol.push(p);
+        M.poh.push({ pol: p.id, kdy: porizeno + 'T09:00:00', druh: 'zarazeno', popis: 'Zařazeno do evidence', kdo: 'Hana Veselá' });
+      }
+    };
+    add('IT', (Y) + '-09-03', 'Notebook Lenovo ThinkPad E14', 'Notebook', 'm-kancelar', 18990, { seriove: 'PF4X2K9L', zaruka: (Y + 3) + '-09-03', stav: 'zapujceno', komu: 'Lucie Malá', doDne: d(-11), dodavatel: 'Alza.cz', doklad: 'FV ' + Y + '/0412' });
+    add('IT', (Y - 1) + '-02-14', 'Tablet Samsung Galaxy Tab A9+', 'Tablet třídy', c0, 5490, { seriove: 'R9WT80CLM2' });
+    add('IT', (Y - 1) + '-02-14', 'Tablet Samsung Galaxy Tab A9+', 'Tablet třídy', c1, 5490, { seriove: 'R9WT80CLM7' });
+    add('IT', (Y - 1) + '-02-14', 'Tablet Samsung Galaxy Tab A9+', 'Tablet třídy', c2, 5490, { seriove: 'R9WT80CLM9' });
+    add('IT', (Y - 2) + '-05-20', 'Multifunkční tiskárna HP LaserJet', 'Tiskárna', 'm-kancelar', 12490, { stav: 'oprava' });
+    add('IT', (Y - 2) + '-05-20', 'Počítač Dell OptiPlex', 'Počítač', 'm-kancelar', 16900, { seriove: 'D7K1Q3' });
+    add('VYB', (Y - 2) + '-09-02', 'Interaktivní tabule s projektorem', 'Tabule', c2, 46800, { vyrobce: 'Avonic AV-T86', seriove: 'AVT86-24-0091', zaruka: (Y + 1) + '-09-02', financ: 'Šablony OP JAK', dodavatel: 'AV Media', doklad: 'FV ' + (Y - 2) + '/1187', odpovida: 'Lucie Malá' });
+    add('VYB', (Y - 3) + '-08-20', 'Skříň na lehátka', 'Skříň', c0, 8900);
+    add('VYB', (Y - 3) + '-08-20', 'Skříň na lehátka', 'Skříň', c1, 8900);
+    add('VYB', (Y - 4) + '-07-10', 'Klavír Petrof (pianino)', 'Hudební nástroj', c1, 38000, { pozn: 'Dar od SRPŠ' });
+    add('NAB', (Y - 3) + '-08-18', 'Stolek dětský Tom-Tom 120×60', 'Stůl', c0, 4350, null, 4);
+    add('NAB', (Y - 3) + '-08-18', 'Židle dětská Tom-Tom, vel. 2', 'Židle', c1, 1290, null, 6);
+    add('NAB', (Y - 3) + '-08-18', 'Židle dětská Tom-Tom, vel. 2', 'Židle', c0, 1290, null, 4);
+    add('NAB', (Y - 1) + '-06-30', 'Kancelářská židle', 'Židle', 'm-kancelar', 3490);
+    add('HRA', (Y - 1) + '-10-09', 'Dřevěná kuchyňka s doplňky', 'Hra', c0, 6990);
+    add('HRA', (Y) + '-03-15', 'Sada Montessori pomůcek', 'Pomůcky', c2, 3280, { stitek: null });
+    add('HRA', (Y - 2) + '-04-02', 'Stavebnice Seva Junior', 'Stavebnice', c1, 890);
+    add('HRA', (Y - 1) + '-11-20', 'Molitanová sestava „Hřiště“', 'Tělocvik', c1, 7450);
+    add('KUC', (Y - 4) + '-07-01', 'Myčka nádobí Electrolux', 'Spotřebič', 'm-kuchyne', 52900, { stav: 'poskozeno', vyrobce: 'Electrolux EWT', zaruka: (Y - 1) + '-07-01' });
+    add('KUC', (Y - 2) + '-06-15', 'Konvektomat Rational iCombi', 'Spotřebič', 'm-kuchyne', 189000, { financ: 'Dotace zřizovatele', ud: 'zrizovatel' });
+    add('KUC', (Y - 1) + '-01-10', 'Lednice Liebherr', 'Spotřebič', 'm-kuchyne', 21900);
+    add('ZAH', (Y - 5) + '-04-30', 'Herní sestava Robinia „Hrad“', 'Herní prvek', 'm-zahrada', 89000);
+    add('ZAH', (Y - 3) + '-05-12', 'Pískoviště s krytem', 'Herní prvek', 'm-zahrada', 24500);
+    add('ZAH', (Y - 1) + '-04-20', 'Odrážedlo', 'Vozítko', 'm-zahrada', 1490, { stitek: null }, 3);
+    add('TEX', (Y - 1) + '-08-25', 'Lehátko stohovatelné', 'Lehátko', 'm-sklad', 1150, null, 5);
+    add('TEX', (Y - 1) + '-08-25', 'Koberec kulatý 200 cm', 'Koberec', c1, 3990);
+    add('UKL', (Y - 2) + '-03-03', 'Vysavač Kärcher', 'Úklid', 'm-sklad', 6490);
+    /* Jedna věc vyřazená, pár pohybů a závad do historie. */
+    var tab = M.pol.filter(function (p) { return p.nazev.indexOf('Interaktivní') === 0; })[0];
+    M.poh.push({ pol: tab.id, kdy: d(230) + 'T11:00:00', druh: 'kontrola', popis: 'Elektrorevize provedena, bez závad', kdo: 'Ivana Pokorná' });
+    var my = M.pol.filter(function (p) { return p.kat === 'KUC' && p.nazev.indexOf('Myčka') === 0; })[0];
+    M.poh.push({ pol: my.id, kdy: d(2) + 'T12:30:00', druh: 'zavada', popis: 'Závada: teče u dvířek', kdo: 'Marie Dvořáková' });
+    var nb = M.pol[0];
+    M.poh.push({ pol: nb.id, kdy: d(20) + 'T08:00:00', druh: 'zapujceni', popis: 'Zapůjčeno: Lucie Malá, vrátit do ' + this.cz(this.addDays(t, 11)), kdo: 'Ivana Pokorná' });
+    add('NAB', (Y - 6) + '-08-01', 'Židle dětská (stará)', 'Židle', c2, 690, { stav: 'vyrazeno', vyrazeno: d(300), duvodV: 'Rozbitá, neopravitelná' });
+    M.kon = [
+      { id: 'k1', pol: null, nazev: 'Elektrorevize spotřebičů', interval: 24, posledni: d(707), dalsi: d(-23), pozn: 'Revizní technik, všechny spotřebiče' },
+      { id: 'k2', pol: null, nazev: 'Kontrola hasicích přístrojů', interval: 12, posledni: d(326), dalsi: d(-39), pozn: '' },
+      { id: 'k3', pol: M.pol.filter(function (p) { return p.nazev.indexOf('Herní sestava') === 0; })[0].id, nazev: 'Roční kontrola herního prvku (ČSN EN 1176)', interval: 12, posledni: d(324), dalsi: d(-41), pozn: '' },
+      { id: 'k4', pol: tab.id, nazev: 'Elektrorevize', interval: 24, posledni: d(707), dalsi: d(-23), pozn: '' }
+    ];
+    M.invHist = [{ id: 'i1', kDatu: (Y - 1) + '-12-31', zahajena: (Y - 1) + '-12-01', uzavrena: Y + '-01-14', komise: ['Ivana Pokorná', 'Hana Veselá', 'Lucie Malá'] }];
+    M.kon.forEach(function (k, i) { k.id = 'k' + (i + 1); });
+    M.nid = M.pol.length + 1;
+    return M;
+  }
+
+  /* Místní engine — totéž co databázové funkce (stejné názvy i parametry). */
+  majLok(op, a) {
+    var self = this, M = this.majM(), now = new Date().toISOString(), today = this.iso(this.today);
+    var me = (this.users[this.state.role] || {}).name || (this.ucet && this.ucet.jmeno) || '';
+    var fail = function (m) { throw new Error(m); };
+    var pol = function (id) { var p = M.pol.filter(function (x) { return x.id === id; })[0]; if (!p) fail('Položka nenalezena.'); return p; };
+    var mN = function (id) { var m = M.mist.filter(function (x) { return x.id === id; })[0]; return m ? m.nazev : 'bez místnosti'; };
+    var poh = function (id, druh, popis) { M.poh.unshift({ pol: id, kdy: now, druh: druh, popis: popis, kdo: me }); };
+    var cz = function (iso) { return iso ? self.cz(new Date(iso + 'T00:00:00')) : ''; };
+    var num = function (v) { if (v == null || v === '') return null; var x = Number(String(v).replace(/\s/g, '').replace(',', '.')); return isNaN(x) ? null : x; };
+    var zaloz = function (p, ks, popis) {
+      var kat = String(p.kategorie || '').toUpperCase();
+      if (!M.kat.some(function (k) { return k.kod === kat; })) fail('Neznámá kategorie ' + kat + '.');
+      if (!String(p.nazev || '').trim()) fail('Napište název položky.');
+      var rok = p.porizeno ? +String(p.porizeno).slice(0, 4) : self.today.getFullYear(), cena = num(p.cena), key = kat + '-' + rok, out = [];
+      M.cis = M.cis || {};
+      if (M.cis[key] == null) M.cis[key] = M.pol.filter(function (x) { return x.cislo.indexOf(key + '-') === 0; }).length;
+      for (var i = 0; i < ks; i++) {
+        M.cis[key]++;
+        var x = { id: 'p' + (M.nid++), cislo: key + '-' + self.pad(M.cis[key], 4), kat: kat, nazev: String(p.nazev).trim(), druh: (p.druh || '').trim(), mist: p.mistnost_id || null,
+          odpovida: (p.odpovida || '').trim(), vyrobce: (p.vyrobce || '').trim(), seriove: (p.seriove || '').trim(), porizeno: p.porizeno || '', cena: cena,
+          dodavatel: (p.dodavatel || '').trim(), doklad: (p.doklad || '').trim(), ud: p.ucetni_druh || (cena > 40000 ? 'dhm' : cena >= 1000 ? 'ddhm' : 'oe'),
+          zaruka: p.zaruka_do || '', financ: (p.financovani || '').trim(), puvodni: (p.puvodni_cislo || '').trim(), pozn: p.poznamka || '', stav: 'ok', komu: '', doDne: '', vyrazeno: '', duvodV: '', stitek: null };
+        M.pol.push(x); out.push(x);
+        poh(x.id, 'zarazeno', (popis || 'Zařazeno do evidence') + ' · ' + mN(x.mist));
+      }
+      return out;
+    };
+    var invOk = function () { if (!M.inv || M.inv.id !== a.p_inventura) fail('Inventura neprobíhá.'); };
+    switch (op) {
+      case 'nova_polozka': return zaloz(a.p, a.p_pocet || 1).map(function (x) { return x.cislo; });
+      case 'uprav_polozku': {
+        var p = pol(a.p_id); if (p.stav === 'vyrazeno') fail('Vyřazenou položku už nejde měnit.');
+        if (!String(a.p.nazev || '').trim()) fail('Napište název položky.');
+        Object.assign(p, { nazev: a.p.nazev.trim(), druh: (a.p.druh || '').trim(), odpovida: (a.p.odpovida || '').trim(), vyrobce: (a.p.vyrobce || '').trim(), seriove: (a.p.seriove || '').trim(),
+          porizeno: a.p.porizeno || '', cena: num(a.p.cena), dodavatel: (a.p.dodavatel || '').trim(), doklad: (a.p.doklad || '').trim(), ud: a.p.ucetni_druh || p.ud,
+          zaruka: a.p.zaruka_do || '', financ: (a.p.financovani || '').trim(), puvodni: (a.p.puvodni_cislo || '').trim(), pozn: a.p.poznamka || '' });
+        poh(p.id, 'uprava', 'Upraveny údaje'); return null;
+      }
+      case 'presun_polozky': {
+        if (!a.p_mistnost) fail('Vyberte místnost.');
+        var n = 0;
+        a.p_ids.forEach(function (id) { var p = pol(id); if (p.stav === 'vyrazeno' || p.mist === a.p_mistnost) return; poh(p.id, 'presun', 'Přesun ' + mN(p.mist) + ' → ' + mN(a.p_mistnost) + (a.p_poznamka ? ' · ' + a.p_poznamka : '')); p.mist = a.p_mistnost; n++; });
+        return n;
+      }
+      case 'zapujc_polozku': { var p2 = pol(a.p_id); if (!String(a.p_komu || '').trim()) fail('Napište, komu se půjčuje.'); if (p2.stav !== 'ok' && p2.stav !== 'poskozeno') fail('Položku teď nejde zapůjčit.');
+        p2.stav = 'zapujceno'; p2.komu = a.p_komu.trim(); p2.doDne = a.p_do || ''; poh(p2.id, 'zapujceni', 'Zapůjčeno: ' + p2.komu + (a.p_do ? ', vrátit do ' + cz(a.p_do) : '')); return null; }
+      case 'vrat_polozku': { var p3 = pol(a.p_id); if (p3.stav !== 'zapujceno') fail('Položka není zapůjčená.'); p3.stav = 'ok'; p3.komu = ''; p3.doDne = ''; poh(p3.id, 'vraceni', 'Vráceno'); return null; }
+      case 'nahlas_zavadu': { var p4 = pol(a.p_id); if (p4.stav === 'vyrazeno') fail('Položka je vyřazená.'); if (!String(a.p_popis || '').trim()) fail('Napište, co se stalo.');
+        p4.stav = 'poskozeno'; poh(p4.id, 'zavada', 'Závada: ' + a.p_popis.trim()); return null; }
+      case 'oprav_polozku': { var p5 = pol(a.p_id); if (['poskozeno', 'oprava', 'ok'].indexOf(p5.stav) === -1) fail('Stav položky teď nejde změnit.');
+        p5.stav = a.p_stav; poh(p5.id, 'oprava', (a.p_stav === 'oprava' ? 'V opravě' : 'Opraveno, v pořádku') + (a.p_popis ? ' · ' + a.p_popis : '')); return null; }
+      case 'vyrad_polozku': { var p6 = pol(a.p_id); if (!String(a.p_duvod || '').trim()) fail('Napište důvod vyřazení.'); if (p6.stav === 'vyrazeno') fail('Položka už je vyřazená.');
+        p6.stav = 'vyrazeno'; p6.vyrazeno = a.p_datum || today; p6.duvodV = a.p_duvod.trim(); poh(p6.id, 'vyrazeni', 'Vyřazeno: ' + p6.duvodV); return null; }
+      case 'stitky_vytisteny': a.p_ids.forEach(function (id) { var p = pol(id); poh(p.id, 'stitek', p.stitek ? 'Štítek vytištěn znovu' : 'Vytištěn štítek'); p.stitek = now; }); return a.p_ids.length;
+      case 'import_majetku': {
+        var nove = 0, presk = 0;
+        a.p_radky.forEach(function (r) {
+          if (r.puvodni_cislo && M.pol.some(function (x) { return x.puvodni === String(r.puvodni_cislo).trim(); })) { presk++; return; }
+          var ks = Math.max(1, Math.min(+r.pocet || 1, 500)); zaloz(r, ks, 'Převedeno ze staré evidence'); nove += ks;
+        });
+        return { nove: nove, preskoceno: presk };
+      }
+      case 'uloz_kontrolu': {
+        if (!String(a.p_nazev || '').trim() || !a.p_dalsi) fail('Napište název a termín kontroly.');
+        var k = a.p_id ? M.kon.filter(function (x) { return x.id === a.p_id; })[0] : null;
+        if (!k) { k = { id: 'k' + (M.nid++), pol: a.p_polozka || null, posledni: '' }; M.kon.push(k); }
+        Object.assign(k, { nazev: a.p_nazev.trim(), interval: a.p_interval || null, dalsi: a.p_dalsi, pozn: a.p_poznamka || '' }); return k.id;
+      }
+      case 'kontrola_hotova': {
+        var k2 = M.kon.filter(function (x) { return x.id === a.p_id; })[0]; if (!k2) fail('Kontrola nenalezena.');
+        var dt = a.p_datum || today;
+        if (k2.pol) poh(k2.pol, 'kontrola', k2.nazev + ' provedena ' + cz(dt) + (a.p_poznamka ? ' · ' + a.p_poznamka : ''));
+        if (!k2.interval) M.kon = M.kon.filter(function (x) { return x !== k2; });
+        else { var nd = new Date(dt + 'T00:00:00'); nd.setMonth(nd.getMonth() + k2.interval); k2.posledni = dt; k2.dalsi = self.iso(nd); }
+        return null;
+      }
+      case 'zahaj_inventuru': {
+        if (this.state.role !== 'reditelka') fail('Inventuru zahajuje vedení školy.');
+        if (M.inv) fail('Jedna inventura už probíhá — nejdřív ji uzavřete.');
+        if (!a.p_k_datu) fail('Zadejte, k jakému dni se inventura dělá.');
+        M.inv = { id: 'i' + (M.nid++), kDatu: a.p_k_datu, zahajena: today, komise: a.p_komise || [] }; M.invM = {}; M.zaz = {}; M.nal = [];
+        M.mist.filter(function (m) { return m.aktivni; }).forEach(function (m) { M.invM[m.id] = { kdo: '', hotovo: null }; });
+        return M.inv.id;
+      }
+      case 'inventura_kontroluje': invOk(); if (!M.invM[a.p_mistnost]) fail('Místnost v inventuře není.'); M.invM[a.p_mistnost].kdo = (a.p_kdo || '').trim(); return null;
+      case 'inventura_sken': {
+        invOk(); if (!M.invM[a.p_mistnost]) fail('Místnost v inventuře není.');
+        var mm = /([A-Za-z]{2,4}-\d{4}-\d{4,})\s*$/.exec(String(a.p_kod || ''));
+        if (!mm) return { vysledek: 'neznamy', kod: String(a.p_kod || '').slice(0, 60) };
+        var c = mm[1].toUpperCase(), q = M.pol.filter(function (x) { return x.cislo === c; })[0];
+        if (!q) return { vysledek: 'neznamy', kod: c };
+        if (q.stav === 'vyrazeno') return { vysledek: 'vyrazeno', cislo: q.cislo, nazev: q.nazev };
+        var vys = q.mist === a.p_mistnost ? 'nalezeno' : 'jinde', z = M.zaz[q.id];
+        if (z && z.vys === vys && z.v === a.p_mistnost) return { vysledek: 'uz', cislo: q.cislo, nazev: q.nazev };
+        M.zaz[q.id] = { vys: vys, v: a.p_mistnost, kdy: now, vyreseno: null };
+        return { vysledek: vys, cislo: q.cislo, nazev: q.nazev, patri: mN(q.mist) };
+      }
+      case 'inventura_bez_stitku': invOk(); if (!String(a.p_popis || '').trim()) fail('Napište, co to je.'); M.nal.push({ id: 'n' + (M.nid++), mist: a.p_mistnost, popis: a.p_popis.trim(), kdy: now, vyreseno: null, pol: null }); return null;
+      case 'inventura_mistnost_hotova': {
+        invOk(); var n2 = 0;
+        M.pol.forEach(function (x) { if (x.mist === a.p_mistnost && x.stav !== 'vyrazeno' && x.stav !== 'zapujceno' && !M.zaz[x.id]) { M.zaz[x.id] = { vys: 'chybi', v: null, kdy: now, vyreseno: null }; n2++; } });
+        M.invM[a.p_mistnost].hotovo = now; return n2;
+      }
+      case 'inventura_vyres': {
+        invOk(); var z2 = M.zaz[a.p_polozka]; if (!z2) fail('Rozdíl nenalezen.'); var p7 = pol(a.p_polozka);
+        if (z2.vys === 'jinde' && a.p_jak === 'presunuto') { poh(p7.id, 'presun', 'Přesun ' + mN(p7.mist) + ' → ' + mN(z2.v) + ' · při inventuře'); p7.mist = z2.v; }
+        else if (z2.vys === 'jinde' && a.p_jak === 'vraceno') poh(p7.id, 'inventura', 'Při inventuře nalezeno v ' + mN(z2.v) + ', vráceno na místo');
+        else if (z2.vys === 'chybi' && a.p_jak === 'naslo_se') { z2.vys = 'nalezeno'; z2.v = p7.mist; }
+        else if (z2.vys === 'chybi' && a.p_jak === 'vyrazeno') { p7.stav = 'vyrazeno'; p7.vyrazeno = today; p7.duvodV = 'Manko zjištěné při inventuře k ' + cz(M.inv.kDatu); poh(p7.id, 'vyrazeni', 'Vyřazeno: ' + p7.duvodV); }
+        else if (z2.vys === 'chybi' && a.p_jak === 'ponechano') poh(p7.id, 'inventura', 'Při inventuře nenalezeno, zatím ponecháno v evidenci');
+        else fail('Takhle rozdíl vyřešit nejde.');
+        z2.vyreseno = a.p_jak; return null;
+      }
+      case 'inventura_nalez_vyres': {
+        var nl = M.nal.filter(function (x) { return x.id === a.p_nalez && !x.vyreseno; })[0]; if (!nl || !M.inv) fail('Nález nenalezen.');
+        if (!a.p) { nl.vyreseno = 'zruseno'; return null; }
+        var nx = zaloz(Object.assign({}, a.p, { mistnost_id: nl.mist }), 1, 'Nalezeno při inventuře (přebytek)')[0];
+        nl.vyreseno = 'zalozeno'; nl.pol = nx.id; M.zaz[nx.id] = { vys: 'nalezeno', v: nl.mist, kdy: now, vyreseno: null }; return nx.cislo;
+      }
+      case 'uzavri_inventuru': {
+        invOk(); if (this.state.role !== 'reditelka') fail('Inventuru uzavírá vedení školy.');
+        var zb = Object.keys(M.invM).filter(function (k) { return !M.invM[k].hotovo; }).length;
+        if (zb) fail('Ještě ' + zb + (zb === 1 ? ' místnost je' : zb < 5 ? ' místnosti jsou' : ' místností je') + ' bez kontroly.');
+        var ot = Object.keys(M.zaz).filter(function (k) { return M.zaz[k].vys !== 'nalezeno' && !M.zaz[k].vyreseno; }).length + M.nal.filter(function (x) { return !x.vyreseno; }).length;
+        if (ot) fail('Nejdřív vyřešte rozdíly (zbývá ' + ot + ').');
+        Object.keys(M.zaz).forEach(function (k) { if (M.zaz[k].vys === 'nalezeno') { var p8 = M.pol.filter(function (x) { return x.id === k; })[0]; if (p8) poh(k, 'inventura', 'Inventura k ' + cz(M.inv.kDatu) + ': nalezeno · ' + mN(M.zaz[k].v)); } });
+        M.invHist.unshift(Object.assign({}, M.inv, { uzavrena: today, soupis: { zaz: M.zaz, invM: M.invM } }));
+        M.inv = null; M.invM = {}; M.zaz = {}; M.nal = []; return null;
+      }
+      case 'uloz_mistnost': {
+        if (!String(a.p_nazev || '').trim()) fail('Napište název místnosti.');
+        if (M.mist.some(function (m) { return m.nazev === a.p_nazev.trim() && m.id !== a.p_id; })) fail('Místnost „' + a.p_nazev.trim() + '“ už existuje.');
+        var m0 = a.p_id ? M.mist.filter(function (m) { return m.id === a.p_id; })[0] : null;
+        if (!m0) { m0 = { id: 'm' + (M.nid++) }; M.mist.push(m0); }
+        Object.assign(m0, { nazev: a.p_nazev.trim(), trida: a.p_trida || null, aktivni: a.p_aktivni !== false }); return m0.id;
+      }
+      case 'uloz_kategorii': {
+        var kod = String(a.p_kod || '').trim().toUpperCase();
+        if (!/^[A-Z]{2,4}$/.test(kod)) fail('Zkratka kategorie má 2–4 velká písmena bez diakritiky (např. IT, NAB).');
+        if (!String(a.p_nazev || '').trim()) fail('Napište název kategorie.');
+        var k3 = M.kat.filter(function (x) { return x.kod === kod; })[0];
+        if (k3) k3.nazev = a.p_nazev.trim(); else M.kat.push({ kod: kod, nazev: a.p_nazev.trim() }); return null;
+      }
+    }
+    fail('Neznámá akce ' + op);
+  }
+
+  /* Změna majetku: na serveru funkcí a pak znovu načíst, jinak místně. */
+  majOp(op, args) {
+    var self = this;
+    if (this._majBezi) return Promise.reject(new Error('Chvilku, ještě se ukládá předchozí změna.'));
+    this._majBezi = true;
+    var p = this.srv
+      ? window.SkolkaServer.majetekRpc(op, args).then(function (r) { return self.majNacti().then(function () { return r; }); })
+      : new Promise(function (res) { res(self.majLok(op, args)); }).then(function (r) { self.saveStore(); return r; });
+    return p.then(function (r) { self._majBezi = false; self.forceUpdate(); return r; }, function (e) { self._majBezi = false; self.forceUpdate(); throw e; });
+  }
+  majChyba(e) { return this.srv && window.SkolkaServer.chyba ? window.SkolkaServer.chyba(e) : (e && e.message) || String(e); }
+  /* Akce z dialogu: zavřít, oznámit, nebo nechat dialog otevřený s chybou. */
+  majAkce(op, args, msg, extra) {
+    var self = this;
+    return this.majOp(op, args).then(function (r) {
+      self.setState(Object.assign({ dlg: null, df: {} }, extra || {}));
+      var m = typeof msg === 'function' ? msg(r) : msg;
+      if (m) self.showToast(m);
+      return r;
+    }).catch(function (e) { self.showToast(self.majChyba(e)); });
+  }
+
+  /* Odkaz z QR štítku (#majetek/IT-2026-0012) → karta položky. */
+  majOtevriOdkaz() {
+    var kod = null;
+    try { kod = sessionStorage.getItem('skolka-majetek-kod'); } catch (e) { kod = null; }
+    if (!kod) return;
+    var M = this.majM(); if (this.srv && !M.nacteno) return;
+    try { sessionStorage.removeItem('skolka-majetek-kod'); } catch (e) { /* nic */ }
+    var p = M.pol.filter(function (x) { return x.cislo === kod; })[0];
+    this.state.page = 'majetek'; this.state.majView = null;
+    this.state.majId = p ? p.id : null;
+    if (!p) this.state.toast = 'Položka ' + kod + ' v evidenci není.';
+  }
+
+  /* QR kód jako cesta SVG (moduly 1×1), z vendored qrcode.js. */
+  majQr(text) {
+    if (typeof window === 'undefined' || !window.qrcode) return { n: 21, path: '' };
+    var q = window.qrcode(0, 'M'); q.addData(text); q.make();
+    var n = q.getModuleCount(), d = [];
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d.push('M' + c + ' ' + r + 'h1v1h-1z');
+    return { n: n, path: d.join('') };
+  }
+  majOdkaz(cislo) {
+    var base = typeof location !== 'undefined' ? location.origin + location.pathname : '';
+    return base + '#majetek/' + cislo;
+  }
+
+  /* Archy štítků A4 (mm). Okraje dopočítané tak, aby mřížka seděla na střed. */
+  majArchy() {
+    var S = this.state.stitky || {};
+    return [
+      { id: '3x7', cols: 3, rows: 7, w: 70, h: 42.3, sub: '70 × 42,3 mm' },
+      { id: '3x8', cols: 3, rows: 8, w: 70, h: 37, sub: '70 × 37 mm' },
+      { id: '4x10', cols: 4, rows: 10, w: 52.5, h: 29.7, sub: '52,5 × 29,7 mm' },
+      { id: '5x13', cols: 5, rows: 13, w: 38, h: 21.2, sub: '38 × 21,2 mm' },
+      { id: 'vlastni', cols: S.cc || 4, rows: S.cr || 11, w: null, h: null, sub: 'sloupce, řádky, okraje' }
+    ].map(function (a) {
+      if (a.id === 'vlastni') { var top = S.ot != null ? S.ot : 10, left = S.ol != null ? S.ol : 7; a.top = top; a.left = left; a.w = (210 - 2 * left) / a.cols; a.h = (297 - 2 * top) / a.rows; }
+      else { a.left = (210 - a.cols * a.w) / 2; a.top = (297 - a.rows * a.h) / 2; }
+      return a;
+    });
+  }
+
+  /* Štítky do tisku: HTML stránka A4 s mřížkou v mm. */
+  majTiskStitku(items, arch, start, opt) {
+    var self = this, esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    var per = arch.cols * arch.rows, cells = [], i;
+    for (i = 1; i < start; i++) cells.push(null);
+    items.forEach(function (p) { cells.push(p); });
+    var pages = [];
+    for (i = 0; i < cells.length; i += per) pages.push(cells.slice(i, i + per));
+    var qrMm = Math.min(arch.h - 3, arch.w * 0.5), big = arch.w >= 45 && arch.h >= 25;
+    var M = this.majM(), mN = function (id) { var m = M.mist.filter(function (x) { return x.id === id; })[0]; return m ? m.nazev : ''; };
+    var lab = function (p) {
+      if (!p) return '<div class="l"></div>';
+      var q = self.majQr(self.majOdkaz(p.cislo));
+      return '<div class="l"><svg viewBox="-2 -2 ' + (q.n + 4) + ' ' + (q.n + 4) + '" style="width:' + qrMm + 'mm;height:' + qrMm + 'mm" shape-rendering="crispEdges"><rect x="-2" y="-2" width="' + (q.n + 4) + '" height="' + (q.n + 4) + '" fill="#fff"/><path d="' + q.path + '" fill="#000"/></svg>'
+        + '<div class="t">' + (opt.skola && big ? '<div class="s">' + esc(self.school.name) + '</div>' : '') + '<div class="c">' + esc(p.cislo) + '</div>'
+        + (opt.nazev && big ? '<div class="n">' + esc(p.nazev) + (mN(p.mist) ? ' · ' + esc(mN(p.mist)) : '') + '</div>' : '') + '</div></div>';
+    };
+    var css = '@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#000}'
+      + '.p{width:210mm;height:297mm;padding:' + arch.top + 'mm ' + arch.left + 'mm;display:grid;grid-template-columns:repeat(' + arch.cols + ',' + arch.w + 'mm);grid-auto-rows:' + arch.h + 'mm;page-break-after:always;overflow:hidden}'
+      + '.l{display:flex;align-items:center;gap:1.5mm;padding:1.2mm 2mm;overflow:hidden}.t{min-width:0}.s{font-size:6.5pt;color:#444}.c{font-size:' + (big ? 9 : 7) + 'pt;font-weight:700;white-space:nowrap}.n{font-size:6.5pt;line-height:1.15;max-height:3.5em;overflow:hidden}'
+      + (opt.zkusebni ? '.l{outline:0.2mm dashed #999}' : '');
+    var html = '<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Štítky majetku</title><style>' + css + '</style></head><body>'
+      + pages.map(function (pg) { return '<div class="p">' + pg.map(lab).join('') + '</div>'; }).join('') + '</body></html>';
+    var w = null;
+    try { w = window.open('', '_blank'); } catch (e) { w = null; }
+    if (w && w.document) {
+      w.document.open(); w.document.write(html); w.document.close();
+      setTimeout(function () { try { w.focus(); w.print(); } catch (e) { /* vytiskne sám */ } }, 400);
+    } else this.download({ name: 'stitky-majetku.html', text: html, type: 'text/html' });
+    return pages.length;
+  }
+
+  /* Inventurní soupis a protokol o vyřazení — přes společný tisk dokumentů (hlavička školky). */
+  majSoupis() {
+    var self = this, M = this.majM(), I = M.inv, esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    if (!I) return;
+    var VY = { nalezeno: 'nalezeno', jinde: 'jinde', chybi: 'chybí' };
+    var kc = function (n) { return n == null ? '' : Number(n).toLocaleString('cs-CZ') + ' Kč'; };
+    var body = '<h1>Inventurní soupis k ' + self.cz(new Date(I.kDatu + 'T00:00:00')) + '</h1><p>Zahájeno ' + self.cz(new Date(I.zahajena + 'T00:00:00')) + ' · inventarizační komise: ' + esc((I.komise || []).join(', ') || '—') + '</p>';
+    M.mist.filter(function (m) { return M.invM[m.id]; }).forEach(function (m) {
+      var ps = M.pol.filter(function (p) { return p.mist === m.id && p.stav !== 'vyrazeno'; });
+      body += '<h2>' + esc(m.nazev) + (M.invM[m.id].kdo ? ' · kontroluje ' + esc(M.invM[m.id].kdo) : '') + '</h2><table><tr><th>Inv. číslo</th><th>Název</th><th>Cena</th><th>Výsledek</th></tr>'
+        + ps.map(function (p) { var z = M.zaz[p.id]; return '<tr><td>' + esc(p.cislo) + '</td><td>' + esc(p.nazev) + '</td><td>' + kc(p.cena) + '</td><td>' + (z ? VY[z.vys] : 'nezkontrolováno') + '</td></tr>'; }).join('') + '</table>';
+    });
+    body += '<p style="margin-top:24px">Podpisy členů komise:</p>' + (I.komise || []).map(function (k) { return '<p>' + esc(k) + ' ............................................</p>'; }).join('');
+    this.printDoc('Inventurní soupis', '<div class="doc">' + body + '</div>', 'table{width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:10px}th,td{border:1px solid #bbb;padding:3px 6px;text-align:left}');
+  }
+  majProtokol(p) {
+    var self = this, esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var body = '<h1>Protokol o vyřazení majetku</h1><table><tr><th>Inventární číslo</th><td>' + esc(p.cislo) + '</td></tr><tr><th>Název</th><td>' + esc(p.nazev) + '</td></tr>'
+      + '<tr><th>Pořízeno</th><td>' + esc(p.porizeno ? self.cz(new Date(p.porizeno + 'T00:00:00')) : '') + '</td></tr><tr><th>Pořizovací cena</th><td>' + (p.cena != null ? Number(p.cena).toLocaleString('cs-CZ') + ' Kč' : '') + '</td></tr>'
+      + '<tr><th>Datum vyřazení</th><td>' + esc(p.vyrazeno ? self.cz(new Date(p.vyrazeno + 'T00:00:00')) : '') + '</td></tr><tr><th>Důvod</th><td>' + esc(p.duvodV) + '</td></tr><tr><th>Způsob likvidace</th><td>&nbsp;</td></tr></table>'
+      + '<p style="margin-top:24px">Likvidační komise:</p><p>............................................</p><p>............................................</p><p>Schválila ředitelka: ............................................</p>';
+    this.printDoc('Protokol o vyřazení ' + p.cislo, '<div class="doc">' + body + '</div>', 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px 8px;text-align:left}th{width:35%}');
+  }
+
+  /* Import ze staré evidence: sloupce podle názvů, hodnoty místností a kategorií se přiřadí. */
+  majImportPlan(rows, name) {
+    var norm = function (s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); };
+    var POLE = [['puvodni_cislo', /^(inv|inventar|cislo|ev c|evid|c inv|inv c)/], ['nazev', /^(nazev|predmet|polozka|popis majetku)/], ['mistnost', /(umisten|mistnost|trida|kde)/],
+      ['kategorie', /^(druh|kategorie|skupina|typ)/], ['cena', /(cena|hodnota|porizovaci)/], ['porizeno', /(datum|porizen|rok)/], ['pocet', /^(ks|pocet|mnozstvi|kusu)/],
+      ['seriove', /(seriov|vyrobni c|sn)/], ['dodavatel', /^dodavatel/], ['poznamka', /^(pozn|poznamka)/]];
+    var hi = -1, cols = {};
+    for (var r = 0; r < Math.min(rows.length, 6) && hi < 0; r++) {
+      var c0 = {};
+      rows[r].forEach(function (h, i) { var n = norm(h); POLE.forEach(function (p) { if (c0[p[0]] == null && p[1].test(n)) c0[p[0]] = i; }); });
+      if (c0.nazev != null) { hi = r; cols = c0; }
+    }
+    if (hi < 0) return { ok: false, name: name };
+    var head = rows[hi], data = rows.slice(hi + 1).filter(function (r) { return r.some(function (x) { return String(x).trim(); }); });
+    var vals = function (k) { var o = {}; if (cols[k] == null) return []; data.forEach(function (r) { var v = String(r[cols[k]] == null ? '' : r[cols[k]]).trim(); o[v] = (o[v] || 0) + 1; }); return Object.keys(o).map(function (v) { return { v: v, n: o[v] }; }).sort(function (a, b) { return b.n - a.n; }); };
+    return { ok: true, name: name, head: head, cols: cols, rows: data, mistVals: vals('mistnost'), katVals: vals('kategorie'), mapM: {}, mapK: {} };
+  }
+  majImportRadky(I) {
+    var self = this, M = this.majM(), out = [];
+    var datum = function (v) {
+      if (v === '' || v == null) return '';
+      if (typeof v === 'number' && v > 20000 && v < 80000) { var d = new Date(Date.UTC(1899, 11, 30) + v * 86400000); return d.toISOString().slice(0, 10); }
+      var s = String(v).trim(), m;
+      if ((m = /^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(s))) return m[3] + '-' + self.pad(+m[2], 2) + '-' + self.pad(+m[1], 2);
+      if ((m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s))) return m[0];
+      if ((m = /^(\d{1,2})\s*[/.]\s*(\d{4})$/.exec(s))) return m[2] + '-' + self.pad(+m[1], 2) + '-01';
+      if ((m = /^(\d{4})$/.exec(s))) return m[1] + '-01-01';
+      return '';
+    };
+    var cena = function (v) { if (typeof v === 'number') return v; var s = String(v || '').replace(/\s|Kč|,-| /g, '').replace(',', '.'); var x = parseFloat(s); return isNaN(x) ? null : x; };
+    I.rows.forEach(function (r) {
+      var g = function (k) { return I.cols[k] == null ? '' : r[I.cols[k]]; };
+      var nazev = String(g('nazev') || '').trim(); if (!nazev) return;
+      var mv = String(g('mistnost') || '').trim(), kv = String(g('kategorie') || '').trim();
+      out.push({ nazev: nazev, puvodni_cislo: String(g('puvodni_cislo') || '').trim(), mistnost_id: I.mapM[mv] || null, kategorie: I.mapK[kv] || I.defK || '',
+        druh: kv && kv.length <= 60 ? kv : '', cena: cena(g('cena')), porizeno: datum(g('porizeno')), pocet: Math.max(1, parseInt(g('pocet'), 10) || 1),
+        seriove: String(g('seriove') || '').trim().slice(0, 80), dodavatel: String(g('dodavatel') || '').trim().slice(0, 120), poznamka: String(g('poznamka') || '').trim().slice(0, 2000) });
+    });
+    var maPuv = {}; M.pol.forEach(function (p) { if (p.puvodni) maPuv[p.puvodni] = true; });
+    return { radky: out, nove: out.filter(function (x) { return !x.puvodni_cislo || !maPuv[x.puvodni_cislo]; }), dup: out.filter(function (x) { return x.puvodni_cislo && maPuv[x.puvodni_cislo]; }) };
+  }
+  majVzorCsv() {
+    return '﻿Inv. č.;Název;Umístění;Druh;Pořizovací cena;Datum pořízení;Ks;Sériové číslo;Dodavatel;Poznámka\r\n'
+      + 'T/112;Interaktivní tabule;Třída 3;nábytek;46 800;2.9.2024;1;AVT86-24-0091;AV Media;\r\nK/004;Myčka nádobí;kuchyň;elektro;52900;1.7.2022;1;;;\r\nL/001;Lehátko;sklad;textil;1150;2025;25;;;dar SRPŠ\r\n';
+  }
+
+  /* Data stránky Majetek pro šablonu. */
+  majVals(st, role, lehky) {
+    var self = this, M = this.majM(), today = this.iso(this.today);
+    var can = role === 'reditelka' || role === 'hospodarka', vedeni = role === 'reditelka';
+    var kc = function (n) { return n == null ? '—' : Math.round(n).toLocaleString('cs-CZ') + ' Kč'; };
+    var czD = function (iso) { return iso ? self.cz(new Date(String(iso).slice(0, 10) + 'T00:00:00')) : ''; };
+    var chip = function (on) { return 'height: 34px; padding: 0 12px; border-radius: 17px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; ' + (on ? 'background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4'); };
+    var btn = function (kind) { return kind === 'primary' ? 'height: 44px; padding: 0 18px; border-radius: 22px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer'
+      : kind === 'small' ? 'height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A'
+      : 'height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A'; };
+    var dot = function (c) { return 'width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; display: inline-block; background: ' + c; };
+    var katN = {}; M.kat.forEach(function (k) { katN[k.kod] = k.nazev; });
+    var clsBy = {}; this.classes.forEach(function (c) { clsBy[c.id] = c; });
+    var mistBy = {}; M.mist.forEach(function (m) { mistBy[m.id] = m; });
+    var mColor = function (m) { if (!m) return '#C9C7BF'; if (m.trida && clsBy[m.trida]) return clsBy[m.trida].color; return /zahrad/i.test(m.nazev) ? '#3BA55C' : '#8A8C90'; };
+    var mN = function (id) { return mistBy[id] ? mistBy[id].nazev : 'Bez místnosti'; };
+    var rooms = M.mist.slice().sort(function (a, b) { return (a.trida ? 0 : 1) - (b.trida ? 0 : 1) || 0; });
+    var ST = { ok: ['V pořádku', '#EDF4E4', '#2F5212'], poskozeno: ['Poškozeno', '#FAEBE4', '#9A3412'], oprava: ['V opravě', '#F7F0DA', '#5C4300'], zapujceno: ['Zapůjčeno', '#EBF1FA', '#27407A'], vyrazeno: ['Vyřazeno', '#EEF0ED', '#3A3C40'] };
+    var pill = function (s) { var x = ST[s] || ST.ok; return 'display: inline-flex; height: 26px; padding: 0 10px; border-radius: 13px; align-items: center; font-size: 12px; font-weight: 800; white-space: nowrap; background: ' + x[1] + '; color: ' + x[2]; };
+    var UD = { dhm: 'Dlouhodobý hmotný majetek', ddhm: 'Drobný dlouhodobý majetek', oe: 'Operativní evidence', zrizovatel: 'Majetek zřizovatele (svěřený)' };
+    var aktiv = M.pol.filter(function (p) { return p.stav !== 'vyrazeno'; });
+    var plus = function (days) { return self.iso(self.addDays(self.today, -days)); };
+    var do30 = plus(-30), do7 = plus(-7);
+
+    /* co vyžaduje pozornost */
+    var att = [];
+    aktiv.filter(function (p) { return p.stav === 'poskozeno'; }).forEach(function (p) {
+      var z = M.poh.filter(function (h) { return h.pol === p.id && h.druh === 'zavada'; })[0];
+      att.push({ title: p.nazev + ' — závada', sub: mN(p.mist) + (z ? ' · ' + z.popis.replace(/^Závada: /, '') + (z.kdo ? ' · ' + z.kdo : '') : ''), bg: '#FAEBE4', open: p.id });
+    });
+    M.kon.filter(function (k) { return k.dalsi <= do30; }).sort(function (a, b) { return a.dalsi < b.dalsi ? -1 : 1; }).forEach(function (k) {
+      var p = k.pol ? M.pol.filter(function (x) { return x.id === k.pol; })[0] : null;
+      att.push({ title: k.nazev, sub: (k.dalsi < today ? 'po termínu · ' : 'do ') + czD(k.dalsi) + (p ? ' · ' + p.cislo : ' · celá školka'), bg: k.dalsi < today ? '#FAEBE4' : '#F7F0DA', tab: 'revize' });
+    });
+    aktiv.filter(function (p) { return p.stav === 'zapujceno' && p.doDne && p.doDne <= do7; }).forEach(function (p) {
+      att.push({ title: p.nazev + ' — zápůjčka', sub: p.komu + ' · vrátit ' + (p.doDne < today ? 'už ' : '') + 'do ' + czD(p.doDne), bg: p.doDne < today ? '#FAEBE4' : '#EBF1FA', open: p.id });
+    });
+    var invRozd = M.inv ? Object.keys(M.zaz).filter(function (k) { return M.zaz[k].vys !== 'nalezeno' && !M.zaz[k].vyreseno; }).length + M.nal.filter(function (n) { return !n.vyreseno; }).length : 0;
+    if (invRozd) att.push({ title: 'Inventura: rozdíly k vyřešení', sub: invRozd + ' ' + (invRozd === 1 ? 'položka' : invRozd < 5 ? 'položky' : 'položek'), bg: '#FBF1DD', tab: 'inventura' });
+    var attCount = att.length;
+    var toAtt = function (a) { return { title: a.title, sub: a.sub, style: 'display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 14px; border: 0; cursor: pointer; color: #17181A; font-family: inherit; background: ' + a.bg,
+      go: function () { if (a.open) self.setState({ majId: a.open, majView: null }); else self.setState({ majTab: a.tab, majId: null, majView: null }); } }; };
+
+    var base0 = null;
+    var base = { loading: this.srv && !M.nacteno, ready: !(this.srv && !M.nacteno), can: can, vedeni: vedeni, attCount: attCount, btnSmall: btn('small'), btn: btn(''), btnPrimary: btn('primary') };
+    if (lehky || base.loading) return Object.assign(base, { showTabs: false, isList: false, isCard: false, isStitky: false, isImport: false, isInv: false, isRev: false, isVyr: false, isSet: false });
+    var tab = st.majTab || 'seznam', view = st.majView || null, P = st.majId ? M.pol.filter(function (p) { return p.id === st.majId; })[0] : null;
+    var noBez = aktiv.filter(function (p) { return !p.stitek; });
+    base.tabs = [['seznam', 'Seznam'], ['inventura', M.inv ? 'Inventura · probíhá' : 'Inventury'], ['revize', 'Revize a servis'], ['vyrazene', 'Vyřazené'], ['nastaveni', 'Místnosti a kategorie']].map(function (t) {
+      var on = tab === t[0] && !P && !view; return { label: t[1], on: on, style: chip(on).replace('height: 34px', 'height: 40px').replace('font-size: 13px', 'font-size: 14px'), pick: function () { self.setState({ majTab: t[0], majId: null, majView: null }); } };
+    });
+    base.showTabs = !P && !view;
+    base.isList = !P && !view && tab === 'seznam';
+    base.isInv = !P && !view && tab === 'inventura';
+    base.isRev = !P && !view && tab === 'revize';
+    base.isVyr = !P && !view && tab === 'vyrazene';
+    base.isSet = !P && !view && tab === 'nastaveni';
+    base.isCard = !!P && !view;
+    base.isStitky = view === 'stitky';
+    base.isImport = view === 'import';
+    base.noBez = noBez.length;
+    base.goStitky = function () { self.setState({ majView: 'stitky', stitky: Object.assign({ what: 'nove', preset: '3x8', start: 1, skola: true, nazev: true }, st.stitky || {}, { what: noBez.length ? 'nove' : 'vse' }) }); };
+    base.goImport = function () { self.setState({ majView: 'import', majImp: null }); };
+    base.novaPolozka = function () { self.setState({ dlg: 'majNova', df: { kat: M.kat[0] ? M.kat[0].kod : '', mist: '', pocet: '1', porizeno: today, cena: '' } }); };
+
+    /* ---------------------------------------------------- seznam */
+    if (base.isList) {
+      var q = (st.majQ || '').toLowerCase().trim(), fr = st.majRoom || 'all', fc = st.majCat || 'all', fs = st.majStav || 'all';
+      var rows = aktiv.filter(function (p) {
+        if (fr !== 'all' && (fr === 'none' ? !!p.mist : p.mist !== fr)) return false;
+        if (fc !== 'all' && p.kat !== fc) return false;
+        if (fs === 'bez' ? !!p.stitek : fs !== 'all' && p.stav !== fs) return false;
+        return !q || (p.cislo + ' ' + p.nazev + ' ' + p.druh + ' ' + p.seriove + ' ' + p.puvodni + ' ' + p.vyrobce).toLowerCase().indexOf(q) !== -1;
+      });
+      var sel = st.majSel || {}, selIds = Object.keys(sel).filter(function (k) { return sel[k] && aktiv.some(function (p) { return p.id === k; }); });
+      var shown = rows.slice(0, 300);
+      var bezMist = aktiv.some(function (p) { return !p.mist; });
+      var sum = function (ps) { return ps.reduce(function (a, p) { return a + (p.cena || 0); }, 0); };
+      var catSum = M.kat.map(function (k) { var ps = aktiv.filter(function (p) { return p.kat === k.kod; }); return { label: k.nazev, n: ps.length, v: sum(ps) }; }).filter(function (x) { return x.n; }).sort(function (a, b) { return b.v - a.v; });
+      var maxV = catSum.length ? catSum[0].v || 1 : 1;
+      var dueKon = M.kon.filter(function (k) { return k.dalsi <= do30; });
+      Object.assign(base, {
+        q: st.majQ || '', onQ: function (e) { self.setState({ majQ: e.target.value }); },
+        rooms: [{ id: 'all', label: 'Vše', c: null }].concat(rooms.filter(function (m) { return m.aktivni; }).map(function (m) { return { id: m.id, label: m.nazev, c: mColor(m) }; })).concat(bezMist ? [{ id: 'none', label: 'Bez místnosti', c: '#C9C7BF' }] : []).map(function (r) {
+          var on = fr === r.id; return { label: r.label, on: on, style: chip(on), hasDot: !!r.c, dotStyle: dot(r.c || 'transparent'), pick: function () { self.setState({ majRoom: r.id }); } };
+        }),
+        cats: [{ kod: 'all', nazev: 'Vše' }].concat(M.kat).map(function (k) { var on = fc === k.kod; return { label: k.nazev, on: on, style: chip(on), pick: function () { self.setState({ majCat: k.kod }); } }; }),
+        stavy: [['all', 'Každý stav'], ['ok', 'V pořádku'], ['poskozeno', 'Poškozeno'], ['oprava', 'V opravě'], ['zapujceno', 'Zapůjčeno'], ['bez', 'Bez štítku']].map(function (s) { var on = fs === s[0]; return { label: s[1], on: on, style: chip(on), pick: function () { self.setState({ majStav: s[0] }); } }; }),
+        stats: [
+          { label: 'V evidenci', value: aktiv.length + ' ks', sub: ['dhm', 'ddhm', 'oe', 'zrizovatel'].map(function (u) { var n = aktiv.filter(function (p) { return p.ud === u; }).length; return n ? n + ' ' + ({ dhm: 'DHM', ddhm: 'drobný', oe: 'operativní', zrizovatel: 'zřizovatele' })[u] : null; }).filter(Boolean).join(' · ') || 'zatím nic', bg: '#FFFFFF' },
+          { label: 'Pořizovací hodnota', value: kc(sum(aktiv)), sub: 'z toho DHM ' + kc(sum(aktiv.filter(function (p) { return p.ud === 'dhm'; }))), bg: '#FFFFFF' },
+          { label: 'Bez štítku', value: noBez.length + ' ks', sub: noBez.length ? 'vytiskněte štítky' : 'všechno má štítek', bg: noBez.length ? '#FBF1DD' : '#FFFFFF' },
+          { label: 'Kontroly do 30 dní', value: String(dueKon.length), sub: dueKon.length ? dueKon.slice(0, 2).map(function (k) { return k.nazev; }).join(', ') : 'nic nehoří', bg: dueKon.length ? '#FAEBE4' : '#FFFFFF' }
+        ].map(function (s) { return Object.assign(s, { style: 'background: ' + s.bg + '; border-radius: 20px; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 0' }); }),
+        rows: shown.map(function (p) {
+          var m = mistBy[p.mist];
+          return { id: p.id, inv: p.cislo, name: p.nazev, sub: [katN[p.kat] || p.kat, p.druh, p.porizeno ? 'pořízeno ' + czD(p.porizeno) : '', p.seriove ? 'SN ' + p.seriove : '', p.stitek ? '' : 'bez štítku'].filter(Boolean).join(' · '), room: mN(p.mist), dotStyle: dot(mColor(m)),
+            cat: katN[p.kat] || p.kat, date: czD(p.porizeno), price: kc(p.cena), st: (ST[p.stav] || ST.ok)[0], stStyle: pill(p.stav), sel: !!sel[p.id],
+            open: function () { self.setState({ majId: p.id }); },
+            toggle: function () { var x = Object.assign({}, self.state.majSel || {}); x[p.id] = !x[p.id]; self.setState({ majSel: x }); } };
+        }),
+        empty: !rows.length, emptyText: aktiv.length ? 'Nic neodpovídá filtrům.' : 'Evidence je prázdná. Přidejte první položku nebo naimportujte starou evidenci z Excelu.',
+        hasSel: selIds.length > 0,
+        foot: selIds.length ? 'Vybráno ' + selIds.length : 'Zobrazeno ' + shown.length + ' z ' + rows.length + (rows.length !== aktiv.length ? ' (celkem ' + aktiv.length + ')' : '') + (rows.length > 300 ? ' — zužte filtr' : ''),
+        selAll: function () { var x = {}; rows.forEach(function (p) { x[p.id] = true; }); self.setState({ majSel: x }); },
+        selNone: function () { self.setState({ majSel: {} }); },
+        selMove: function () { self.setState({ dlg: 'majPresun', df: { ids: selIds } }); },
+        selPrint: function () { self.setState({ majView: 'stitky', stitky: Object.assign({ preset: '3x8', start: 1, skola: true, nazev: true }, st.stitky || {}, { what: 'vybrane' }) }); },
+        export: function () {
+          var esc = function (v) { v = v == null ? '' : String(v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+          var out = ['Inventární číslo;Název;Kategorie;Druh;Místnost;Pořízeno;Pořizovací cena;Účetní druh;Stav;Sériové číslo;Dodavatel;Doklad;Financování;Původní číslo'];
+          rows.forEach(function (p) { out.push([p.cislo, p.nazev, katN[p.kat], p.druh, mN(p.mist), p.porizeno, p.cena == null ? '' : String(p.cena).replace('.', ','), UD[p.ud], (ST[p.stav] || ST.ok)[0], p.seriove, p.dodavatel, p.doklad, p.financ, p.puvodni].map(esc).join(';')); });
+          self.download({ name: 'majetek-' + today + '.csv', text: '﻿' + out.join('\r\n'), type: 'text/csv' });
+        },
+        byCat: catSum.map(function (b) { return { label: b.label, n: b.n, value: kc(b.v), bar: 'display: block; height: 6px; border-radius: 3px; background: #2F6FDB; width: ' + Math.max(2, Math.round(b.v / maxV * 100)) + '%' }; }),
+        att: att.slice(0, 6).map(toAtt), noAtt: !att.length
+      });
+    }
+
+    /* ---------------------------------------------------- karta položky */
+    if (base.isCard) {
+      var K = P, hist = M.poh.filter(function (h) { return h.pol === K.id; }).sort(function (a, b) { return a.kdy < b.kdy ? 1 : -1; });
+      var kon = M.kon.filter(function (k) { return k.pol === K.id; });
+      var qr = this.majQr(this.majOdkaz(K.cislo));
+      var f = function (k, v) { return { k: k, v: v || '—' }; };
+      var A = [];
+      var act = function (t, s, fn, danger) { A.push({ t: t, s: s, go: fn, style: 'min-height: 52px; padding: 8px 14px; border-radius: 16px; border: 0; background: ' + (danger ? '#FAEBE4' : '#F3F4F2') + '; color: #17181A; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; text-align: left; font-family: inherit' }); };
+      if (can && K.stav !== 'vyrazeno') {
+        act('Přesunout', 'do jiné třídy nebo místnosti', function () { self.setState({ dlg: 'majPresun', df: { ids: [K.id], mist: K.mist || '' } }); });
+        if (K.stav === 'zapujceno') act('Vráceno', 'zápůjčka skončila', function () { self.majAkce('vrat_polozku', { p_id: K.id }, 'Zapsáno: vráceno'); });
+        else if (K.stav === 'ok' || K.stav === 'poskozeno') act('Zapůjčit', 'komu, do kdy', function () { self.setState({ dlg: 'majZapujc', df: { id: K.id } }); });
+        if (K.stav === 'poskozeno') act('Odvezeno do opravy', 'stav „v opravě“', function () { self.majAkce('oprav_polozku', { p_id: K.id, p_stav: 'oprava', p_popis: '' }, 'Zapsáno: v opravě'); });
+        if (K.stav === 'poskozeno' || K.stav === 'oprava') act('Opraveno', 'zpět do provozu', function () { self.majAkce('oprav_polozku', { p_id: K.id, p_stav: 'ok', p_popis: '' }, 'Zapsáno: opraveno'); });
+        if (K.stav === 'ok' || K.stav === 'zapujceno') act('Nahlásit závadu', 'změní stav, ukáže se v Přehledu', function () { self.setState({ dlg: 'majZavada', df: { id: K.id } }); });
+        act('Vyřadit', 'důvod, protokol pro likvidační komisi', function () { self.setState({ dlg: 'majVyrad', df: { id: K.id, datum: today } }); }, true);
+      }
+      if (can && K.stav === 'vyrazeno') act('Protokol o vyřazení', 'k tisku nebo do PDF', function () { self.majProtokol(K); });
+      var DR = { zarazeno: 'Zařazeno', uprava: 'Úprava', presun: 'Přesun', zapujceni: 'Zápůjčka', vraceni: 'Vráceno', zavada: 'Závada', oprava: 'Oprava', vyrazeni: 'Vyřazení', stitek: 'Štítek', inventura: 'Inventura', kontrola: 'Kontrola' };
+      Object.assign(base, {
+        card: {
+          kicker: 'Majetek · ' + (katN[K.kat] || K.kat) + ' · ', cislo: K.cislo, title: K.nazev, st: (ST[K.stav] || ST.ok)[0], stStyle: pill(K.stav).replace('height: 26px', 'height: 32px').replace('font-size: 12px', 'font-size: 13px'),
+          back: function () { self.setState({ majId: null }); },
+          canEdit: can && K.stav !== 'vyrazeno',
+          edit: function () { self.setState({ dlg: 'majUprav', df: { id: K.id, nazev: K.nazev, druh: K.druh, odpovida: K.odpovida, vyrobce: K.vyrobce, seriove: K.seriove, porizeno: K.porizeno, cena: K.cena == null ? '' : String(K.cena).replace('.', ','), dodavatel: K.dodavatel, doklad: K.doklad, ud: K.ud, zaruka: K.zaruka, financ: K.financ, puvodni: K.puvodni, pozn: K.pozn } }); },
+          facts: [f('Inventární číslo', K.cislo), f('Původní číslo', K.puvodni), f('Kategorie · druh', (katN[K.kat] || K.kat) + (K.druh ? ' · ' + K.druh : '')), f('Místnost', mN(K.mist)), f('Odpovídá', K.odpovida),
+            f('Výrobce · model', K.vyrobce), f('Sériové číslo', K.seriove), f('Pořízeno', czD(K.porizeno)), f('Pořizovací cena', K.cena == null ? '' : kc(K.cena)), f('Dodavatel · doklad', [K.dodavatel, K.doklad].filter(Boolean).join(' · ')),
+            f('Účetní druh', UD[K.ud]), f('Financování', K.financ), f('Záruka do', czD(K.zaruka)),
+            K.stav === 'zapujceno' ? f('Zapůjčeno', K.komu + (K.doDne ? ' · do ' + czD(K.doDne) : '')) : null, K.stav === 'vyrazeno' ? f('Vyřazeno', czD(K.vyrazeno) + ' · ' + K.duvodV) : null, K.pozn ? f('Poznámka', K.pozn) : null].filter(Boolean),
+          hist: hist.slice(0, 40).map(function (h) { return { d: czD(h.kdy), what: (DR[h.druh] || h.druh) + ': ' + h.popis.replace(/^(Závada|Zapůjčeno|Vyřazeno): /, ''), who: h.kdo || '' }; }),
+          noHist: !hist.length,
+          kon: kon.map(function (k) { return { t: k.nazev + ' · ' + (k.dalsi < today ? 'po termínu ' : 'do ') + czD(k.dalsi), s: (k.interval ? 'každých ' + k.interval + ' měs.' : 'jednorázově') + (k.posledni ? ' · naposledy ' + czD(k.posledni) : ''),
+            style: 'padding: 12px 14px; border-radius: 16px; display: flex; align-items: center; gap: 10px; background: ' + (k.dalsi <= do30 ? '#FAEBE4' : '#F3F4F2'),
+            done: function () { self.setState({ dlg: 'majKonHotovo', df: { id: k.id, datum: today } }); } }; }),
+          hasGar: !!K.zaruka, gar: K.zaruka ? 'Záruka do ' + czD(K.zaruka) + (K.zaruka < today ? ' · skončila' : '') : '',
+          noKon: !kon.length && !K.zaruka,
+          addKon: function () { self.setState({ dlg: 'majKon', df: { pol: K.id, interval: '12', dalsi: self.iso(self.addDays(self.today, 365)) } }); },
+          qrView: '-2 -2 ' + (qr.n + 4) + ' ' + (qr.n + 4), qrBox: '-2', qrSize: String(qr.n + 4), qrPath: qr.path,
+          room: mN(K.mist), labelNote: K.stitek ? 'Štítek vytištěn ' + czD(K.stitek) + '. Naskenováním se otevře tahle karta.' : 'Štítek zatím nebyl vytištěn.',
+          printLabel: function () { self.setState({ majView: 'stitky', majSel: (function () { var x = {}; x[K.id] = true; return x; })(), stitky: Object.assign({ preset: '3x8', start: 1, skola: true, nazev: true }, st.stitky || {}, { what: 'vybrane' }) }); },
+          printLabelText: K.stitek ? 'Vytisknout znovu' : 'Vytisknout štítek',
+          actions: A, hasActions: A.length > 0
+        }
+      });
+    }
+
+    /* ---------------------------------------------------- tisk štítků */
+    if (base.isStitky) {
+      var SS = st.stitky || {}, archy = this.majArchy(), ar = archy.filter(function (a) { return a.id === (SS.preset || '3x8'); })[0] || archy[1];
+      var sel2 = st.majSel || {};
+      var src = SS.what === 'vybrane' ? aktiv.filter(function (p) { return sel2[p.id]; }) : SS.what === 'mistnost' ? aktiv.filter(function (p) { return p.mist === SS.mist; }) : SS.what === 'vse' ? aktiv : noBez;
+      var per = ar.cols * ar.rows, start = Math.max(1, Math.min(SS.start || 1, per));
+      var set = function (o) { self.setState({ stitky: Object.assign({}, self.state.stitky || {}, o) }); };
+      var innerW = 524, innerH = 692, gw = innerW / ar.cols, gh = innerH / ar.rows;
+      var qpx = Math.max(16, Math.min(gh - 8, gw * 0.45, 64)), bigC = gw >= 120 && gh >= 50;
+      var cells = [];
+      for (var i = 1; i <= per; i++) (function (pos) {
+        var idx = pos - start, it = idx >= 0 && idx < src.length ? src[idx] : null, used = pos < start, qq = it ? self.majQr(self.majOdkaz(it.cislo)) : null;
+        cells.push({ filled: !!it, used: used, inv: it ? it.cislo : '', name: it ? it.nazev + ' · ' + mN(it.mist) : '', qrPath: qq ? qq.path : '', qrView: qq ? '-2 -2 ' + (qq.n + 4) + ' ' + (qq.n + 4) : '0 0 1 1', qrSize: qq ? String(qq.n + 4) : '1',
+          showSchool: !!it && SS.skola !== false && bigC, showName: !!it && SS.nazev !== false && bigC, school: self.school.name,
+          aria: 'Štítek ' + pos + (it ? ', ' + it.cislo : used ? ', použitý' : ', prázdný') + ' — začít tady', pick: function () { set({ start: pos }); },
+          qrStyle: 'width: ' + qpx + 'px; height: ' + qpx + 'px; flex-shrink: 0',
+          invStyle: 'font-size: ' + (bigC ? 10 : 8) + 'px; font-weight: 800; white-space: nowrap',
+          style: 'min-width: 0; min-height: 0; overflow: hidden; border-radius: 3px; padding: 2px 4px; display: flex; align-items: center; gap: 4px; cursor: pointer; font-family: inherit; color: #17181A; '
+            + (it ? 'background: #FFFFFF; border: 1px solid #C9C7BF; justify-content: flex-start' : used ? 'background: repeating-linear-gradient(135deg, #F3F4F2 0 6px, #E5E7E4 6px 7px); border: 1px solid #E5E7E4; justify-content: center' : 'background: #FFFFFF; border: 1px dashed #D5D7D3; justify-content: center') });
+      })(i);
+      var archu = src.length ? Math.ceil((start - 1 + src.length) / per) : 0;
+      var wl = function (n) { return n === 1 ? 'štítek' : n >= 2 && n <= 4 ? 'štítky' : 'štítků'; };
+      var nSel2 = aktiv.filter(function (p) { return sel2[p.id]; }).length;
+      var step = function (key, min, max, label) { var v = SS[key] != null ? SS[key] : (key === 'cc' ? 4 : key === 'cr' ? 11 : key === 'ot' ? 10 : 7); return { label: label, value: String(v),
+        minus: function () { var o = {}; o[key] = Math.max(min, v - 1); set(o); }, plus: function () { var o = {}; o[key] = Math.min(max, v + 1); set(o); } }; };
+      Object.assign(base, { st: {
+        back: function () { self.setState({ majView: null }); },
+        what: [['nove', 'Nové bez štítku · ' + noBez.length], ['vybrane', 'Vybrané · ' + nSel2], ['mistnost', 'Celá místnost'], ['vse', 'Vše · ' + aktiv.length]].map(function (w) { var on = (SS.what || 'nove') === w[0]; return { label: w[1], on: on, style: chip(on).replace('height: 34px', 'height: 40px'), pick: function () { set({ what: w[0], start: 1 }); } }; }),
+        isMist: SS.what === 'mistnost',
+        mists: rooms.filter(function (m) { return m.aktivni; }).map(function (m) { var on = SS.mist === m.id; return { label: m.nazev, on: on, style: chip(on), pick: function () { set({ mist: m.id }); } }; }),
+        presets: archy.map(function (a) { var on = ar.id === a.id; return { title: a.id === 'vlastni' ? 'Vlastní' : a.cols + ' × ' + a.rows + ' = ' + a.cols * a.rows, sub: a.sub, on: on, pick: function () { set({ preset: a.id, start: 1 }); },
+          style: 'min-height: 58px; padding: 8px 14px; border-radius: 16px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; color: #17181A; font-family: inherit; ' + (on ? 'background: #E6EDF6; border: 2px solid #B4C6DD' : 'background: #FFFFFF; border: 2px solid #E5E7E4') }; }),
+        custom: ar.id === 'vlastni',
+        customFields: [step('cc', 1, 8, 'Sloupce'), step('cr', 1, 20, 'Řádky'), step('ot', 0, 30, 'Okraj nahoře a dole (mm)'), step('ol', 0, 30, 'Okraj vlevo a vpravo (mm)')],
+        customNote: ar.id === 'vlastni' ? 'Štítek ' + (Math.round(ar.w * 10) / 10).toString().replace('.', ',') + ' × ' + (Math.round(ar.h * 10) / 10).toString().replace('.', ',') + ' mm' : '',
+        start: String(start),
+        startMinus: function () { set({ start: Math.max(1, start - 1) }); }, startPlus: function () { set({ start: Math.min(per, start + 1) }); },
+        opts: [['skola', 'Název školky'], ['nazev', 'Název položky a místnost']].map(function (o) { var on = SS[o[0]] !== false; return { label: o[1], on: on, toggle: function () { var x = {}; x[o[0]] = !on; set(x); } }; }),
+        summary: src.length ? src.length + ' ' + wl(src.length) + ' · ' + archu + (archu === 1 ? ' arch' : archu < 5 ? ' archy' : ' archů') + ' A4 · první na pozici ' + start : 'Není co tisknout — vyberte jiné položky.',
+        can: src.length > 0, cant: src.length === 0,
+        gridStyle: 'grid-template-columns: repeat(' + ar.cols + ', minmax(0, 1fr)); grid-template-rows: repeat(' + ar.rows + ', minmax(0, 1fr))',
+        cells: cells,
+        sheetNote: 'Náhled 1. archu · ' + ar.cols + ' × ' + ar.rows + ' = ' + per + ' štítků · šrafované = už použité',
+        test: function () { self.majTiskStitku(src.slice(0, per - start + 1), ar, start, { skola: SS.skola !== false, nazev: SS.nazev !== false, zkusebni: true }); },
+        print: function () {
+          if (!src.length) return;
+          self.majTiskStitku(src, ar, start, { skola: SS.skola !== false, nazev: SS.nazev !== false });
+          self.majOp('stitky_vytisteny', { p_ids: src.map(function (p) { return p.id; }) }).then(function () { self.showToast('Štítky odeslány do tisku: ' + src.length + ' · v tisku zvolte skutečnou velikost (100 %)'); }).catch(function (e) { self.showToast(self.majChyba(e)); });
+        }
+      } });
+    }
+
+    /* ---------------------------------------------------- import */
+    if (base.isImport) {
+      var I = st.majImp;
+      var imp = { back: function () { self.setState({ majView: null, majImp: null }); }, has: !!(I && I.ok), fail: I && !I.ok ? (I.fail || 'V souboru jsem nenašel sloupec Název. Stáhněte si vzorovou tabulku a zkontrolujte názvy sloupců.') : '', hasFail: !!(I && !I.ok),
+        file: I ? I.name : '',
+        onFile: function (ev) {
+          var file = ev.target.files && ev.target.files[0]; ev.target.value = '';
+          if (!file) return;
+          var go = function (rows) { self.setState({ majImp: self.majImportPlan(rows, file.name) }); };
+          var fail = function (m) { self.setState({ majImp: { ok: false, name: file.name, fail: m } }); };
+          if (/\.xls$/i.test(file.name)) { fail('Starý formát .xls neumím přečíst. V Excelu ho uložte jako .xlsx nebo CSV.'); return; }
+          if (/\.xlsx$/i.test(file.name)) file.arrayBuffer().then(function (b) { return self.readXlsx(b); }).then(go).catch(function (e) { fail('Soubor se nepodařilo přečíst: ' + (e && e.message ? e.message : e) + '.'); });
+          else file.text().then(function (t) { go(self.parseCsv(t)); }).catch(function () { fail('Soubor se nepodařilo přečíst.'); });
+        },
+        sample: function () { self.download({ name: 'vzor-import-majetku.csv', text: self.majVzorCsv(), type: 'text/csv' }); } };
+      if (I && I.ok) {
+        var R = this.majImportRadky(I), POLEN = { puvodni_cislo: 'Původní číslo', nazev: 'Název', mistnost: 'Místnost (přiřaďte níže)', kategorie: 'Kategorie (přiřaďte níže)', cena: 'Pořizovací cena', porizeno: 'Datum pořízení', pocet: 'Počet kusů (rozdělí se)', seriove: 'Sériové číslo', dodavatel: 'Dodavatel', poznamka: 'Poznámka' };
+        var setI = function (o) { self.setState({ majImp: Object.assign({}, self.state.majImp, o) }); };
+        var ks = R.nove.reduce(function (a, r) { return a + r.pocet; }, 0), bezK = R.nove.filter(function (r) { return !r.kategorie; }).length, bezM = R.nove.filter(function (r) { return !r.mistnost_id; }).length;
+        Object.assign(imp, {
+          info: I.rows.length + ' řádků · ' + Object.keys(I.cols).length + ' poznaných sloupců',
+          map: Object.keys(POLEN).filter(function (k) { return I.cols[k] != null; }).map(function (k) { return { col: String(I.head[I.cols[k]]), ex: I.rows.slice(0, 3).map(function (r) { return String(r[I.cols[k]] == null ? '' : r[I.cols[k]]); }).filter(Boolean).join(' · '), to: POLEN[k] }; }),
+          hasMist: I.mistVals.length > 0,
+          mistVals: I.mistVals.slice(0, 20).map(function (v) { return { from: v.v || '(prázdné)', n: v.n, chips: rooms.filter(function (m) { return m.aktivni; }).map(function (m) { var on = I.mapM[v.v] === m.id; return { label: m.nazev, on: on, style: chip(on), pick: function () { var x = Object.assign({}, I.mapM); x[v.v] = on ? null : m.id; setI({ mapM: x }); } }; }) }; }),
+          hasKat: I.katVals.length > 0,
+          katVals: I.katVals.slice(0, 20).map(function (v) { return { from: v.v || '(prázdné)', n: v.n, chips: M.kat.map(function (k) { var on = I.mapK[v.v] === k.kod; return { label: k.kod + ' · ' + k.nazev, on: on, style: chip(on), pick: function () { var x = Object.assign({}, I.mapK); x[v.v] = on ? null : k.kod; setI({ mapK: x }); } }; }) }; }),
+          noKatCol: I.cols.kategorie == null,
+          defK: M.kat.map(function (k) { var on = I.defK === k.kod; return { label: k.kod + ' · ' + k.nazev, on: on, style: chip(on), pick: function () { setI({ defK: on ? null : k.kod }); } }; }),
+          check: [
+            { n: String(ks), t: 'nových položek' + (ks !== R.nove.length ? ' (řádky s počtem kusů se rozdělí)' : ''), style: 'display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: #EDF4E4; color: #2F5212' },
+            { n: String(R.dup.length), t: 'už v evidenci (stejné původní číslo) — přeskočí se', style: 'display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: #F3F4F2; color: #3A3C40' },
+            { n: String(bezK), t: 'bez kategorie — přiřaďte, jinak je nejde uložit', style: 'display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: ' + (bezK ? '#FAEBE4; color: #9A3412' : '#F3F4F2; color: #3A3C40') },
+            { n: String(bezM), t: 'bez místnosti — uloží se, místnost doplníte později', style: 'display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: ' + (bezM ? '#FBF1DD; color: #6B4A00' : '#F3F4F2; color: #3A3C40') }
+          ],
+          canRun: R.nove.length > 0 && !bezK,
+          runLabel: bezK ? 'Přiřaďte kategorie' : R.nove.length ? 'Importovat ' + ks + ' položek' : 'Není co importovat',
+          runStyle: 'height: 52px; border-radius: 26px; border: 0; font-size: 15px; font-weight: 800; cursor: pointer; ' + (R.nove.length && !bezK ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #5A5C60'),
+          run: function () {
+            if (!R.nove.length || bezK) return;
+            var chunks = [], all = R.nove.slice();
+            while (all.length) chunks.push(all.splice(0, 400));
+            var vys = { nove: 0, preskoceno: 0 };
+            chunks.reduce(function (pr, ch) { return pr.then(function () { return self.majOp('import_majetku', { p_radky: ch }).then(function (r) { vys.nove += r.nove; vys.preskoceno += r.preskoceno; }); }); }, Promise.resolve())
+              .then(function () { self.log('Import majetku: ' + vys.nove + ' položek'); self.setState({ majView: 'stitky', majImp: null, stitky: Object.assign({ preset: '3x8', start: 1, skola: true, nazev: true }, self.state.stitky || {}, { what: 'nove' }) }); self.showToast('Naimportováno ' + vys.nove + ' položek' + (vys.preskoceno ? ', ' + vys.preskoceno + ' přeskočeno' : '') + ' — teď štítky'); })
+              .catch(function (e) { self.showToast('Import se nepovedl: ' + self.majChyba(e)); });
+          }
+        });
+      }
+      base.imp = imp;
+    }
+
+    /* ---------------------------------------------------- inventura */
+    if (base.isInv) {
+      var IV = M.inv, inv = { running: !!IV, notRunning: !IV,
+        hist: M.invHist.map(function (h) { return { t: 'Inventura k ' + czD(h.kDatu), s: 'Uzavřena ' + czD(h.uzavrena) + ((h.komise || []).length ? ' · komise: ' + h.komise.join(', ') : '') }; }), noHist: !M.invHist.length,
+        canStart: vedeni, start: function () { var y = self.today.getFullYear(); self.setState({ dlg: 'majInvStart', df: { kDatu: y + '-12-31', komise: (self.users.reditelka && self.users.reditelka.name) || '' } }); } };
+      if (IV) {
+        var inRooms = M.mist.filter(function (m) { return M.invM[m.id]; });
+        var expected = function (m) { return aktiv.filter(function (p) { return p.mist === m.id && p.stav !== 'zapujceno'; }); };
+        var all2 = inRooms.reduce(function (a, m) { return a + expected(m).length; }, 0);
+        var zz = M.zaz, kz = Object.keys(zz);
+        var nNal = kz.filter(function (k) { return zz[k].vys === 'nalezeno'; }).length, nChy = kz.filter(function (k) { return zz[k].vys === 'chybi' && !zz[k].vyreseno; }).length, nJin = kz.filter(function (k) { return zz[k].vys === 'jinde' && !zz[k].vyreseno; }).length;
+        var nNov = M.nal.filter(function (n) { return !n.vyreseno; }).length;
+        var checked = kz.filter(function (k) { return zz[k].vys !== 'jinde'; }).length;
+        var tile = function (bg) { return 'background: ' + bg + '; border-radius: 20px; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 0'; };
+        var rp = function (k) { var S2 = { chybi: ['#FAEBE4', '#9A3412'], jinde: ['#FBF1DD', '#6B4A00'], nove: ['#EBF1FA', '#27407A'], ok: ['#EDF4E4', '#2F5212'], nic: ['#F3F4F2', '#5A5C60'] }[k]; return 'height: 26px; padding: 0 10px; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; background: ' + S2[0] + '; color: ' + S2[1]; };
+        var polBy = {}; M.pol.forEach(function (p) { polBy[p.id] = p; });
+        var hotovoVse = inRooms.every(function (m) { return M.invM[m.id].hotovo; });
+        var todo2 = [];
+        kz.filter(function (k) { return zz[k].vys === 'jinde' && !zz[k].vyreseno; }).forEach(function (k) { var p = polBy[k]; if (!p) return;
+          todo2.push({ kind: 'Jinde', title: p.nazev + ' ' + p.cislo, sub: 'patří: ' + mN(p.mist) + ', nalezeno: ' + mN(zz[k].v), bg: '#FBF1DD', fg: '#6B4A00',
+            acts: [{ l: 'Přesunout sem', go: function () { self.majAkce('inventura_vyres', { p_inventura: IV.id, p_polozka: k, p_jak: 'presunuto' }, 'Přesunuto do ' + mN(zz[k].v)); } }, { l: 'Vrátit na místo', go: function () { self.majAkce('inventura_vyres', { p_inventura: IV.id, p_polozka: k, p_jak: 'vraceno' }, 'Zapsáno'); } }] }); });
+        kz.filter(function (k) { return zz[k].vys === 'chybi' && !zz[k].vyreseno; }).forEach(function (k) { var p = polBy[k]; if (!p) return;
+          todo2.push({ kind: 'Chybí · ' + mN(p.mist), title: p.nazev + ' ' + p.cislo, sub: (p.stav === 'poskozeno' ? 'nahlášena závada · ' : '') + kc(p.cena), bg: '#FAEBE4', fg: '#9A3412',
+            acts: [{ l: 'Našlo se', go: function () { self.majAkce('inventura_vyres', { p_inventura: IV.id, p_polozka: k, p_jak: 'naslo_se' }, 'Zapsáno: nalezeno'); } }, { l: 'Ponechat', go: function () { self.majAkce('inventura_vyres', { p_inventura: IV.id, p_polozka: k, p_jak: 'ponechano' }, 'Ponecháno v evidenci'); } }, { l: 'Vyřadit (manko)', go: function () { self.majAkce('inventura_vyres', { p_inventura: IV.id, p_polozka: k, p_jak: 'vyrazeno' }, 'Vyřazeno jako manko'); } }] }); });
+        M.nal.filter(function (n) { return !n.vyreseno; }).forEach(function (n) {
+          todo2.push({ kind: 'Bez štítku · ' + mN(n.mist), title: n.popis, sub: 'možný přebytek · zapsáno ' + czD(n.kdy), bg: '#EBF1FA', fg: '#27407A',
+            acts: [{ l: 'Založit', go: function () { self.setState({ dlg: 'majNalez', df: { nalez: n.id, nazev: n.popis, kat: M.kat[0] ? M.kat[0].kod : '', porizeno: '' } }); } }, { l: 'Zrušit', go: function () { self.majAkce('inventura_nalez_vyres', { p_nalez: n.id, p: null }, 'Zrušeno'); } }] }); });
+        Object.assign(inv, {
+          title: 'Inventura k ' + czD(IV.kDatu), sub: 'Zahájena ' + czD(IV.zahajena) + ((IV.komise || []).length ? ' · komise: ' + IV.komise.join(', ') : ''),
+          stats: [
+            { label: 'Zkontrolováno', value: checked + ' / ' + all2, sub: inRooms.filter(function (m) { return M.invM[m.id].hotovo; }).length + ' z ' + inRooms.length + ' místností hotovo', style: tile('#FFFFFF') },
+            { label: 'Nalezeno', value: String(nNal), sub: 'na svém místě', style: tile('#EDF4E4') },
+            { label: 'Chybí', value: String(nChy), sub: 'možné manko', style: tile(nChy ? '#FAEBE4' : '#FFFFFF') },
+            { label: 'Jinde', value: String(nJin), sub: 'v jiné místnosti', style: tile(nJin ? '#FBF1DD' : '#FFFFFF') },
+            { label: 'Bez štítku', value: String(nNov), sub: 'možný přebytek', style: tile(nNov ? '#EBF1FA' : '#FFFFFF') }
+          ],
+          rooms: inRooms.map(function (m) {
+            var ex = expected(m), f2 = ex.filter(function (p) { return zz[p.id] && zz[p.id].vys !== 'jinde'; }).length, IM = M.invM[m.id];
+            var pct = ex.length ? Math.round(f2 / ex.length * 100) : (IM.hotovo ? 100 : 0);
+            var ch = ex.filter(function (p) { return zz[p.id] && zz[p.id].vys === 'chybi' && !zz[p.id].vyreseno; }).length;
+            var ji = kz.filter(function (k) { return zz[k].vys === 'jinde' && zz[k].v === m.id && !zz[k].vyreseno; }).length;
+            var no = M.nal.filter(function (n) { return n.mist === m.id && !n.vyreseno; }).length;
+            var diffs = [];
+            if (ch) diffs.push({ t: ch + ' chybí', style: rp('chybi') }); if (ji) diffs.push({ t: ji + ' odjinud', style: rp('jinde') }); if (no) diffs.push({ t: no + ' bez štítku', style: rp('nove') });
+            if (!diffs.length) diffs.push(IM.hotovo ? { t: 'Bez rozdílů', style: rp('ok') } : { t: f2 ? 'rozpracováno' : 'nezačato', style: rp('nic') });
+            return { name: m.nazev, dotStyle: 'width: 12px; height: 12px; border-radius: 6px; background: ' + mColor(m), who: IM.kdo || (m.trida ? 'učitelky třídy (tablet)' : 'nepřiděleno'),
+              prog: f2 + ' / ' + ex.length + (IM.hotovo ? ' · hotovo' : ''), bar: 'display: block; height: 8px; border-radius: 4px; width: ' + pct + '%; background: ' + (IM.hotovo ? '#3BA55C' : '#2F6FDB'), diffs: diffs,
+              scan: function () { self.setState({ dlg: 'majSken', df: { mist: m.id, kod: '', log: [] } }); },
+              assign: function () { self.setState({ dlg: 'majKdo', df: { mist: m.id, kdo: IM.kdo || '' } }); },
+              canScan: can && !IM.hotovo, done: !!IM.hotovo };
+          }),
+          todo: todo2, noTodo: !todo2.length, todoTitle: 'Rozdíly k vyřešení · ' + todo2.length,
+          canClose: vedeni && hotovoVse && !todo2.length,
+          closeHint: !hotovoVse ? 'Nejdřív dokončete všechny místnosti' : todo2.length ? 'Nejdřív vyřešte rozdíly' : 'Inventura je připravená k uzavření',
+          closeStyle: 'height: 48px; padding: 0 20px; border-radius: 24px; border: 0; font-size: 15px; font-weight: 800; cursor: pointer; ' + (vedeni && hotovoVse && !todo2.length ? 'background: #DCE6F2; color: #1F3A5C' : 'background: #F3F4F2; color: #5A5C60'),
+          close: function () { if (!(vedeni && hotovoVse && !todo2.length)) { self.showToast(!vedeni ? 'Inventuru uzavírá ředitelka.' : !hotovoVse ? 'Nejdřív dokončete všechny místnosti.' : 'Nejdřív vyřešte rozdíly.'); return; } self.setState({ dlg: 'majInvClose', df: {} }); },
+          soupis: function () { self.majSoupis(); },
+          komise: (IV.komise || []).map(function (k, i) { return { t: k, role: i === 0 ? 'předseda/předsedkyně' : 'člen' }; }), hasKomise: (IV.komise || []).length > 0
+        });
+      }
+      base.inv = inv;
+    }
+
+    /* ---------------------------------------------------- revize a servis */
+    if (base.isRev) {
+      base.rev = { add: function () { self.setState({ dlg: 'majKon', df: { pol: '', interval: '12', dalsi: self.iso(self.addDays(self.today, 30)) } }); },
+        rows: M.kon.slice().sort(function (a, b) { return a.dalsi < b.dalsi ? -1 : 1; }).map(function (k) {
+          var p = k.pol ? M.pol.filter(function (x) { return x.id === k.pol; })[0] : null;
+          return { t: k.nazev, s: (p ? p.cislo + ' · ' + p.nazev + ' · ' + mN(p.mist) : 'celá školka') + (k.pozn ? ' · ' + k.pozn : ''), when: (k.dalsi < today ? 'po termínu · ' : '') + czD(k.dalsi),
+            every: k.interval ? 'každých ' + k.interval + ' měs.' : 'jednorázově', last: k.posledni ? 'naposledy ' + czD(k.posledni) : '',
+            whenStyle: 'font-weight: 800; font-size: 14px; color: ' + (k.dalsi < today ? '#9A3412' : k.dalsi <= do30 ? '#8A4513' : '#17181A'),
+            rowStyle: 'display: grid; grid-template-columns: minmax(0, 1fr) 150px 130px 210px; gap: 12px; padding: 12px 20px; align-items: center; border-bottom: 1px solid #F3F4F2; background: ' + (k.dalsi <= do30 ? '#FFF8F4' : '#FFFFFF'),
+            done: function () { self.setState({ dlg: 'majKonHotovo', df: { id: k.id, datum: today } }); },
+            edit: function () { self.setState({ dlg: 'majKon', df: { id: k.id, pol: k.pol || '', nazev: k.nazev, interval: k.interval ? String(k.interval) : '', dalsi: k.dalsi, pozn: k.pozn } }); },
+            hasPol: !!p, open: function () { if (p) self.setState({ majId: p.id }); } };
+        }) };
+      base.rev.empty = !base.rev.rows.length;
+    }
+
+    /* ---------------------------------------------------- vyřazené */
+    if (base.isVyr) {
+      var vy = M.pol.filter(function (p) { return p.stav === 'vyrazeno'; }).sort(function (a, b) { return a.vyrazeno < b.vyrazeno ? 1 : -1; });
+      base.vyr = { empty: !vy.length, rows: vy.map(function (p) { return { inv: p.cislo, name: p.nazev, date: czD(p.vyrazeno), why: p.duvodV, price: kc(p.cena),
+        open: function () { self.setState({ majId: p.id }); }, print: function () { self.majProtokol(p); } }; }) };
+    }
+
+    /* ---------------------------------------------------- místnosti a kategorie */
+    if (base.isSet) {
+      base.set = {
+        rooms: M.mist.map(function (m) { var n = aktiv.filter(function (p) { return p.mist === m.id; }).length;
+          return { name: m.nazev, sub: (m.trida && clsBy[m.trida] ? 'třída ' + clsBy[m.trida].name + ' · ' : '') + n + ' ks' + (m.aktivni ? '' : ' · nepoužívá se'), dotStyle: dot(mColor(m)),
+            edit: function () { self.setState({ dlg: 'majMist', df: { id: m.id, nazev: m.nazev, trida: m.trida || '', aktivni: m.aktivni ? 'ano' : 'ne' } }); } }; }),
+        addRoom: function () { self.setState({ dlg: 'majMist', df: { trida: '', aktivni: 'ano' } }); },
+        cats: M.kat.map(function (k) { var n = M.pol.filter(function (p) { return p.kat === k.kod; }).length; return { kod: k.kod, name: k.nazev, sub: n + ' ks · další nové ' + k.kod + '-' + self.today.getFullYear() + '-' + self.pad(1 + M.pol.reduce(function (mx, p) { var pre = k.kod + '-' + self.today.getFullYear() + '-'; return p.cislo.indexOf(pre) === 0 ? Math.max(mx, +p.cislo.slice(pre.length) || 0) : mx; }, 0), 4),
+          edit: function () { self.setState({ dlg: 'majKat', df: { kod: k.kod, nazev: k.nazev, pevny: true } }); } }; }),
+        addCat: function () { self.setState({ dlg: 'majKat', df: {} }); }
+      };
+    }
+    return base;
+  }
+
+  /* Dialogy majetku (společný formulář ředitelny). */
+  majDialog(dk, dlg, df, inp, group, area) {
+    var self = this, M = this.majM(), today = this.iso(this.today);
+    var num = function (v) { if (v == null || String(v).trim() === '') return null; var x = Number(String(v).replace(/\s/g, '').replace(',', '.')); return isNaN(x) || x < 0 ? NaN : x; };
+    var mistOpts = M.mist.filter(function (m) { return m.aktivni; }).map(function (m) { return [m.id, m.nazev]; });
+    var katOpts = M.kat.map(function (k) { return [k.kod, k.kod === k.nazev ? k.kod : k.kod + ' · ' + k.nazev]; });
+    var udOpts = [['dhm', 'Dlouhodobý hmotný (nad 40 000 Kč)'], ['ddhm', 'Drobný dlouhodobý'], ['oe', 'Operativní evidence'], ['zrizovatel', 'Majetek zřizovatele']];
+    var autoUd = function (c) { return c > 40000 ? 'dhm' : c >= 1000 ? 'ddhm' : 'oe'; };
+    var dalsi = function (kat, rok) { var pre = kat + '-' + rok + '-', mx = 0; M.pol.forEach(function (p) { if (p.cislo.indexOf(pre) === 0) mx = Math.max(mx, +p.cislo.slice(pre.length) || 0); }); return mx + 1; };
+    var P = df.id ? M.pol.filter(function (p) { return p.id === df.id; })[0] : null;
+    var cz = function (iso) { return iso ? self.cz(new Date(iso + 'T00:00:00')) : ''; };
+
+    if (dk === 'majNova' || dk === 'majNalez') {
+      var nalez = dk === 'majNalez', ks = nalez ? 1 : Math.max(1, Math.min(500, parseInt(df.pocet, 10) || 1)), cena = num(df.cena), rok = df.porizeno ? +df.porizeno.slice(0, 4) : this.today.getFullYear();
+      var autoNow = cena != null && !isNaN(cena) ? autoUd(cena) : 'oe';
+      if (!df.ud || df.ud === df._udAuto) { df.ud = autoNow; df._udAuto = autoNow; }
+      var ud = df.ud;
+      var od = df.kat ? dalsi(df.kat, rok) : 0, cis = function (n) { return df.kat + '-' + rok + '-' + self.pad(n, 4); };
+      var okN = !!(df.nazev && df.nazev.trim()) && !!df.kat && !(cena != null && isNaN(cena)) && (!df.porizeno || df.porizeno <= self.iso(self.addDays(self.today, 31)));
+      var data = function () { return { nazev: (df.nazev || '').trim(), kategorie: df.kat, druh: df.druh || '', mistnost_id: df.mist || null, cena: cena == null ? null : String(cena), porizeno: df.porizeno || null,
+        doklad: df.doklad || '', dodavatel: df.dodavatel || '', seriove: ks === 1 ? df.seriove || '' : '', zaruka_do: df.zaruka || null, ucetni_druh: ud, financovani: df.financ || '', odpovida: df.odpovida || '', poznamka: df.pozn || '' }; };
+      var ulozit = function (tisk) {
+        if (!okN) return;
+        if (nalez) { self.majAkce('inventura_nalez_vyres', { p_nalez: df.nalez, p: data() }, function (c) { return 'Založeno: ' + c + ' — vytiskněte štítek'; }); return; }
+        self.majAkce('nova_polozka', { p: data(), p_pocet: ks }, function (c) { return 'Přidáno: ' + (c.length > 1 ? c[0] + ' až ' + c[c.length - 1] : c[0]); }, tisk ? { majView: 'stitky', majId: null, stitky: Object.assign({ preset: '3x8', start: 1, skola: true, nazev: true }, self.state.stitky || {}, { what: 'nove' }) } : null)
+          .then(function (c) { if (c) self.log('Majetek: přidáno ' + c.length + ' ks (' + c[0] + ')'); });
+      };
+      Object.assign(dlg, {
+        title: nalez ? 'Založit nalezenou věc' : 'Nová položka',
+        inputs: [inp('Název', 'nazev', 'Např. Židle dětská Tom-Tom, vel. 2'), inp('Druh', 'druh', 'Např. Židle, Notebook, Herní prvek')]
+          .concat(nalez ? [] : [inp('Počet kusů', 'pocet', '1', 'number', ks > 1 ? 'Každý kus dostane své číslo a štítek' : '', false)]),
+        choices: [group('Kategorie — začátek inventárního čísla', 'kat', katOpts)].concat(nalez ? [] : [group('Místnost', 'mist', mistOpts)]),
+        inputs2: [inp('Cena za kus (Kč)', 'cena', 'Např. 1 290', 'text', cena != null && isNaN(cena) ? 'Cena nesedí — jen číslo' : '', cena != null && isNaN(cena)), inp('Pořízeno', 'porizeno', '', 'date', 'Rok pořízení je součástí čísla', false),
+          inp('Doklad', 'doklad', 'Např. FV 2026/0412'), inp('Dodavatel', 'dodavatel', '')].concat(ks === 1 ? [inp('Sériové číslo', 'seriove', '')] : [])
+          .concat([inp('Záruka do', 'zaruka', '', 'date'), inp('Odpovídá', 'odpovida', 'Jméno (nepovinné)'), inp('Financování', 'financ', 'Např. Šablony OP JAK, dar SRPŠ'), inp('Poznámka', 'pozn', '')]),
+        choices2: [group('Účetní druh' + (df.ud === df._udAuto ? ' — předvybráno podle ceny' : ''), 'ud', udOpts)],
+        areas: [],
+        canSave: okN,
+        summary: !df.kat ? 'Vyberte kategorii.' : (ks > 1 ? 'Dostanou čísla ' + cis(od) + ' až ' + cis(od + ks - 1) : 'Dostane číslo ' + cis(od)) + (this.srv ? ' (pokud mezitím nepřidá někdo jiný)' : '') + (cena != null && !isNaN(cena) ? ' · celkem ' + Math.round(cena * ks).toLocaleString('cs-CZ') + ' Kč' : ''),
+        saveLabel: okN ? 'Uložit' : 'Doplňte název a kategorii',
+        save: function () { ulozit(false); },
+        hasExtra: !nalez && okN, extraLabel: 'Uložit a tisknout štítky', extra: function () { ulozit(true); }
+      });
+    }
+    if (dk === 'majUprav' && P) {
+      var c2 = num(df.cena), ok2 = !!(df.nazev && df.nazev.trim()) && !(c2 != null && isNaN(c2));
+      Object.assign(dlg, {
+        title: 'Upravit ' + P.cislo,
+        inputs: [inp('Název', 'nazev', ''), inp('Druh', 'druh', ''), inp('Odpovídá', 'odpovida', ''), inp('Výrobce · model', 'vyrobce', ''), inp('Sériové číslo', 'seriove', ''),
+          inp('Pořízeno', 'porizeno', '', 'date', 'Číslo položky se už nemění', false), inp('Pořizovací cena (Kč)', 'cena', '', 'text', c2 != null && isNaN(c2) ? 'Cena nesedí' : '', c2 != null && isNaN(c2)),
+          inp('Dodavatel', 'dodavatel', ''), inp('Doklad', 'doklad', ''), inp('Záruka do', 'zaruka', '', 'date'), inp('Financování', 'financ', ''), inp('Původní číslo', 'puvodni', '')],
+        areas: [area('Poznámka', 'pozn', '')],
+        choices: [group('Účetní druh', 'ud', udOpts)],
+        canSave: ok2, saveLabel: 'Uložit', summary: 'Kategorie a inventární číslo zůstávají.',
+        save: function () {
+          if (!ok2) return;
+          self.majAkce('uprav_polozku', { p_id: P.id, p: { nazev: df.nazev.trim(), druh: df.druh || '', odpovida: df.odpovida || '', vyrobce: df.vyrobce || '', seriove: df.seriove || '', porizeno: df.porizeno || null,
+            cena: c2 == null ? null : String(c2), dodavatel: df.dodavatel || '', doklad: df.doklad || '', ucetni_druh: df.ud || P.ud, zaruka_do: df.zaruka || null, financovani: df.financ || '', puvodni_cislo: df.puvodni || '', poznamka: df.pozn || '' } }, 'Uloženo');
+        }
+      });
+    }
+    if (dk === 'majPresun') {
+      var ids = df.ids || [];
+      Object.assign(dlg, {
+        title: ids.length === 1 ? 'Přesunout ' + (M.pol.filter(function (p) { return p.id === ids[0]; })[0] || {}).cislo : 'Přesunout ' + ids.length + ' položek',
+        choices: [group('Kam', 'mist', mistOpts)], inputs: [inp('Poznámka', 'pozn', 'Nepovinné')],
+        canSave: !!df.mist, saveLabel: df.mist ? 'Přesunout' : 'Vyberte místnost', summary: 'Přesun se zapíše do historie položky.',
+        save: function () { if (!df.mist) return; self.majAkce('presun_polozky', { p_ids: ids, p_mistnost: df.mist, p_poznamka: df.pozn || '' }, function (n) { return n ? 'Přesunuto: ' + n : 'Nic se nepřesunulo — položky už tam jsou'; }, { majSel: {} }); }
+      });
+    }
+    if (dk === 'majZapujc' && P) {
+      var ok3 = !!(df.komu && df.komu.trim());
+      Object.assign(dlg, { title: 'Zapůjčit ' + P.cislo, inputs: [inp('Komu', 'komu', 'Jméno'), inp('Vrátit do', 'do', '', 'date')], canSave: ok3, saveLabel: 'Zapůjčit',
+        summary: 'Před termínem vrácení se zápůjčka ukáže v Přehledu.',
+        save: function () { if (!ok3) return; self.majAkce('zapujc_polozku', { p_id: P.id, p_komu: df.komu.trim(), p_do: df.do || null }, 'Zapůjčeno: ' + df.komu.trim()); } });
+    }
+    if (dk === 'majZavada' && P) {
+      var ok4 = !!(df.popis && df.popis.trim());
+      Object.assign(dlg, { title: 'Závada: ' + P.nazev, areas: [area('Co se stalo', 'popis', 'Např. prasklá noha, nesvítí projektor')], canSave: ok4, saveLabel: 'Nahlásit',
+        summary: 'Položka dostane stav „poškozeno“.', save: function () { if (!ok4) return; self.majAkce('nahlas_zavadu', { p_id: P.id, p_popis: df.popis.trim() }, 'Závada zapsána'); } });
+    }
+    if (dk === 'majVyrad' && P) {
+      var ok5 = !!(df.duvod && df.duvod.trim());
+      Object.assign(dlg, { title: 'Vyřadit ' + P.cislo, inputs: [inp('Důvod vyřazení', 'duvod', 'Např. rozbitá, neopravitelná'), inp('Datum vyřazení', 'datum', '', 'date')],
+        hasWarn: true, warn: 'Vyřazení nejde vrátit. Položka zůstane v evidenci jako vyřazená a dostane protokol pro likvidační komisi.',
+        canSave: ok5, saveLabel: 'Vyřadit', summary: P.nazev + ' · ' + (P.cena != null ? Math.round(P.cena).toLocaleString('cs-CZ') + ' Kč' : 'bez ceny'),
+        save: function () { if (!ok5) return; self.majAkce('vyrad_polozku', { p_id: P.id, p_duvod: df.duvod.trim(), p_datum: df.datum || null }, 'Vyřazeno — protokol najdete v kartě').then(function () { self.log('Majetek: vyřazeno ' + P.cislo); }); } });
+    }
+    if (dk === 'majKon') {
+      var iv = df.interval ? parseInt(df.interval, 10) : null, ok6 = !!(df.nazev && df.nazev.trim()) && !!df.dalsi && (!df.interval || (iv >= 1 && iv <= 120));
+      var pp = df.pol ? M.pol.filter(function (p) { return p.id === df.pol; })[0] : null;
+      Object.assign(dlg, { title: df.id ? 'Upravit kontrolu' : 'Nová kontrola' + (pp ? ' · ' + pp.cislo : ''),
+        inputs: [inp('Co se kontroluje', 'nazev', 'Např. Elektrorevize, Kontrola hasicích přístrojů'), inp('Opakovat po (měsících)', 'interval', 'Prázdné = jednorázově', 'number'), inp('Další termín', 'dalsi', '', 'date'), inp('Poznámka', 'pozn', 'Např. kdo ji dělá')],
+        canSave: ok6, saveLabel: 'Uložit', summary: pp ? pp.nazev : 'Kontrola pro celou školku (třeba hasicí přístroje).',
+        save: function () { if (!ok6) return; self.majAkce('uloz_kontrolu', { p_id: df.id || null, p_polozka: df.pol || null, p_nazev: df.nazev.trim(), p_interval: iv || null, p_dalsi: df.dalsi, p_poznamka: df.pozn || '' }, 'Kontrola uložena'); } });
+    }
+    if (dk === 'majKonHotovo') {
+      var kk = M.kon.filter(function (k) { return k.id === df.id; })[0];
+      if (kk) Object.assign(dlg, { title: kk.nazev + ' — hotovo', inputs: [inp('Kdy', 'datum', '', 'date'), inp('Poznámka', 'pozn', 'Např. bez závad, číslo protokolu')], canSave: !!df.datum, saveLabel: 'Zapsat',
+        summary: kk.interval ? 'Další termín se posune o ' + kk.interval + ' měs.' : 'Jednorázová kontrola se tím uzavře.',
+        save: function () { self.majAkce('kontrola_hotova', { p_id: kk.id, p_datum: df.datum, p_poznamka: df.pozn || '' }, 'Zapsáno'); } });
+    }
+    if (dk === 'majInvStart') {
+      var ok7 = !!df.kDatu;
+      Object.assign(dlg, { title: 'Zahájit inventuru', inputs: [inp('K jakému dni', 'kDatu', '', 'date', 'Řádná inventarizace bývá k 31. 12.', false), inp('Inventarizační komise', 'komise', 'Jména oddělená čárkou — první je předseda/předsedkyně')],
+        canSave: ok7, saveLabel: 'Zahájit', summary: 'Do inventury se zařadí všechny používané místnosti. Učitelky třídy pak skenují na tabletu, ostatní místnosti tady.',
+        save: function () { if (!ok7) return; self.majAkce('zahaj_inventuru', { p_k_datu: df.kDatu, p_komise: String(df.komise || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean) }, 'Inventura zahájena', { majTab: 'inventura' }); } });
+    }
+    if (dk === 'majInvClose' && M.inv) {
+      Object.assign(dlg, { title: 'Uzavřít inventuru k ' + cz(M.inv.kDatu), hasWarn: true, warn: 'Po uzavření už výsledky nejde měnit. Inventurní soupis si vytiskněte k podpisu komise (tlačítko Inventurní soupis).',
+        canSave: true, saveLabel: 'Uzavřít', summary: 'Nalezené položky dostanou do historie záznam z inventury.',
+        save: function () { var kd = M.inv.kDatu; self.majAkce('uzavri_inventuru', { p_inventura: M.inv.id }, 'Inventura uzavřena').then(function () { self.log('Majetek: uzavřena inventura k ' + cz(kd)); }); } });
+    }
+    if (dk === 'majKdo' && M.inv) {
+      var mm = M.mist.filter(function (m) { return m.id === df.mist; })[0] || {};
+      Object.assign(dlg, { title: 'Kdo kontroluje: ' + mm.nazev, inputs: [inp('Jméno', 'kdo', 'Kdo místnost projde')], canSave: true, saveLabel: 'Uložit', summary: mm.trida ? 'U třídy můžou skenovat i učitelky na tabletu.' : '',
+        save: function () { self.majAkce('inventura_kontroluje', { p_inventura: M.inv.id, p_mistnost: df.mist, p_kdo: df.kdo || '' }, 'Uloženo'); } });
+    }
+    if (dk === 'majSken' && M.inv) {
+      var m2 = M.mist.filter(function (m) { return m.id === df.mist; })[0] || {}, inv2 = M.inv;
+      var exp = M.pol.filter(function (p) { return p.mist === df.mist && p.stav !== 'vyrazeno' && p.stav !== 'zapujceno'; });
+      var hot = exp.filter(function (p) { return M.zaz[p.id] && M.zaz[p.id].vys === 'nalezeno'; }).length;
+      var zapis = function (kod) {
+        self.majOp('inventura_sken', { p_inventura: inv2.id, p_mistnost: df.mist, p_kod: kod }).then(function (r) {
+          var T = { nalezeno: 'nalezeno', jinde: 'patří jinam (' + (r.patri || '') + ') — zapsáno jako „jinde“', uz: 'už zapsáno', neznamy: 'tohle číslo v evidenci není', vyrazeno: 'vyřazená položka' };
+          var log = [{ label: r.cislo || r.kod || kod, value: (r.nazev ? r.nazev + ' — ' : '') + T[r.vysledek] }].concat(self.state.df.log || []).slice(0, 8);
+          self.setDF({ kod: '', log: log });
+        }).catch(function (e) { self.showToast(self.majChyba(e)); });
+      };
+      var fld = inp('Štítek', 'kod', 'Načtěte čtečkou nebo napište číslo (IT-2026-0012)');
+      var orig = fld.onInput;
+      fld.onInput = function (e) { var v = e.target.value; orig(e); if (/[A-Za-z]{2,4}-\d{4}-\d{4}\s*$/.test(v)) zapis(v.trim()); };
+      Object.assign(dlg, { title: 'Inventura: ' + m2.nazev, inputs: [fld], hasInfo: (df.log || []).length > 0, info: df.log || [],
+        canSave: true, saveLabel: 'Místnost hotová', summary: 'Zkontrolováno ' + hot + ' z ' + exp.length + '. Každý načtený štítek se ukládá hned; „Místnost hotová“ zapíše, co se nenašlo, jako chybějící.',
+        hasExtra: true, extraLabel: 'Věc bez štítku…', extra: function () { var popis = window.prompt('Co to je? (krátký popis)'); if (popis && popis.trim()) self.majOp('inventura_bez_stitku', { p_inventura: inv2.id, p_mistnost: df.mist, p_popis: popis.trim() }).then(function () { self.setDF({ log: [{ label: 'bez štítku', value: popis.trim() + ' — zapsáno' }].concat(self.state.df.log || []).slice(0, 8) }); }).catch(function (e) { self.showToast(self.majChyba(e)); }); },
+        save: function () { self.majAkce('inventura_mistnost_hotova', { p_inventura: inv2.id, p_mistnost: df.mist }, function (n) { return m2.nazev + ' hotovo' + (n ? ' · ' + n + ' chybí' : ' · bez rozdílů'); }); } });
+    }
+    if (dk === 'majMist') {
+      var ok8 = !!(df.nazev && df.nazev.trim());
+      Object.assign(dlg, { title: df.id ? 'Místnost' : 'Nová místnost', inputs: [inp('Název', 'nazev', 'Např. Tělocvična')],
+        choices: [group('Patří ke třídě', 'trida', [['', 'Ne']].concat(this.classes.map(function (c) { return [c.id, c.name]; }))), group('Používá se', 'aktivni', [['ano', 'Ano'], ['ne', 'Ne (v inventuře nebude)']])],
+        canSave: ok8, saveLabel: 'Uložit', summary: 'U místnosti třídy vidí majetek a skenují při inventuře učitelky té třídy.',
+        save: function () { if (!ok8) return; self.majAkce('uloz_mistnost', { p_id: df.id || null, p_nazev: df.nazev.trim(), p_trida: df.trida || null, p_aktivni: df.aktivni !== 'ne' }, 'Místnost uložena'); } });
+    }
+    if (dk === 'majKat') {
+      var kod = String(df.kod || '').trim().toUpperCase(), ok9 = /^[A-Z]{2,4}$/.test(kod) && !!(df.nazev && df.nazev.trim());
+      Object.assign(dlg, { title: df.pevny ? 'Kategorie ' + kod : 'Nová kategorie',
+        inputs: (df.pevny ? [] : [inp('Zkratka', 'kod', 'Např. SPO', 'text', kod && !/^[A-Z]{2,4}$/.test(kod) ? '2–4 písmena bez diakritiky' : 'Začátek inventárního čísla — později už nejde změnit', !!kod && !/^[A-Z]{2,4}$/.test(kod))]).concat([inp('Název', 'nazev', 'Např. Sportovní vybavení')]),
+        canSave: ok9, saveLabel: 'Uložit', summary: ok9 ? 'Čísla budou ' + kod + '-' + this.today.getFullYear() + '-0001, 0002…' : '',
+        save: function () { if (!ok9) return; self.majAkce('uloz_kategorii', { p_kod: kod, p_nazev: df.nazev.trim() }, 'Kategorie uložena'); } });
+    }
+  }
+
   renderVals() {
     var self = this, st = this.state, df = st.df || {};
     var CL = this.classes, clsById = {};
@@ -3309,7 +4734,7 @@ class Component extends DCLogic {
       self.log('Z tabletu: úraz č. ' + e.no + ' — ' + (kk ? kk.first + ' ' + kk.last : e.child));
     });
     var role = st.role, ME = this.users[role];
-    var ALLOW = role === 'hospodarka' ? ['prehled', 'deti', 'dochazka', 'platby', 'zpravy', 'archiv'] : null;
+    var ALLOW = role === 'hospodarka' ? ['prehled', 'deti', 'dochazka', 'platby', 'zpravy', 'archiv', 'majetek'] : null;
     var UC = this.ucet, board = function (b) { return !UC || UC.desky.indexOf(b) !== -1; };
     var SU = typeof window !== 'undefined' ? window.SkolkaUcet : null;
     var SRVON = !!(SU && SU.server && SU.server());
@@ -3348,11 +4773,12 @@ class Component extends DCLogic {
     var webMissing = this.webChecks().filter(function (c) { return !c.ok; }).length;
     var docTodo = this.docs ? this.docs.filter(function (d) { return d.required && !d.approved; }).length : 0;
     /* Menu po skupinách: děti → školka → rodiče a veřejnost → peníze → povinná evidence → nastavení. */
+    var majLehky = this.majVals(st, role, st.page !== 'majetek');
     var zpVl = this.zpVlakna(), zpNove = zpVl.reduce(function (a, v) { return a + v.nove.length; }, 0);
     var NAV0 = [
       ['prehled', 'Přehled', ''],
       ['#', 'Děti', 'deti'], ['deti', 'Kartotéka dětí', kids.length], ['dochazka', 'Docházka', neoml.length || ''], ['zapis', 'Zápis do školky', ''],
-      ['#', 'Školka', 'skolka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''], ['jidelna', 'Školní jídelna', ''],
+      ['#', 'Školka', 'skolka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''], ['jidelna', 'Školní jídelna', ''], ['majetek', 'Majetek', majLehky.attCount || ''],
       ['#', 'Rodiče', 'rodice'], ['zpravy', this.srv ? 'Zprávy' : 'Zprávy rodičům', zpNove || ''], ['lifeos', 'Rodiče v LifeOS', ''], ['web', 'Webové stránky', webMissing || ''],
       ['#', 'Peníze', 'penize'], ['platby', 'Platby', unpaidPrev.length || ''],
       ['#', 'Úřední evidence', 'evidence'], ['matrika', 'Matrika MŠMT', matErr.length ? matErr.length : ''], ['urazy', 'Kniha úrazů', urazPending.length ? urazPending.length : ''], ['dokumenty', 'Dokumenty', docTodo || ''], ['archiv', 'Archiv', ''],
@@ -3375,17 +4801,17 @@ class Component extends DCLogic {
           dotStyle: 'width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; background: ' + (nb ? nb[0] : '#C9C7BF') };
       }
       var on = st.page === n[0];
-      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web', 'zpravy'].indexOf(n[0]) !== -1 && n[2] !== '';
+      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web', 'zpravy', 'majetek'].indexOf(n[0]) !== -1 && n[2] !== '';
       return {
         isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
           + (warn ? 'background: #F7DCC6; color: #8A4513' : 'background: ' + (on ? '#F3F4F2' : '#E5E7E4') + '; color: #3A3C40'),
         pick: n[0] === 'jidelna' ? function () { location.hash = '#jidelna'; } : go(n[0], { kidId: null, editAll: false }),
-        style: 'min-height: 32px; padding: 0 12px 0 14px; border-radius: 16px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
+        style: 'min-height: 30px; padding: 0 12px 0 14px; border-radius: 15px; border: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; color: #17181A; background: ' + (on ? '#FFFFFF' : 'transparent') + '; font-weight: ' + (on ? '800' : '600')
       };
     });
     var is = {};
-    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'dokumenty', 'archiv', 'nastaveni', 'pristupy', 'lifeos'].forEach(function (p) { is[p] = st.page === p; });
+    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'dokumenty', 'archiv', 'nastaveni', 'pristupy', 'lifeos', 'majetek'].forEach(function (p) { is[p] = st.page === p; });
 
     var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
     var today = this.today;
@@ -3404,6 +4830,7 @@ class Component extends DCLogic {
       zpravy: this.srv ? ['Rodiče v LifeOS a učitelky na tabletech', 'Zprávy', '', null] : ['Hromadné zprávy do aplikace a e-mailem', 'Zprávy rodičům', '', null],
       porady: ['Záznamy z pedagogických rad a provozních porad', 'Porady', '+ Nový zápis', function () { self.setState({ dlg: 'porada', df: { date: self.iso(today), typ: 'Pedagogická rada', prit: self.srv ? self.poradaKdo().map(function (o) { return o[0]; }) : undefined } }); }],
       archiv: ['Spisová služba a kontrola přístupu', 'Archiv', '', null],
+      majetek: ['Evidence, QR štítky a inventarizace', 'Majetek', '+ Nová položka', function () { majLehky.novaPolozka(); }],
       web: ['Skládají se z údajů v ředitelně — kontakty, třídy, zápis, platby', 'Webové stránky', '', null],
       nastaveni: ['Údaje, ze kterých se skládá matrika, web, dokumenty i platby', 'Nastavení školky', '', null],
       dokumenty: ['Povinné dokumenty školy — předvyplněné z údajů školky', 'Dokumenty', '', null],
@@ -3412,6 +4839,7 @@ class Component extends DCLogic {
     };
     var P = PAGES[st.page];
     var page = { kicker: P[0], title: P[1], hasAction: !!P[2] && canEdit, actionLabel: P[2], action: P[3] || function () {} };
+    if (st.page === 'majetek') page.hasAction = majLehky.can && !majLehky.loading && !st.majId && !st.majView;
 
     /* -------------------------------------------------- přehled */
     // Docházka „dnes“ je v ředitelně ukázková (skutečná přijde z tabletů tříd).
@@ -3431,6 +4859,9 @@ class Component extends DCLogic {
     }
     var todoItem = function (bg, dotC, title, sub, action, fn, pg) { return { pg: pg || 'deti', title: title, sub: sub, action: action, go: fn, dotStyle: dot(dotC, 12), style: 'display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 16px; border-radius: 18px; background: ' + bg }; };
     var todo = [];
+    /* Majetek: závady, kontroly do 30 dní, zápůjčky a rozdíly z inventury (jen kdo majetek spravuje). */
+    if (majLehky.can && majLehky.attCount && allowed('majetek')) todo.push(todoItem('#F3F4F2', '#8A8C90', 'Majetek: ' + majLehky.attCount + (majLehky.attCount === 1 ? ' věc vyžaduje' : majLehky.attCount < 5 ? ' věci vyžadují' : ' věcí vyžaduje') + ' pozornost',
+      'Závady, revize a servis do 30 dní, zápůjčky, rozdíly z inventury', 'Otevřít', go('majetek', { majTab: 'seznam', majId: null, majView: null }), 'majetek'));
     if (matErr.length) todo.push(todoItem('#FCF4EF', '#F28C28', 'Matrika: ' + nDeti(matErr.length) + ' s chybějícími údaji', 'Sběr k ' + (st.matDate === 'podzim' ? '30. 9.' : '31. 3.') + ', odevzdání do ' + deadline + ' na matrika.msmt.cz', 'Opravit', go('matrika'), 'matrika'));
     urazPending.forEach(function (u) {
       var d = new Date(u.date); var dl = new Date(d.getFullYear(), d.getMonth() + 1, 5);
@@ -4677,7 +6108,7 @@ class Component extends DCLogic {
 
     /* -------------------------------------------------- formuláře */
     var dk = st.dlg;
-    var dlg = { open: !!dk, close: function () { self.setState({ dlg: null, df: {} }); }, inputs: [], areas: [], rich: [], choices: [], summary: '', canSave: false, saveLabel: '', title: '', hasWarn: false, warn: '', hasAvatar: false, av: this.avatar({ name: '' }, 96), hasPhoto: false, photoLabel: '', onPhoto: function () {}, removePhoto: function () {}, hasInfo: false, info: [], hasExtra: false, extra: function () {}, extraLabel: '' };
+    var dlg = { open: !!dk, close: function () { self.setState({ dlg: null, df: {} }); }, inputs: [], inputs2: [], choices2: [], areas: [], rich: [], choices: [], summary: '', canSave: false, saveLabel: '', title: '', hasWarn: false, warn: '', hasAvatar: false, av: this.avatar({ name: '' }, 96), hasPhoto: false, photoLabel: '', onPhoto: function () {}, removePhoto: function () {}, hasInfo: false, info: [], hasExtra: false, extra: function () {}, extraLabel: '' };
     /* Pole s formátováním (zápis z porady). Psaní stav nepřekresluje — kurzor by
        skočil; překreslí se jen, když se pole vyprázdní nebo zaplní (tlačítko Uložit). */
     var richFill = [];
@@ -4844,6 +6275,7 @@ class Component extends DCLogic {
         }
       });
     }
+    if (dk && /^maj/.test(dk)) this.majDialog(dk, dlg, df, inp, group, area);
     if (dk === 'bankaSet') {
       var tok = String(df.token || '').replace(/\s/g, ''), maB = !!this.banka;
       var tokOk = /^[A-Za-z0-9]{20,200}$/.test(tok), okB = tokOk || (maB && !tok);
@@ -5015,7 +6447,7 @@ class Component extends DCLogic {
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
       zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, lo: lo, imp: imp, payDlg: payDlg,
-      dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
+      maj: majLehky, dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }
 }

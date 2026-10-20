@@ -132,6 +132,16 @@ práva podle role (ředitelka / učitelka / hospodářka / rodič) přes RLS,
 učitelky a hospodářka nevidí rodná čísla, každá změna osobních údajů jde
 do `audit_log`. Ověřeno na PostgreSQL 16.
 
+### Majetek a inventarizace
+
+Ředitelna → Školka → **Majetek**: evidence s čísly `KATEGORIE-ROK-POŘADÍ`
+(IT-2026-0012), filtry podle tříd, místností, kategorií a stavu, karta položky
+s historií, QR štítky na arch A4 (počet štítků na archu volitelný, i načatý
+arch), import ze staré evidence (Excel/CSV), revize a servis, vyřazení
+s protokolem a **inventura** — učitelky skenují na tabletu své třídy, ostatní
+místnosti se skenují v ředitelně, rozdíly se vyřeší a vytiskne se inventurní
+soupis. Podrobnosti v [`docs/MAJETEK.md`](docs/MAJETEK.md).
+
 ### Platby z banky a QR pro rodiče
 
 Platby se z účtu školky (Fio API) stahují a párují **samy každých 15 minut**
