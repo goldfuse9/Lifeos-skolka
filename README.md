@@ -150,6 +150,17 @@ tokenem v Platby → Platby z banky, hospodářka může stáhnout hned. Rodič 
 zavolá `moje_platby()` a dostane částku k úhradě, VS a hotový řetězec QR platby.
 Zprovoznění v [`docs/PLATBY-Z-BANKY.md`](docs/PLATBY-Z-BANKY.md).
 
+### Pokročilé finance a export pro účetní
+
+Platby mají záložky **Předpisy · Další platby · Přeplatky a vratky · Pokladna ·
+Slevy a prominutí · Uzávěrka a export**. Měsíční předpisy předem (viz provozní
+kalendář) dostanou číslo dokladu, slevy a prominutí ředitelky a storno.
+Jednorázové platby (výlety, pomůcky, kroužky, fond) pro třídu, přihlášené na akci
+nebo vybrané děti, storno protizápisem, pokladní doklady s číselnou řadou,
+vratky přeplatků hromadným příkazem pro banku (ABO), uzávěrka měsíce a **ZIP
+s CSV pro účetní** (deník s předkontací, předpisy, úhrady, pokladní kniha, vratky,
+saldokonto, rekapitulace). Podrobnosti v [`docs/FINANCE.md`](docs/FINANCE.md).
+
 ### Finanční modul (`server/`)
 
 Školkovné a stravné pro ostrý provoz: Python (`Decimal`) + PostgreSQL

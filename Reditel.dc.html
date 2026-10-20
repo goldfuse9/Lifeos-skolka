@@ -557,6 +557,14 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
          Úplata za předškolní vzdělávání (u PPV se neplatí) a stravné.
          Párování podle variabilního symbolu z výpisu banky. -->
     <sc-if value="{{is.platby}}" hint-placeholder-val="{{false}}">
+      <sc-if value="{{fxv.on}}" hint-placeholder-val="{{true}}">
+        <div role="tablist" aria-label="Platby" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+          <sc-for list="{{fxv.tabs}}" as="t" hint-placeholder-count="7">
+            <button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{fxv.isPred}}" hint-placeholder-val="{{true}}">
       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
         <sc-for list="{{pay.months}}" as="m" hint-placeholder-count="2">
           <button type="button" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="{{m.style}}">{{m.label}}</button>
@@ -565,7 +573,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <label for="vypis-gpc" style="height: 44px; padding: 0 18px; border-radius: 22px; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; cursor: pointer">Načíst výpis z banky (.gpc)</label>
         <input id="vypis-gpc" type="file" accept=".gpc,.abo,.txt" onChange="{{pay.onFile}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none">
  <sc-if value="{{pay.lokalni}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{pay.demo}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Ukázkový výpis</button></sc-if>
-        <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Export pro účetnictví</button>
+        <button type="button" onClick="{{pay.export}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">{{pay.exportLabel}}</button>
       </div>
       <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
         <sc-for list="{{pay.stats}}" as="s" hint-placeholder-count="4">
@@ -637,6 +645,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
             <sc-for list="{{pay.setup}}" as="x" hint-placeholder-count="4">
               <span style="display: flex; gap: 8px; font-size: 13px"><span style="color: #5A5C60; flex-grow: 1">{{x.k}}</span><span style="font-weight: 700; text-align: right">{{x.v}}</span></span>
             </sc-for>
+            <sc-if value="{{pay.fxOn}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{pay.fxSet}}" style="align-self: flex-start; height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Pokladna a předkontace</button></sc-if>
           </section>
           <sc-if value="{{pay.bankaShow}}" hint-placeholder-val="{{false}}">
             <section aria-label="Platby z banky" style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
@@ -650,6 +659,169 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
           </sc-if>
         </aside>
       </div>
+      </sc-if>
+
+      <!-- další platby: výlety, pomůcky, kroužky, fond -->
+      <sc-if value="{{fxv.isDalsi}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Další platby" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #EEF0ED">
+              <h2 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Výlety, divadla, pomůcky, kroužky</h2>
+              <sc-if value="{{fxv.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{fxv.novaPlatba}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Nová platba</button></sc-if>
+            </div>
+            <sc-if value="{{fxv.dalsiNone}}" hint-placeholder-val="{{false}}"><span style="padding: 30px 20px; font-size: 14px; color: #5A5C60; line-height: 20px">Zatím žádné. Platbu vystavíte celé školce, třídě, dětem přihlášeným na akci nebo vybraným dětem — rodiče ji uvidí v aplikaci s QR kódem a platba se spáruje podle VS jako školkovné.</span></sc-if>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+              <sc-for list="{{fxv.dalsi}}" as="g" hint-placeholder-count="3">
+                <div role="button" tabindex="0" onClick="{{g.pick}}" style="{{g.style}}">
+                  <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 800">{{g.nazev}}</span><span style="font-size: 12px; color: #5A5C60">{{g.sub}}</span></span>
+                  <span style="font-weight: 700">{{g.deti}}</span>
+                  <span style="display: flex; flex-direction: column; text-align: right"><span style="font-weight: 800">{{g.castka}}</span><span style="font-size: 12px; color: #5A5C60">{{g.zbyva}}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+          <sc-if value="{{fxv.hasSelG}}" hint-placeholder-val="{{false}}">
+            <aside aria-label="Děti v platbě" style="width: 380px; flex-shrink: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+              <div style="padding: 14px 20px; border-bottom: 1px solid #EEF0ED; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 800">{{fxv.selG.title}}</span><span style="font-size: 12px; color: #5A5C60">{{fxv.selG.sub}}</span></div>
+              <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+                <sc-for list="{{fxv.selG.rows}}" as="r" hint-placeholder-count="4">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1fr) 76px 92px 64px; gap: 8px; align-items: center; padding: 8px 20px; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                    <span style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="text-align: right">{{r.castka}}</span><span style="{{r.stateStyle}}">{{r.state}}</span>
+                    <sc-if value="{{r.canStorno}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{r.storno}}" style="height: 30px; padding: 0 8px; border-radius: 15px; border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513; font-size: 12px; font-weight: 700; cursor: pointer">Storno</button></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </aside>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- přeplatky a vratky -->
+      <sc-if value="{{fxv.isVratky}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Přeplatky" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #EEF0ED"><h2 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Přeplatky na kontech</h2><span style="font-size: 16px; font-weight: 800">{{fxv.preplSum}}</span></div>
+            <sc-if value="{{fxv.preplNone}}" hint-placeholder-val="{{false}}"><span style="padding: 30px 20px; font-size: 14px; color: #5A5C60">Nikdo nemá přeplatek.</span></sc-if>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+              <sc-for list="{{fxv.prepl}}" as="r" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 90px; gap: 10px; align-items: center; padding: 9px 20px; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                  <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">{{r.name}}</span><span style="font-size: 12px; color: #5A5C60">{{r.sub}}</span></span>
+                  <span style="font-weight: 800; color: #27407A; text-align: right">{{r.castka}}</span>
+                  <sc-if value="{{fxv.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{r.vratit}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Vrátit</button></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+          <aside style="width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+            <sc-if value="{{fxv.vrPrip}}" hint-placeholder-val="{{false}}">
+              <section style="background: #F7F0DA; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+                <h2 style="margin: 0; font-size: 16px; font-weight: 800">Čeká na odeslání</h2>
+                <span style="font-size: 14px; color: #5C4300; line-height: 20px">{{fxv.vrPripText}}</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                  <button type="button" onClick="{{fxv.vrAbo}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 0; background: #FFFFFF; color: #5C4300; font-size: 14px; font-weight: 800; cursor: pointer">Hromadný příkaz pro banku</button>
+                  <sc-if value="{{fxv.can}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{fxv.vrOdeslano}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid #E5D6A8; background: transparent; color: #5C4300; font-size: 14px; font-weight: 700; cursor: pointer">Označit jako odeslané</button></sc-if>
+                </div>
+              </section>
+            </sc-if>
+            <section aria-label="Vratky" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+              <h2 style="margin: 0; padding: 14px 20px; font-size: 16px; font-weight: 800; border-bottom: 1px solid #EEF0ED">Vrácené přeplatky</h2>
+              <sc-if value="{{fxv.vrNone}}" hint-placeholder-val="{{true}}"><span style="padding: 20px; font-size: 14px; color: #5A5C60">Zatím žádné.</span></sc-if>
+              <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+                <sc-for list="{{fxv.vratky}}" as="v" hint-placeholder-count="2">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 8px; align-items: center; padding: 9px 20px; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                    <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">{{v.name}} · {{v.castka}}</span><span style="font-size: 12px; color: #5A5C60">{{v.cislo}} · {{v.sub}}</span></span>
+                    <span style="{{v.stateStyle}}">{{v.state}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </sc-if>
+
+      <!-- pokladna -->
+      <sc-if value="{{fxv.isPokl}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+          <sc-for list="{{fxv.pokMonths}}" as="m" hint-placeholder-count="2"><button type="button" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="{{m.style}}">{{m.label}}</button></sc-for>
+          <span style="flex-grow: 1"></span>
+          <sc-if value="{{fxv.can}}" hint-placeholder-val="{{true}}">
+            <button type="button" onClick="{{fxv.pokPrijem}}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Příjem</button>
+            <button type="button" onClick="{{fxv.pokVydej}}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Výdej</button>
+          </sc-if>
+          <button type="button" onClick="{{fxv.pokKniha}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Pokladní kniha</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+          <sc-for list="{{fxv.pokStats}}" as="s" hint-placeholder-count="4">
+            <div style="{{s.style}}"><span style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">{{s.label}}</span><span style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em">{{s.value}}</span></div>
+          </sc-for>
+        </div>
+        <section aria-label="Pokladní doklady" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: grid; grid-template-columns: 130px 90px minmax(0, 1fr) 100px 100px 110px 70px; gap: 10px; padding: 10px 20px; font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #EEF0ED">
+            <span>Doklad</span><span>Datum</span><span>Účel</span><span style="text-align: right">Příjem</span><span style="text-align: right">Výdej</span><span style="text-align: right">Zůstatek</span><span></span>
+          </div>
+          <sc-if value="{{fxv.pokNone}}" hint-placeholder-val="{{false}}"><span style="padding: 24px 20px; font-size: 14px; color: #5A5C60">V tomto měsíci žádné pokladní doklady.</span></sc-if>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+            <sc-for list="{{fxv.pokRows}}" as="r" hint-placeholder-count="4">
+              <div style="display: grid; grid-template-columns: 130px 90px minmax(0, 1fr) 100px 100px 110px 70px; gap: 10px; align-items: center; padding: 8px 20px; border-bottom: 1px solid #F3F4F2; font-size: 14px; font-variant-numeric: tabular-nums">
+                <span style="font-weight: 700">{{r.cislo}}</span><span>{{r.datum}}</span><span style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.ucel}}</span>
+                <span style="text-align: right; color: #2F5212; font-weight: 700">{{r.prijem}}</span><span style="text-align: right; color: #9A3412; font-weight: 700">{{r.vydej}}</span><span style="text-align: right">{{r.zust}}</span>
+                <button type="button" onClick="{{r.tisk}}" style="height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 12px; font-weight: 700; cursor: pointer; color: #17181A">Tisk</button>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- slevy a prominutí -->
+      <sc-if value="{{fxv.isSlevy}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Slevy a prominutí" style="flex-grow: 1; min-height: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #EEF0ED">
+            <span style="display: flex; flex-direction: column; flex-grow: 1"><h2 style="margin: 0; font-size: 16px; font-weight: 800">Snížení a prominutí školkovného</h2><span style="font-size: 13px; color: #5A5C60">Podle § 6 vyhl. 14/2005 Sb. a směrnice školky, rozhoduje ředitelka. Děti s povinným předškolním vzděláváním jsou osvobozené samy.</span></span>
+            <sc-if value="{{fxv.vedeni}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{fxv.novaSleva}}" style="height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Nová sleva</button></sc-if>
+          </div>
+          <sc-if value="{{fxv.slevyNone}}" hint-placeholder-val="{{false}}"><span style="padding: 30px 20px; font-size: 14px; color: #5A5C60">Zatím žádné.</span></sc-if>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+            <sc-for list="{{fxv.slevy}}" as="u" hint-placeholder-count="2">
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) 150px 110px 90px; gap: 10px; align-items: center; padding: 10px 20px; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">{{u.name}}</span><span style="font-size: 12px; color: #5A5C60">{{u.sub}}</span></span>
+                <span style="font-weight: 700">{{u.co}}</span><span style="{{u.stateStyle}}">{{u.state}}</span>
+                <sc-if value="{{u.canZrusit}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{u.zrusit}}" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Zrušit</button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- uzávěrka a export pro účetní -->
+      <sc-if value="{{fxv.isUz}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Uzávěrka měsíců" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden">
+            <div style="padding: 14px 20px; border-bottom: 1px solid #EEF0ED; display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 16px; font-weight: 800">Měsíce</h2><span style="font-size: 13px; color: #5A5C60">Export je ZIP s CSV pro účetní (deník, předpisy, úhrady, pokladní kniha, vratky, saldokonto, rekapitulace). Uzavřený měsíc se už nezmění.</span></div>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+              <sc-for list="{{fxv.uzMonths}}" as="m" hint-placeholder-count="3">
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 100px auto; gap: 10px; align-items: center; padding: 10px 20px; border-bottom: 1px solid #F3F4F2; font-size: 14px">
+                  <span style="display: flex; flex-direction: column"><span style="font-weight: 800">{{m.label}}</span><span style="font-size: 12px; color: #5A5C60">{{m.sub}}</span></span>
+                  <span style="{{m.stateStyle}}">{{m.state}}</span>
+                  <span style="display: flex; gap: 6px; justify-content: flex-end">
+                    <button type="button" onClick="{{m.exp}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Export ZIP</button>
+                    <sc-if value="{{m.canUz}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{m.uz}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Uzavřít</button></sc-if>
+                    <sc-if value="{{m.canOtev}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{m.otev}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513; font-size: 13px; font-weight: 700; cursor: pointer">Otevřít</button></sc-if>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+          <aside style="width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+            <section style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 800; flex-grow: 1">Předkontace</h2><sc-if value="{{fxv.vedeni}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{fxv.openSet}}" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A">Upravit</button></sc-if></div>
+              <sc-for list="{{fxv.predk}}" as="x" hint-placeholder-count="6">
+                <span style="display: flex; gap: 8px; font-size: 13px"><span style="color: #5A5C60; flex-grow: 1">{{x.k}}</span><span style="font-weight: 700; font-variant-numeric: tabular-nums">{{x.v}}</span></span>
+              </sc-for>
+              <span style="font-size: 12px; color: #5A5C60; line-height: 17px">Čísla účtů si nastaví vaše účetní podle svého účtového rozvrhu — CSV jde načíst do účetního programu nebo otevřít v Excelu.</span>
+            </section>
+          </aside>
+        </div>
+      </sc-if>
     </sc-if>
 
     <!-- ========================================================== MAJETEK
@@ -1823,6 +1995,24 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
                 <button type="button" onClick="{{payDlg.copy}}" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 700; cursor: pointer; color: #17181A; margin-top: 4px">Zkopírovat platební údaje</button>
               </div>
             </div>
+            <sc-if value="{{payDlg.fx}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button type="button" onClick="{{payDlg.prijem}}" style="height: 38px; padding: 0 14px; border-radius: 19px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 13px; font-weight: 800; cursor: pointer">Přijmout hotově</button>
+                <sc-if value="{{payDlg.canVratit}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{payDlg.vratit}}" style="height: 38px; padding: 0 14px; border-radius: 19px; border: 1px solid #E5E7E4; background: #FFFFFF; color: #17181A; font-size: 13px; font-weight: 700; cursor: pointer">Vrátit přeplatek</button></sc-if>
+                <sc-if value="{{payDlg.canSleva}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{payDlg.sleva}}" style="height: 38px; padding: 0 14px; border-radius: 19px; border: 1px solid #E5E7E4; background: #FFFFFF; color: #17181A; font-size: 13px; font-weight: 700; cursor: pointer">Sleva / prominutí</button></sc-if>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Předpisy</span>
+                <sc-for list="{{payDlg.predpisy}}" as="q" hint-placeholder-count="3">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1fr) 90px 92px 76px; gap: 8px; padding: 7px 0; border-top: 1px solid #F3F4F2; font-size: 14px; align-items: center">
+                    <span style="display: flex; flex-direction: column; min-width: 0"><span style="font-weight: 700">{{q.t}}</span><span style="font-size: 12px; color: #5A5C60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{q.sub}}</span></span>
+                    <span style="font-weight: 700; text-align: right; font-variant-numeric: tabular-nums">{{q.a}}</span>
+                    <span style="{{q.stateStyle}}">{{q.state}}</span>
+                    <sc-if value="{{q.canStorno}}" hint-placeholder-val="{{true}}"><button type="button" onClick="{{q.storno}}" style="height: 30px; padding: 0 10px; border-radius: 15px; border: 1px solid #EFC3A3; background: #FFFFFF; color: #8A4513; font-size: 12px; font-weight: 700; cursor: pointer">Storno</button></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 13px; font-weight: 800; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Pohyby na kontě</span>
               <sc-for list="{{payDlg.history}}" as="h" hint-placeholder-count="4">
@@ -2027,6 +2217,7 @@ class Component extends DCLogic {
     /* Finance — nastavení školky (částky v haléřích) a ukázkové předpisy s platbami. */
     this.fin = { ucet: '19-2000145399/0800', skolkovne: 90000, stravne: { '3-6': 4800, '7+': 5200 }, omlDni: 1, omlDo: '08:00', splatnost: 10, vsSchema: 'rok_poradi', vsPrefix: '', vsDelka: 6 };
     this.predpisy = {}; this.pohyby = []; this.platby = []; this.nespar = []; this.upominky = [];
+    this.fx = this.fxInit();
     this.kids = kids;
     var self2 = this;
     this.monthKeys.slice(0, -1).forEach(function (mk2) {
@@ -2355,6 +2546,7 @@ class Component extends DCLogic {
     this.srvSaldo = {}; (F.konta || []).forEach(function (k) { self.srvSaldo[k.dite_id] = h(k.saldo); });
     this.bankaChybi = F.banka === false;   // migrace 2026-10-17-banka ještě neproběhla
     this.banka = F.banka || null;
+    this.fxZeServeru(F.x);
   }
   openFinSet() {
     var F = this.fin, kc = function (h) { return h ? String(h / 100).replace('.', ',') : ''; };
@@ -2825,7 +3017,7 @@ class Component extends DCLogic {
 
   /* Zkušební provoz: všechno, co se v ředitelně změní, zůstane v tomto
      prohlížeči i po zavření. „Vrátit ukázková data“ to smaže. */
-  persistKeys() { return ['school', 'classes', 'teachers', 'users', 'kids', 'urazy', 'webCfg', 'zapis', 'messages', 'porady', 'plan', 'audit', 'fin', 'predpisy', 'pohyby', 'platby', 'nespar', 'upominky', 'docs', '_imp']; }
+  persistKeys() { return ['school', 'classes', 'teachers', 'users', 'kids', 'urazy', 'webCfg', 'zapis', 'messages', 'porady', 'plan', 'audit', 'fin', 'predpisy', 'pohyby', 'platby', 'nespar', 'upominky', 'fx', 'docs', '_imp']; }
 
   restore() {
     var raw = null;
@@ -2951,7 +3143,10 @@ class Component extends DCLogic {
   splatnost(key) { var y = +key.slice(0, 4), m = +key.slice(5, 7); return this.iso(new Date(y, m, this.fin.splatnost)); }
   spoctiPredpis(k, key) {
     var F = this.fin, pol = [];
+    var y = +key.slice(0, 4), m = +key.slice(5, 7), up = this.fx ? this.fxUprava(k.id, key + '-01', this.iso(new Date(y, m, 0))) : null;
     if (this.osvobozen(k)) pol.push({ druh: 'skolkovne', popis: 'Školkovné — osvobozeno', mn: 1, cena: 0, castka: 0 });
+    else if (up && up.typ === 'osvobozeni') pol.push({ druh: 'skolkovne', popis: 'Školkovné ' + this.monthName(key) + ' — prominuto: ' + up.duvod, mn: 1, cena: 0, castka: 0 });
+    else if (up) { var sk = Math.max(0, up.typ === 'procento' ? Math.round(F.skolkovne * (100 - up.hodnota) / 100) : F.skolkovne - up.hodnota); pol.push({ druh: 'skolkovne', popis: 'Školkovné ' + this.monthName(key) + ' — sníženo: ' + up.duvod, mn: 1, cena: sk, castka: sk }); }
     else pol.push({ druh: 'skolkovne', popis: 'Školkovné ' + this.monthName(key), mn: 1, cena: F.skolkovne, castka: F.skolkovne });
     var o = this.obedy(k, key), kat = this.kategorie(k, key);
     if (o.dny) pol.push({ druh: 'stravne', popis: 'Stravné ' + kat + ' let', mn: o.dny, cena: F.stravne[kat], castka: F.stravne[kat] * o.dny, pozde: o.pozde });
@@ -2959,9 +3154,11 @@ class Component extends DCLogic {
   }
   aktivniV(k, key) { var a = this.att(k, key); return a.d > 0; }
   predpis(kidId, key) { return (this.predpisy[kidId] || {})[key] || null; }
-  zauctuj(datum, md, dal, castka, popis, doklad) {
+  zauctuj(datum, md, dal, castka, popis, doklad, druh) {
     if (!(castka > 0) || !Number.isInteger(castka)) return;
-    this.pohyby.push({ id: 'u' + (this.pohyby.length + 1) + '-' + Date.now().toString(36), datum: datum, md: md, dal: dal, castka: castka, popis: popis, doklad: doklad || '' });
+    druh = druh || (md === 'banka' || md === 'pokladna' ? 'platba' : /^dite:/.test(md) ? 'predpis' : '');
+    this.pohyby.push({ id: 'u' + (this.pohyby.length + 1) + '-' + Date.now().toString(36), datum: datum, md: md, dal: dal, castka: castka, popis: popis, doklad: doklad || '',
+      druh: druh, obdobi: this.fx ? this.fxObdobi(datum) : String(datum).slice(0, 7) });
   }
   saldo(kidId) {
     if (this.srv && this.srvSaldo) return this.srvSaldo[kidId] || 0;
@@ -2971,8 +3168,9 @@ class Component extends DCLogic {
   }
   kUhrade(kidId) { return Math.max(0, -this.saldo(kidId)); }
   vyrovnej(kidId) {
+    /* kredit = vše připsané dítěti (platby, dobropisy) bez storen − vrácené přeplatky; FIFO podle splatnosti */
     var a = 'dite:' + kidId, kredit = 0;
-    this.pohyby.forEach(function (p) { if (p.dal === a) kredit += p.castka; });
+    this.pohyby.forEach(function (p) { if (p.dal === a && p.druh !== 'storno') kredit += p.castka; if (p.md === a && p.druh === 'vratka') kredit -= p.castka; });
     var P = this.predpisy[kidId] || {};
     Object.keys(P).sort(function (x, y) { return P[x].splatnost < P[y].splatnost ? -1 : P[x].splatnost > P[y].splatnost ? 1 : (x < y ? -1 : 1); }).forEach(function (key) {
       var p = P[key], u = Math.min(p.castka, Math.max(0, kredit));
@@ -3777,6 +3975,610 @@ class Component extends DCLogic {
      (store().maj), v ostrém provozu na serveru — tam se mění jen databázovými
      funkcemi (supabase/migrace-2026-10-20-majetek.sql). Místní engine níž
      (majLok) dělá totéž co ty funkce, se stejnými názvy a parametry. */
+  /* ================================================================ FINANCE+
+     Školkovné předem, zálohy na stravné s vyúčtováním, jednorázové platby,
+     slevy, storno, pokladna, vratky, uzávěrka a export pro účetní
+     (supabase/migrace-2026-10-21-finance.sql). Místní engine (fxLok) dělá
+     ve zkušebním provozu totéž co databázové funkce; částky v argumentech
+     jsou v Kč (jako na serveru), uvnitř ředitelny v haléřích. */
+  fxInit() {
+    return { on: true, predkontace: {}, pokladnaPocatek: 0,
+      upravy: [], pokladna: [], vratky: [], uzaverky: [], akce: [], storna: [], rady: {}, nid: 1 };
+  }
+  fxZeServeru(X) {
+    var self = this, h = function (v) { return Math.round(Number(v || 0) * 100); };
+    if (!X) { this.fx = Object.assign(this.fxInit(), { on: false }); return; }
+    var N = X.nastaveni || {}, ST = { zaplaceno: 'zaplaceno', castecne_zaplaceno: 'castecne', otevreno: 'otevreno', storno: 'storno' }, storna = [];
+    this.predpisy = {};
+    (X.predpisy || []).forEach(function (p) {
+      var pol = (p.predpis_polozky || []).slice().sort(function (a, b) { return a.poradi - b.poradi; }).map(function (q) { return { druh: q.druh, popis: q.popis, mn: q.mnozstvi, cena: h(q.cena), castka: h(q.castka) }; });
+      var o = { id: p.id, polozky: pol, castka: h(p.castka), uhrazeno: h(p.uhrazeno), stav: ST[p.stav] || 'otevreno', splatnost: p.splatnost, vystaveno: p.vystaveno,
+        druh: p.druh || 'mesicni', nazev: p.nazev || '', cislo: p.cislo || '', akce: p.akce_id || null, obdobi: p.obdobi, kidId: p.dite_id };
+      if (p.storno) { o.storno = String(p.storno).slice(0, 10); o.stornoDuvod = p.storno_duvod || ''; storna.push(o); return; }
+      (self.predpisy[p.dite_id] || (self.predpisy[p.dite_id] = {}))[o.druh === 'mesicni' ? p.obdobi : 'J:' + p.id] = o;
+    });
+    var pd = {}; (X.pohyby || []).forEach(function (x) { pd[x.id] = x; });
+    this.pohyby.forEach(function (p) { var x = pd[p.id]; if (x) { p.druh = x.druh || ''; p.obdobi = x.obdobi_uctu || p.datum.slice(0, 7); } });
+    var pz = {}; (X.platby || []).forEach(function (x) { pz[x.id] = x.zdroj; });
+    this.platby.forEach(function (p) { p.zdroj = pz[p.id] || 'gpc'; });
+    this.fx = {
+      on: true,
+      predkontace: N.predkontace || {}, pokladnaPocatek: h(N.pokladna_pocatek),
+      upravy: (X.upravy || []).map(function (u) { return { id: u.id, kidId: u.dite_id, typ: u.typ, hodnota: u.typ === 'castka' ? h(u.hodnota) : Number(u.hodnota), od: u.plati_od, do: u.plati_do || '', duvod: u.duvod, rozhodnuti: u.rozhodnuti || '', vytvoreno: String(u.vytvoreno).slice(0, 10), zruseno: u.zruseno ? String(u.zruseno).slice(0, 10) : null }; }),
+      pokladna: (X.pokladna || []).map(function (p) { return { id: p.id, cislo: p.cislo, datum: p.datum, druh: p.druh, castka: h(p.castka), kidId: p.dite_id || null, ucel: p.ucel, osoba: p.osoba || '' }; }),
+      vratky: (X.vratky || []).map(function (v) { return { id: v.id, kidId: v.dite_id, castka: h(v.castka), zpusob: v.zpusob, ucet: v.ucet || '', cislo: v.cislo, stav: v.stav, vytvoreno: String(v.vytvoreno).slice(0, 10), odeslano: v.odeslano ? String(v.odeslano).slice(0, 10) : null }; }),
+      uzaverky: (X.uzaverky || []).map(function (u) { return u.obdobi; }),
+      akce: (X.akce || []).map(function (a) { return { id: a.id, nazev: a.nazev, den: a.den, cena: h(a.cena), trida: a.trida_id || null, ano: (a.akce_odpovedi || []).filter(function (o) { return o.odpoved === 'ano'; }).map(function (o) { return o.dite_id; }) }; }),
+      storna: storna, rady: {}
+    };
+  }
+
+  /* ---------------------------------------------------- místní engine */
+  fxObdobi(datum) { var o = String(datum).slice(0, 7), U = this.fx.uzaverky; while (U.indexOf(o) !== -1) { var y = +o.slice(0, 4), m = +o.slice(5, 7); o = (m === 12 ? y + 1 : y) + '-' + (m === 12 ? '01' : this.pad(m + 1, 2)); } return o; }
+  fxOtevreno(obdobi) { if (this.fx.uzaverky.indexOf(obdobi) !== -1) throw new Error('Měsíc ' + obdobi + ' je uzavřený (předaný účetní) — změny jdou jen do otevřeného měsíce.'); }
+  fxCislo(rada, datum) { var r = (datum || this.iso(this.today)).slice(0, 4), k = rada + r; this.fx.rady[k] = (this.fx.rady[k] || 0) + 1; return rada + '-' + r + '-' + this.pad(this.fx.rady[k], 5); }
+  fxUprava(kidId, od, dokdy) {
+    return this.fx.upravy.filter(function (u) { return u.kidId === kidId && !u.zruseno && u.od <= dokdy && (!u.do || u.do >= od); }).sort(function (a, b) { return a.vytvoreno < b.vytvoreno ? 1 : -1; })[0] || null;
+  }
+  fxZauctujPredpis(k, p, datum) {
+    var self = this;
+    p.polozky.forEach(function (x) { self.zauctuj(datum, 'dite:' + k.id, 'vynosy:' + x.druh, x.castka, x.popis + ' — ' + k.first + ' ' + k.last, p.cislo || p.id, 'predpis'); });
+  }
+  fxLok(op, a) {
+    var self = this, FX = this.fx, F = this.fin, dnes = this.iso(this.today), H = function (v) { return Math.round(Number(String(v == null ? 0 : v).replace(',', '.')) * 100); };
+    var fail = function (m) { throw new Error(m); };
+    var kid = function (id) { var k = self.kids.filter(function (x) { return x.id === id; })[0]; if (!k) fail('Dítě nenalezeno.'); return k; };
+    var vedeni = this.state.role === 'reditelka';
+    switch (op) {
+      case 'uloz_financni_ucetni':
+        if (!vedeni) fail('Nastavení plateb mění vedení školy.');
+        if (H(a.p_pokladna_pocatek) < 0) fail('Počáteční stav pokladny nemůže být záporný.');
+        FX.predkontace = a.p_predkontace || {}; FX.pokladnaPocatek = H(a.p_pokladna_pocatek); return null;
+      case 'vystav_predpisy': {
+        var key = a.p_obdobi, n = 0;
+        this.kids.forEach(function (k) {
+          if (k.ended || self.predpis(k.id, key)) return;
+          var p = self.vystav(k, key); if (!p) return;
+          p.cislo = self.fxCislo('PR'); p.druh = 'mesicni'; p.nazev = self.monthName(key) + ' ' + key.slice(0, 4); p.obdobi = key; n++;
+        });
+        return n;
+      }
+      case 'nova_hromadna_platba': {
+        if (!String(a.p_nazev || '').trim()) fail('Napište, za co se platí.');
+        var c = H(a.p_castka); if (!(c > 0)) fail('Neplatná částka.');
+        this.fxOtevreno(dnes.slice(0, 7));
+        var n2 = 0;
+        a.p_deti.forEach(function (id) {
+          var k = kid(id), P = self.predpisy[id] || {};
+          if (a.p_akce && Object.keys(P).some(function (x) { return P[x].akce === a.p_akce; })) return;
+          var p = { id: 'pr' + (FX.nid++), cislo: self.fxCislo('PR'), polozky: [{ druh: a.p_druh, popis: a.p_nazev.trim(), mn: 1, cena: c, castka: c }], castka: c, uhrazeno: 0, stav: 'otevreno',
+            splatnost: a.p_splatnost, vystaveno: dnes, druh: 'jednorazova', nazev: a.p_nazev.trim(), akce: a.p_akce || null, obdobi: dnes.slice(0, 7) };
+          (self.predpisy[id] || (self.predpisy[id] = {}))['J:' + p.id] = p;
+          self.fxZauctujPredpis(k, p, dnes); self.vyrovnej(id); n2++;
+        });
+        return n2;
+      }
+      case 'storno_predpisu': {
+        if (!String(a.p_duvod || '').trim()) fail('Napište důvod storna.');
+        this.fxOtevreno(dnes.slice(0, 7));
+        var hit = null;
+        Object.keys(this.predpisy).forEach(function (kidId) { var P = self.predpisy[kidId]; Object.keys(P).forEach(function (key) { if (P[key].id === a.p_predpis) hit = { kidId: kidId, key: key, p: P[key] }; }); });
+        if (!hit) fail('Předpis nenalezen.');
+        var k2 = kid(hit.kidId);
+        hit.p.polozky.forEach(function (q) { self.zauctuj(dnes, 'vynosy:' + q.druh, 'dite:' + k2.id, q.castka, 'Storno: ' + q.popis + ' — ' + k2.first + ' ' + k2.last, hit.p.cislo || hit.p.id, 'storno'); });
+        delete this.predpisy[hit.kidId][hit.key];
+        FX.storna.push(Object.assign({}, hit.p, { storno: dnes, stornoDuvod: a.p_duvod.trim(), kidId: hit.kidId, stav: 'storno', uhrazeno: 0 }));
+        this.vyrovnej(hit.kidId); return null;
+      }
+      case 'uloz_upravu':
+        if (!vedeni) fail('O snížení nebo prominutí úplaty rozhoduje ředitelka.');
+        if (!String(a.p_duvod || '').trim()) fail('Napište důvod.');
+        FX.upravy.unshift({ id: 'up' + (FX.nid++), kidId: a.p_dite, typ: a.p_typ, hodnota: a.p_typ === 'castka' ? H(a.p_hodnota) : Number(a.p_hodnota || 0), od: a.p_od, do: a.p_do || '', duvod: a.p_duvod.trim(), rozhodnuti: a.p_rozhodnuti || '', vytvoreno: dnes, zruseno: null });
+        return null;
+      case 'zrus_upravu': if (!vedeni) fail('O snížení nebo prominutí úplaty rozhoduje ředitelka.'); FX.upravy.forEach(function (u) { if (u.id === a.p_id) u.zruseno = dnes; }); return null;
+      case 'pokladna_prijem': {
+        var k3 = kid(a.p_dite), c4 = H(a.p_castka); if (!(c4 > 0)) fail('Neplatná částka.');
+        if (!a.p_datum || a.p_datum > dnes) fail('Neplatné datum.');
+        this.fxOtevreno(a.p_datum.slice(0, 7));
+        var cis = this.fxCislo('PPD', a.p_datum), pl = { id: 'pl' + (FX.nid++), datum: a.p_datum, castka: c4, vs: k3.vs || '', protiucet: '', nazev: a.p_osoba || '', doklad: cis, kidId: null, zdroj: 'pokladna' };
+        FX.pokladna.push({ id: 'pk' + (FX.nid++), cislo: cis, datum: a.p_datum, druh: 'prijem', castka: c4, kidId: k3.id, ucel: a.p_ucel || 'Platba za školku', osoba: a.p_osoba || '' });
+        this.platby.push(pl); pl.kidId = k3.id;
+        this.zauctuj(a.p_datum, 'pokladna', 'dite:' + k3.id, c4, 'Platba hotově ' + cis + ' — ' + k3.first + ' ' + k3.last, cis, 'platba');
+        this.vyrovnej(k3.id); return cis;
+      }
+      case 'pokladna_vydej': {
+        var c5 = H(a.p_castka); if (!(c5 > 0)) fail('Neplatná částka.');
+        if (!String(a.p_ucel || '').trim()) fail('Napište účel výdeje.');
+        if (!a.p_datum || a.p_datum > dnes) fail('Neplatné datum.');
+        this.fxOtevreno(a.p_datum.slice(0, 7));
+        if (this.fxPokladnaZustatek() < c5) fail('V pokladně není dost peněz (zůstatek ' + this.fmtH(this.fxPokladnaZustatek()) + ').');
+        var cv = this.fxCislo('VPD', a.p_datum);
+        FX.pokladna.push({ id: 'pk' + (FX.nid++), cislo: cv, datum: a.p_datum, druh: 'vydej', castka: c5, kidId: null, ucel: a.p_ucel.trim(), osoba: a.p_osoba || '' });
+        this.zauctuj(a.p_datum, 'ostatni:vydaje', 'pokladna', c5, a.p_ucel.trim(), cv, 'pokladna'); return cv;
+      }
+      case 'vrat_preplatek': {
+        var k4 = kid(a.p_dite), c6 = H(a.p_castka), sal = this.saldo(k4.id);
+        this.fxOtevreno(dnes.slice(0, 7));
+        if (!(c6 > 0) || c6 > sal) fail('Vrátit jde nejvýš přeplatek ' + this.fmtH(Math.max(0, sal)) + '.');
+        if (a.p_zpusob === 'banka' && !this.iban(a.p_ucet)) fail('Číslo účtu pro vrácení nesedí.');
+        var cr = this.fxCislo('VR'), cp = null;
+        if (a.p_zpusob === 'pokladna') {
+          if (this.fxPokladnaZustatek() < c6) fail('V pokladně není dost peněz (zůstatek ' + this.fmtH(this.fxPokladnaZustatek()) + ').');
+          cp = this.fxCislo('VPD'); FX.pokladna.push({ id: 'pk' + (FX.nid++), cislo: cp, datum: dnes, druh: 'vydej', castka: c6, kidId: k4.id, ucel: 'Vrácení přeplatku ' + cr, osoba: '' });
+        }
+        FX.vratky.unshift({ id: 'vr' + (FX.nid++), kidId: k4.id, castka: c6, zpusob: a.p_zpusob, ucet: a.p_ucet || '', cislo: cr, stav: a.p_zpusob === 'pokladna' ? 'odeslano' : 'pripraveno', vytvoreno: dnes, odeslano: a.p_zpusob === 'pokladna' ? dnes : null });
+        this.zauctuj(dnes, 'dite:' + k4.id, a.p_zpusob === 'pokladna' ? 'pokladna' : 'banka', c6, 'Vrácení přeplatku — ' + k4.first + ' ' + k4.last, cp || cr, 'vratka');
+        this.vyrovnej(k4.id); return cr;
+      }
+      case 'vratky_odeslany': { var n3 = 0; FX.vratky.forEach(function (v) { if (a.p_ids.indexOf(v.id) !== -1 && v.stav === 'pripraveno') { v.stav = 'odeslano'; v.odeslano = dnes; n3++; } }); return n3; }
+      case 'uzavri_obdobi': {
+        var o = a.p_obdobi, U = FX.uzaverky;
+        if (o >= dnes.slice(0, 7)) fail('Uzavřít jde jen skončený měsíc.');
+        if (U.indexOf(o) !== -1) fail('Měsíc už je uzavřený.');
+        if (U.some(function (x) { return x > o; })) fail('Pozdější měsíc už je uzavřený.');
+        var y2 = +o.slice(0, 4), m2 = +o.slice(5, 7), pred = (m2 === 1 ? y2 - 1 : y2) + '-' + (m2 === 1 ? '12' : this.pad(m2 - 1, 2));
+        if (U.length && U.indexOf(pred) === -1) fail('Uzavírá se postupně — nejdřív uzavřete předchozí měsíc.');
+        U.push(o); U.sort(); return null;
+      }
+      case 'otevri_obdobi':
+        if (!vedeni) fail('Uzávěrku otevírá jen vedení školy.');
+        if (FX.uzaverky.some(function (x) { return x > a.p_obdobi; })) fail('Otevřít jde jen poslední uzavřený měsíc.');
+        if (FX.uzaverky.indexOf(a.p_obdobi) === -1) fail('Měsíc není uzavřený.');
+        FX.uzaverky = FX.uzaverky.filter(function (x) { return x !== a.p_obdobi; }); return null;
+    }
+    fail('Neznámá akce ' + op);
+  }
+  fxPokladnaZustatek(doDne) {
+    return this.fx.pokladna.reduce(function (s, p) { return !doDne || p.datum <= doDne ? s + (p.druh === 'prijem' ? p.castka : -p.castka) : s; }, this.fx.pokladnaPocatek || 0);
+  }
+  /* Změna financí: server (a znovu načíst) nebo místně. */
+  fxOp(op, args) {
+    var self = this;
+    if (this._fxBezi) return Promise.reject(new Error('Chvilku, ještě se ukládá předchozí změna.'));
+    this._fxBezi = true;
+    var p = this.srv
+      ? window.SkolkaServer.finRpc(op, args).then(function (r) { return self.srvZnovu().then(function () { return r; }); })
+      : new Promise(function (res) { res(self.fxLok(op, args)); }).then(function (r) { self.save(); return r; });
+    return p.then(function (r) { self._fxBezi = false; self.forceUpdate(); return r; }, function (e) { self._fxBezi = false; self.forceUpdate(); throw e; });
+  }
+  fxChyba(e) { return this.srv && window.SkolkaServer.chyba ? window.SkolkaServer.chyba(e) : (e && e.message) || String(e); }
+  fxAkce(op, args, msg, extra) {
+    var self = this;
+    return this.fxOp(op, args).then(function (r) {
+      self.setState(Object.assign({ dlg: null, df: {} }, extra || {}));
+      var m = typeof msg === 'function' ? msg(r) : msg; if (m) self.showToast(m);
+      return r;
+    }).catch(function (e) { self.showToast(self.fxChyba(e)); });
+  }
+  /* Účet rodiče pro vratku: poslední příchozí platba dítěte z banky. */
+  fxUcetRodice(kidId) {
+    var p = this.platby.filter(function (x) { return x.kidId === kidId && x.protiucet && (x.zdroj || 'gpc') !== 'pokladna'; }).sort(function (a, b) { return a.datum < b.datum ? 1 : -1; })[0];
+    return p ? p.protiucet : '';
+  }
+
+  /* ---------------------------------------------------- export pro účetní */
+  fxPredkontace() {
+    var D = { pohledavky: '315', banka: '241', pokladna: '261', skolkovne: '602.100', stravne: '602.200', akce: '378.100', pomucky: '378.200', krouzek: '602.300', fond: '378.300', jine: '602.900', vydaje: '501' };
+    return Object.assign({}, D, this.fx.predkontace || {});
+  }
+  fxUcet(int) {
+    var P = this.fxPredkontace();
+    if (/^dite:/.test(int)) return P.pohledavky;
+    if (int === 'banka' || int === 'pokladna') return P[int];
+    if (int === 'ostatni:vydaje') return P.vydaje;
+    var m = /^vynosy:(.+)$/.exec(int); return m ? P[m[1]] || P.jine : int;
+  }
+  fxZip(files) {
+    var crcT = this._crcT || (this._crcT = (function () { var t = [], c; for (var n = 0; n < 256; n++) { c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })());
+    var crc = function (b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = crcT[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+    var enc = new TextEncoder(), parts = [], central = [], off = 0;
+    var u16 = function (v) { return [v & 255, (v >>> 8) & 255]; }, u32 = function (v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; };
+    var d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)), dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate());
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), data = enc.encode(f.text), c = crc(data);
+      var head = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(dt), u16(dd), u32(c), u32(data.length), u32(data.length), u16(name.length), u16(0));
+      parts.push(new Uint8Array(head), name, data);
+      central.push(new Uint8Array([].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(dt), u16(dd), u32(c), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(off))), name);
+      off += head.length + name.length + data.length;
+    });
+    var cs = central.reduce(function (s, b) { return s + b.length; }, 0);
+    var end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cs), u32(off), u16(0)));
+    return new Blob(parts.concat(central).concat([end]), { type: 'application/zip' });
+  }
+  fxExport(obdobi) {
+    var self = this, FX = this.fx, clsBy = {}, kidBy = {};
+    this.classes.forEach(function (c) { clsBy[c.id] = c.name; });
+    this.kids.forEach(function (k) { kidBy[k.id] = k; });
+    var csv = function (rows) { return '﻿' + rows.map(function (r) { return r.map(function (v) { v = v == null ? '' : String(v); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(';'); }).join('\r\n') + '\r\n'; };
+    var kc = function (h) { return (h < 0 ? '-' : '') + Math.floor(Math.abs(h) / 100) + ',' + String(100 + Math.abs(h) % 100).slice(1); };
+    var jm = function (id) { var k = kidBy[id]; return k ? k.first + ' ' + k.last : ''; };
+    var vs = function (id) { var k = kidBy[id]; return k ? k.vs || '' : ''; };
+    var ob = function (p) { return p.obdobi || self.fxObdobiPohybu(p); };
+    var P = this.fxPredkontace();
+    var poh = this.pohyby.filter(function (p) { return ob(p) === obdobi; });
+    var kidOf = function (p) { var m = /^dite:(.+)$/.exec(p.md) || /^dite:(.+)$/.exec(p.dal); return m ? m[1] : ''; };
+    var files = [];
+    files.push({ name: 'denik.csv', text: csv([['Datum', 'Doklad', 'Druh', 'Popis', 'MD', 'Dal', 'Částka', 'Dítě', 'VS']].concat(poh.map(function (p) {
+      return [p.datum, p.doklad, p.druh || '', p.popis, self.fxUcet(p.md), self.fxUcet(p.dal), kc(p.castka), jm(kidOf(p)), vs(kidOf(p))]; }))) });
+    var vsech = []; Object.keys(this.predpisy).forEach(function (kid) { Object.keys(self.predpisy[kid]).forEach(function (key) { vsech.push(Object.assign({ kidId: kid }, self.predpisy[kid][key])); }); });
+    vsech = vsech.concat(FX.storna);
+    var DR = { mesicni: 'měsíční', jednorazova: 'jednorázová' };
+    files.push({ name: 'predpisy.csv', text: csv([['Číslo', 'Vystaveno', 'Splatnost', 'Dítě', 'VS', 'Třída', 'Druh', 'Název', 'Položky', 'Částka', 'Uhrazeno', 'Stav', 'Storno']].concat(vsech.filter(function (p) { return (p.vystaveno || '').slice(0, 7) === obdobi || (p.storno || '').slice(0, 7) === obdobi; }).map(function (p) {
+      var k = kidBy[p.kidId] || {};
+      return [p.cislo || p.id, p.vystaveno, p.splatnost, jm(p.kidId), vs(p.kidId), clsBy[k.cls] || '', DR[p.druh || 'mesicni'], p.nazev || p.obdobi, p.polozky.map(function (q) { return q.popis + ' ' + kc(q.castka); }).join(' | '), kc(p.castka), kc(p.uhrazeno), p.stav, p.storno ? p.storno + ' ' + (p.stornoDuvod || '') : ''];
+    }))) });
+    var plat = this.platby.filter(function (p) { return p.kidId && self.fxObdobi(p.datum) === obdobi || (p.datum || '').slice(0, 7) === obdobi; });
+    files.push({ name: 'uhrady.csv', text: csv([['Datum', 'Doklad', 'Zdroj', 'VS', 'Protiúčet', 'Plátce', 'Částka', 'Dítě', 'Spárováno']].concat(plat.map(function (p) {
+      return [p.datum, p.doklad, (p.zdroj || 'gpc') === 'pokladna' ? 'pokladna' : 'banka', p.vs, p.protiucet, p.nazev, kc(p.castka), jm(p.kidId), p.kidId ? 'ano' : 'ne — k ručnímu přiřazení']; }))) });
+    var poc = this.fxPokladnaZustatek(this.iso(new Date(+obdobi.slice(0, 4), +obdobi.slice(5, 7) - 1, 0))), zust = poc, pk = [['Číslo', 'Datum', 'Příjem', 'Výdej', 'Zůstatek', 'Dítě', 'Účel', 'Osoba'], ['', obdobi + '-01', '', '', kc(poc), '', 'Počáteční zůstatek', '']];
+    FX.pokladna.filter(function (p) { return p.datum.slice(0, 7) === obdobi; }).sort(function (a, b) { return a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : a.cislo < b.cislo ? -1 : 1; }).forEach(function (p) {
+      zust += p.druh === 'prijem' ? p.castka : -p.castka; pk.push([p.cislo, p.datum, p.druh === 'prijem' ? kc(p.castka) : '', p.druh === 'vydej' ? kc(p.castka) : '', kc(zust), jm(p.kidId), p.ucel, p.osoba]); });
+    files.push({ name: 'pokladni-kniha.csv', text: csv(pk) });
+    files.push({ name: 'vratky.csv', text: csv([['Číslo', 'Vytvořeno', 'Dítě', 'VS', 'Částka', 'Způsob', 'Účet', 'Stav', 'Odesláno']].concat(FX.vratky.filter(function (v) { return v.vytvoreno.slice(0, 7) === obdobi; }).map(function (v) {
+      return [v.cislo, v.vytvoreno, jm(v.kidId), vs(v.kidId), kc(v.castka), v.zpusob === 'banka' ? 'převodem' : 'hotově', v.ucet, v.stav === 'odeslano' ? 'odesláno' : 'připraveno', v.odeslano || '']; }))) });
+    /* saldokonto k začátku a konci měsíce (z deníku podle účetních období) */
+    var sk = {}, pohAll = this.pohyby;
+    pohAll.forEach(function (p) {
+      var o = ob(p); if (o > obdobi) return;
+      [['md', -1], ['dal', 1]].forEach(function (s) {
+        var m = /^dite:(.+)$/.exec(p[s[0]]); if (!m) return;
+        var r = sk[m[1]] || (sk[m[1]] = { poc: 0, pred: 0, uhr: 0, opr: 0, vrat: 0 });
+        if (o < obdobi) r.poc += s[1] * p.castka;
+        else if (p.druh === 'predpis' || (!p.druh && s[0] === 'md')) r.pred += p.castka;
+        else if (p.druh === 'platba' || (!p.druh && s[0] === 'dal')) r.uhr += p.castka;
+        else if (p.druh === 'vratka') r.vrat += p.castka;
+        else r.opr += p.castka;
+      });
+    });
+    var skRows = [['Dítě', 'VS', 'Třída', 'Zůstatek na začátku (+ přeplatek / − dluh)', 'Předepsáno', 'Uhrazeno', 'Storna a dobropisy', 'Vráceno', 'Zůstatek na konci']], tPrepl = 0, tDluh = 0;
+    Object.keys(sk).forEach(function (id) { var r = sk[id], kon = r.poc - r.pred + r.uhr + r.opr - r.vrat; if (kon > 0) tPrepl += kon; else tDluh -= kon;
+      var k = kidBy[id] || {}; skRows.push([jm(id), vs(id), clsBy[k.cls] || '', kc(r.poc), kc(r.pred), kc(r.uhr), kc(r.opr), kc(r.vrat), kc(kon)]); });
+    files.push({ name: 'saldokonto.csv', text: csv(skRows) });
+    /* rekapitulace: obraty účtů a souhrn */
+    var ob2 = {};
+    poh.forEach(function (p) { [['md', 0], ['dal', 1]].forEach(function (s) { var u = self.fxUcet(p[s[0]]); var r = ob2[u] || (ob2[u] = [0, 0]); r[s[1]] += p.castka; }); });
+    var sum = function (f) { return poh.filter(f).reduce(function (a, p) { return a + p.castka; }, 0); };
+    var rek = [['Rekapitulace plateb za ' + obdobi + ' — ' + (this.school.nazev || this.school.name)], [], ['Účet', 'Obrat MD', 'Obrat Dal']]
+      .concat(Object.keys(ob2).sort().map(function (u) { return [u, kc(ob2[u][0]), kc(ob2[u][1])]; }))
+      .concat([[], ['Souhrn', 'Částka'],
+        ['Předepsáno — školkovné', kc(sum(function (p) { return p.druh === 'predpis' && p.dal === 'vynosy:skolkovne'; }))],
+        ['Předepsáno — stravné', kc(sum(function (p) { return p.druh === 'predpis' && p.dal === 'vynosy:stravne'; }))],
+        ['Předepsáno — ostatní (akce, pomůcky, kroužky, fond)', kc(sum(function (p) { return p.druh === 'predpis' && /^vynosy:(akce|pomucky|krouzek|fond|jine)$/.test(p.dal); }))],
+        ['Storna předpisů', kc(sum(function (p) { return p.druh === 'storno'; }))],
+        ['Odhlášené obědy odečtené z předpisů a dobropisy', kc(sum(function (p) { return p.druh === 'odpocet' || p.druh === 'dobropis'; }))],
+        ['Uhrazeno na účet', kc(sum(function (p) { return p.druh === 'platba' && p.md === 'banka' || (!p.druh && p.md === 'banka'); }))],
+        ['Uhrazeno hotově (pokladna)', kc(sum(function (p) { return p.druh === 'platba' && p.md === 'pokladna'; }))],
+        ['Vráceno přeplatků', kc(sum(function (p) { return p.druh === 'vratka'; }))],
+        ['Výdaje z pokladny', kc(sum(function (p) { return p.druh === 'pokladna'; }))],
+        ['Přeplatky na kontech dětí ke konci měsíce', kc(tPrepl)],
+        ['Nedoplatky ke konci měsíce', kc(tDluh)],
+        ['Pokladna — zůstatek ke konci měsíce', kc(zust)],
+        [], ['Uzávěrka', FX.uzaverky.indexOf(obdobi) !== -1 ? 'měsíc je uzavřený — export se už nezmění' : 'měsíc NENÍ uzavřený — čísla se ještě můžou změnit']]);
+    files.unshift({ name: 'rekapitulace.csv', text: csv(rek) });
+    files.push({ name: 'CTI-ME.txt', text: 'Export plateb školky za ' + obdobi + ' pro účetní\r\n\r\n'
+      + 'Soubory jsou CSV (oddělovač středník, kódování UTF-8) — otevřete v Excelu nebo načtěte do účetního programu.\r\n\r\n'
+      + 'rekapitulace.csv      obraty účtů podle předkontace a souhrn měsíce\r\n'
+      + 'denik.csv             všechny účetní pohyby měsíce (MD/Dal podle předkontace)\r\n'
+      + 'predpisy.csv          předpisy (pohledávky) vystavené nebo stornované v měsíci\r\n'
+      + 'uhrady.csv            příchozí platby z banky a pokladny\r\n'
+      + 'pokladni-kniha.csv    pokladní kniha s počátečním a průběžným zůstatkem\r\n'
+      + 'vratky.csv            vrácené přeplatky\r\n'
+      + 'saldokonto.csv        zůstatky dětí na začátku a konci měsíce\r\n\r\n'
+      + 'Předkontace (nastavuje se v Platby → Uzávěrka a export): ' + Object.keys(P).map(function (k) { return k + '=' + P[k]; }).join(', ') + '\r\n'
+      + 'Pohyb s datem v už uzavřeném měsíci se zaúčtuje do prvního otevřeného měsíce (sloupec Datum ukazuje skutečné datum).\r\n' });
+    var blob = this.fxZip(files);
+    this.download({ name: 'platby-pro-ucetni-' + obdobi + '.zip', text: blob, type: 'application/zip' });
+    this.log('Export pro účetní za ' + obdobi);
+  }
+  fxObdobiPohybu(p) { return p.obdobi || (p.datum || '').slice(0, 7); }
+
+  /* Hromadný příkaz pro banku (formát ABO) — vratky převodem. */
+  fxAbo(vratky) {
+    var F = this.fin, self = this, d = this.today, dd = this.pad(d.getDate(), 2) + this.pad(d.getMonth() + 1, 2) + this.pad(d.getFullYear() % 100, 2);
+    var t = String(F.ucet || '').replace(/\s/g, ''), m = /^(?:(\d{1,6})-)?(\d{2,10})\/(\d{4})$/.exec(t);
+    if (!m) throw new Error('Pro hromadný příkaz zadejte účet školky jako číslo/kód banky.');
+    var ascii = function (s, n) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 .,\-\/]/g, ' ').toUpperCase().slice(0, n); };
+    var nas = (m[1] ? m[1] + '-' : '') + m[2], banka = m[3], celkem = 0, radky = [];
+    vratky.forEach(function (v) {
+      var u = /^(?:(\d{1,6})-)?(\d{2,10})\/(\d{4})$/.exec(String(v.ucet).replace(/\s/g, ''));
+      if (!u) throw new Error('Vratka ' + v.cislo + ' má účet v jiném tvaru než číslo/kód banky (' + v.ucet + ').');
+      var k = self.kids.filter(function (x) { return x.id === v.kidId; })[0] || {};
+      celkem += v.castka;
+      radky.push((u[1] ? u[1] + '-' : '') + u[2] + ' ' + v.castka + ' ' + (self.vsNorm(k.vs) || '0') + ' ' + u[3] + '0558' + ' 0 AV:' + ascii('VRACENI PREPLATKU ' + (k.first || '') + ' ' + (k.last || ''), 32));
+    });
+    var lines = ['UHL1' + dd + (ascii(this.school.name, 20) + '                    ').slice(0, 20) + this.pad(m[2], 10).slice(-10) + '001' + '999' + '000000' + '000000',
+      '1 1501 ' + this.pad(Math.floor(Math.random() * 999) + 1, 3) + '001 ' + banka, '2 ' + nas + ' ' + celkem + ' ' + dd].concat(radky).concat(['3 +', '5 +']);
+    return lines.join('\r\n') + '\r\n';
+  }
+
+  /* Pokladní doklad k tisku. */
+  fxTiskDokladu(p) {
+    var self = this, esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var k = p.kidId ? this.kids.filter(function (x) { return x.id === p.kidId; })[0] : null;
+    var body = '<h1>' + (p.druh === 'prijem' ? 'Příjmový' : 'Výdajový') + ' pokladní doklad ' + esc(p.cislo) + '</h1><table>'
+      + '<tr><th>Datum</th><td>' + esc(this.cz(new Date(p.datum + 'T00:00:00'))) + '</td></tr><tr><th>Částka</th><td><b>' + esc(this.fmtH(p.castka)) + '</b></td></tr>'
+      + '<tr><th>Účel</th><td>' + esc(p.ucel) + '</td></tr>' + (k ? '<tr><th>Dítě</th><td>' + esc(k.first + ' ' + k.last) + (k.vs ? ' · VS ' + esc(k.vs) : '') + '</td></tr>' : '')
+      + '<tr><th>' + (p.druh === 'prijem' ? 'Zaplatil(a)' : 'Převzal(a)') + '</th><td>' + esc(p.osoba || '') + '</td></tr></table>'
+      + '<p style="margin-top:40px">' + (p.druh === 'prijem' ? 'Přijal(a)' : 'Vydal(a)') + ': ............................................ &nbsp; Podpis: ............................................</p>';
+    this.printDoc((p.druh === 'prijem' ? 'Příjmový' : 'Výdajový') + ' pokladní doklad ' + p.cislo, '<div class="doc">' + body + '</div>', 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px 8px;text-align:left}th{width:30%}');
+  }
+
+  /* Stránka Platby — záložky rozšířených financí (bez migrace 2026-10-21 jen Předpisy jako dřív). */
+  fxVals(st, role, kids, curMonth) {
+    var self = this, FX = this.fx, dnes = this.iso(this.today), can = role === 'reditelka' || role === 'hospodarka', vedeni = role === 'reditelka';
+    var czD = function (iso) { return iso ? self.cz(new Date(String(iso).slice(0, 10) + 'T00:00:00')) : ''; };
+    var chip = function (on) { return 'height: 34px; padding: 0 12px; border-radius: 17px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; ' + (on ? 'background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD' : 'background: #FFFFFF; color: #17181A; border: 2px solid #E5E7E4'); };
+    var pill = function (bg, fg) { return 'justify-self: start; display: inline-flex; height: 26px; padding: 0 10px; border-radius: 13px; align-items: center; font-size: 12px; font-weight: 800; white-space: nowrap; background: ' + bg + '; color: ' + fg; };
+    var kidBy = {}; this.kids.forEach(function (k) { kidBy[k.id] = k; });
+    var clsBy = {}; this.classes.forEach(function (c) { clsBy[c.id] = c; });
+    var jm = function (id) { var k = kidBy[id]; return k ? k.first + ' ' + k.last : '—'; };
+    var on = !!(FX && FX.on), tab = on ? st.fxTab || 'predpisy' : 'predpisy';
+    var TABS = [['predpisy', 'Předpisy'], ['dalsi', 'Další platby'], ['vratky', 'Přeplatky a vratky'], ['pokladna', 'Pokladna'], ['slevy', 'Slevy a prominutí'], ['uzaverka', 'Uzávěrka a export']];
+    var V = {
+      on: on, tabs: on ? TABS.map(function (t) { var o = tab === t[0]; return { label: t[1], on: o, style: chip(o), pick: function () { self.setState({ fxTab: t[0] }); } }; }) : [],
+      isPred: tab === 'predpisy', isDalsi: tab === 'dalsi', isVratky: tab === 'vratky', isPokl: tab === 'pokladna', isSlevy: tab === 'slevy', isUz: tab === 'uzaverka',
+      can: can, vedeni: vedeni,
+      openSet: function () { self.fxOtevriNastaveni(); }
+    };
+    if (!on) return V;
+    var vsech = [];
+    Object.keys(this.predpisy).forEach(function (kid) { Object.keys(self.predpisy[kid]).forEach(function (key) { vsech.push(Object.assign({ kidId: kid, key: key }, self.predpisy[kid][key])); }); });
+
+    /* ---------------------------------------- další (jednorázové) platby */
+    var DRUH = { akce: 'Akce a výlety', pomucky: 'Pomůcky', krouzek: 'Kroužky', fond: 'Fond rodičů', jine: 'Jiné' };
+    var jedn = vsech.filter(function (p) { return p.druh === 'jednorazova'; });
+    var grp = {};
+    jedn.forEach(function (p) {
+      var g = (p.akce || p.nazev) + '|' + p.splatnost;
+      var G = grp[g] || (grp[g] = { key: g, nazev: p.nazev, druh: p.polozky[0].druh, splatnost: p.splatnost, vystaveno: p.vystaveno, items: [] });
+      G.items.push(p);
+    });
+    var gl = Object.keys(grp).map(function (k) { return grp[k]; }).sort(function (a, b) { return a.vystaveno < b.vystaveno ? 1 : -1; });
+    var selG = grp[st.fxG] || null;
+    V.dalsiNone = !gl.length;
+    V.dalsi = gl.map(function (G) {
+      var celk = 0, uhr = 0, nz = 0; G.items.forEach(function (p) { celk += p.castka; uhr += p.uhrazeno; if (p.stav === 'zaplaceno') nz++; });
+      var o = st.fxG === G.key;
+      return { nazev: G.nazev, sub: DRUH[G.druh] + ' · vystaveno ' + czD(G.vystaveno) + ' · splatnost ' + czD(G.splatnost), deti: nz + ' / ' + G.items.length + ' zaplaceno',
+        castka: self.fmtH(celk), zbyva: celk - uhr ? 'zbývá ' + self.fmtH(celk - uhr) : 'vše uhrazeno',
+        style: 'display: grid; grid-template-columns: minmax(0, 1fr) 130px 120px; gap: 10px; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F3F4F2; cursor: pointer; font-size: 14px; background: ' + (o ? '#F2F6FB' : '#FFFFFF'),
+        pick: function () { self.setState({ fxG: o ? null : G.key }); } };
+    });
+    V.hasSelG = !!selG;
+    V.selG = selG ? { title: selG.nazev, sub: DRUH[selG.druh] + ' · splatnost ' + czD(selG.splatnost),
+      rows: selG.items.slice().sort(function (a, b) { return jm(a.kidId) < jm(b.kidId) ? -1 : 1; }).map(function (p) {
+        var S = p.stav === 'zaplaceno' ? ['Zaplaceno', '#EDF4E4', '#2F5212'] : p.stav === 'castecne' ? ['Částečně', '#F7F0DA', '#5C4300'] : ['Čeká', '#FAEBE4', '#9A3412'];
+        return { name: jm(p.kidId), castka: self.fmtH(p.castka), state: S[0], stateStyle: pill(S[1], S[2]), canStorno: can,
+          storno: function () { self.setState({ dlg: 'fxStorno', df: { predpis: p.id } }); } };
+      }) } : { title: '', sub: '', rows: [] };
+    V.novaPlatba = function () { if (!can) return; self.setState({ dlg: 'fxPlatba', df: { druh: 'akce', komu: 'all', splatnost: self.iso(self.addDays(self.today, 14)), deti: [] } }); };
+
+    function nDeti(n) { return n === 1 ? '1 dítě' : n + (n >= 2 && n <= 4 ? ' děti' : ' dětí'); }
+
+    /* ---------------------------------------- přeplatky a vratky */
+    var prepl = this.kids.map(function (k) { return { k: k, s: self.saldo(k.id) }; }).filter(function (x) { return x.s > 0; }).sort(function (a, b) { return b.s - a.s; });
+    V.preplNone = !prepl.length;
+    V.prepl = prepl.map(function (x) {
+      return { name: x.k.first + ' ' + x.k.last, sub: (clsBy[x.k.cls] ? clsBy[x.k.cls].name : '') + (x.k.ended ? ' · ukončená docházka' : ''), castka: self.fmtH(x.s),
+        vratit: function () { if (!can) return; self.setState({ dlg: 'fxVratka', df: { kid: x.k.id, castka: String(x.s / 100).replace('.', ','), zpusob: 'banka', ucet: self.fxUcetRodice(x.k.id) } }); } };
+    });
+    V.preplSum = self.fmtH(prepl.reduce(function (a, x) { return a + x.s; }, 0));
+    var prip = FX.vratky.filter(function (v) { return v.stav === 'pripraveno'; });
+    V.vrPrip = prip.length > 0;
+    V.vrPripText = prip.length ? (prip.length === 1 ? '1 vratka' : prip.length + (prip.length <= 4 ? ' vratky' : ' vratek')) + ' převodem za ' + self.fmtH(prip.reduce(function (a, v) { return a + v.castka; }, 0)) + ' čeká na odeslání z banky.' : '';
+    V.vrAbo = function () {
+      try { var t = self.fxAbo(prip); self.download({ name: 'vratky-' + dnes + '.kpc', text: t, type: 'text/plain' }); self.showToast('Hromadný příkaz stažen — nahrajte ho v internetovém bankovnictví (formát ABO / KPC).'); }
+      catch (e) { self.showToast(e.message); }
+    };
+    V.vrOdeslano = function () { if (!can) return; self.fxAkce('vratky_odeslany', { p_ids: prip.map(function (v) { return v.id; }) }, function (n) { return 'Označeno jako odeslané: ' + n; }); };
+    V.vrNone = !FX.vratky.length;
+    V.vratky = FX.vratky.slice(0, 60).map(function (v) {
+      return { cislo: v.cislo, name: jm(v.kidId), castka: self.fmtH(v.castka), sub: czD(v.vytvoreno) + ' · ' + (v.zpusob === 'banka' ? 'převodem na ' + v.ucet : 'hotově z pokladny'),
+        state: v.stav === 'odeslano' ? (v.zpusob === 'banka' ? 'Odesláno ' + czD(v.odeslano) : 'Vyplaceno') : 'Připraveno', stateStyle: v.stav === 'odeslano' ? pill('#EDF4E4', '#2F5212') : pill('#F7F0DA', '#5C4300') };
+    });
+
+    /* ---------------------------------------- pokladna */
+    var pM = st.fxPokM || curMonth, pMs = this.monthKeys.slice();
+    V.pokMonths = pMs.map(function (m) { var o = m === pM; return { label: self.monthName(m), on: o, style: chip(o), pick: function () { self.setState({ fxPokM: m }); } }; });
+    var poc = this.fxPokladnaZustatek(this.iso(new Date(+pM.slice(0, 4), +pM.slice(5, 7) - 1, 0))), zust = poc, prij = 0, vyd = 0;
+    var dok = FX.pokladna.filter(function (p) { return p.datum.slice(0, 7) === pM; }).sort(function (a, b) { return a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : a.cislo < b.cislo ? -1 : 1; });
+    V.pokRows = dok.map(function (p) {
+      zust += p.druh === 'prijem' ? p.castka : -p.castka; if (p.druh === 'prijem') prij += p.castka; else vyd += p.castka;
+      return { cislo: p.cislo, datum: czD(p.datum), ucel: p.ucel + (p.kidId ? ' · ' + jm(p.kidId) : '') + (p.osoba ? ' · ' + p.osoba : ''), prijem: p.druh === 'prijem' ? self.fmtH(p.castka) : '', vydej: p.druh === 'vydej' ? self.fmtH(p.castka) : '',
+        zust: self.fmtH(zust), tisk: function () { self.fxTiskDokladu(p); } };
+    });
+    V.pokNone = !dok.length;
+    V.pokStats = [['Počáteční stav · ' + self.monthName(pM), self.fmtH(poc), '#FFFFFF'], ['Příjmy', self.fmtH(prij), '#EDF4E4'], ['Výdaje', self.fmtH(vyd), '#FAEBE4'], ['Zůstatek', self.fmtH(zust), '#EBF1FA']]
+      .map(function (x) { return { label: x[0], value: x[1], style: 'border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; background: ' + x[2] }; });
+    V.pokPrijem = function () { if (!can) return; self.setState({ dlg: 'fxPrijem', df: { datum: dnes, ucel: 'Platba za školku', q: '' } }); };
+    V.pokVydej = function () { if (!can) return; self.setState({ dlg: 'fxVydej', df: { datum: dnes } }); };
+    V.pokKniha = function () {
+      var esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }, z = poc;
+      var rows = dok.map(function (p) { z += p.druh === 'prijem' ? p.castka : -p.castka; return '<tr><td>' + esc(p.cislo) + '</td><td>' + esc(czD(p.datum)) + '</td><td>' + esc(p.ucel + (p.kidId ? ' — ' + jm(p.kidId) : '')) + '</td><td class="r">' + (p.druh === 'prijem' ? esc(self.fmtH(p.castka)) : '') + '</td><td class="r">' + (p.druh === 'vydej' ? esc(self.fmtH(p.castka)) : '') + '</td><td class="r">' + esc(self.fmtH(z)) + '</td></tr>'; }).join('');
+      self.printDoc('Pokladní kniha ' + self.monthName(pM) + ' ' + pM.slice(0, 4), '<div class="doc"><h1>Pokladní kniha — ' + esc(self.monthName(pM) + ' ' + pM.slice(0, 4)) + '</h1><table><tr><th>Doklad</th><th>Datum</th><th>Účel</th><th>Příjem</th><th>Výdej</th><th>Zůstatek</th></tr><tr><td></td><td></td><td>Počáteční stav</td><td></td><td></td><td class="r">' + esc(self.fmtH(poc)) + '</td></tr>' + rows
+        + '<tr><th></th><th></th><th>Celkem</th><th class="r">' + esc(self.fmtH(prij)) + '</th><th class="r">' + esc(self.fmtH(vyd)) + '</th><th class="r">' + esc(self.fmtH(zust)) + '</th></tr></table><p style="margin-top:36px">Zkontroloval(a): ........................................ &nbsp; Datum: ................</p></div>',
+        'table{width:100%;border-collapse:collapse;font-size:10pt}th,td{border:1px solid #bbb;padding:4px 6px;text-align:left}.r{text-align:right;white-space:nowrap}');
+    };
+
+    /* ---------------------------------------- slevy */
+    var TYP = { osvobozeni: 'Prominutí školkovného', procento: 'Snížení o %', castka: 'Snížení o částku' };
+    V.slevyNone = !FX.upravy.length;
+    V.slevy = FX.upravy.map(function (u) {
+      var akt = !u.zruseno && (!u.do || u.do >= dnes);
+      return { name: jm(u.kidId), co: TYP[u.typ] + (u.typ === 'procento' ? ' ' + u.hodnota + ' %' : u.typ === 'castka' ? ' ' + self.fmtH(u.hodnota) : ''),
+        sub: 'od ' + czD(u.od) + (u.do ? ' do ' + czD(u.do) : '') + ' · ' + u.duvod + (u.rozhodnuti ? ' · ' + u.rozhodnuti : ''),
+        state: u.zruseno ? 'Zrušeno ' + czD(u.zruseno) : akt ? 'Platí' : 'Skončila', stateStyle: akt ? pill('#EDF4E4', '#2F5212') : pill('#F3F4F2', '#5A5C60'),
+        canZrusit: vedeni && !u.zruseno, zrusit: function () { self.fxAkce('zrus_upravu', { p_id: u.id }, 'Sleva zrušena — platí pro předpisy vystavené odteď'); } };
+    });
+    V.novaSleva = function () { if (!vedeni) { self.showToast('O snížení nebo prominutí úplaty rozhoduje ředitelka.'); return; } self.setState({ dlg: 'fxSleva', df: { typ: 'osvobozeni', od: dnes.slice(0, 7) + '-01', q: '' } }); };
+
+    /* ---------------------------------------- uzávěrka a export */
+    var U = FX.uzaverky, posl = U.length ? U[U.length - 1] : null;
+    V.uzMonths = this.monthKeys.slice().reverse().map(function (m) {
+      var zav = U.indexOf(m) !== -1, skon = m < curMonth;
+      var mozno = can && !zav && skon && (!posl ? true : self.fxDalsiMesic(posl) === m);
+      var poh = self.pohyby.filter(function (p) { return (p.obdobi || p.datum.slice(0, 7)) === m; }).length;
+      return { label: self.monthName(m) + ' ' + m.slice(0, 4), sub: poh + ' účetních pohybů' + (zav ? '' : skon ? '' : ' · měsíc ještě běží'),
+        state: zav ? 'Uzavřeno' : skon ? 'Otevřeno' : 'Běží', stateStyle: zav ? pill('#EDF4E4', '#2F5212') : skon ? pill('#F7F0DA', '#5C4300') : pill('#F3F4F2', '#5A5C60'),
+        exp: function () { self.fxExport(m); },
+        canUz: mozno, uz: function () { self.setState({ dlg: 'fxUzavrit', df: { obdobi: m } }); },
+        canOtev: vedeni && zav && m === posl, otev: function () { self.fxAkce('otevri_obdobi', { p_obdobi: m }, self.monthName(m) + ' je znovu otevřený — po opravě ho uzavřete a pošlete účetní nový export'); } };
+    });
+    var PK = this.fxPredkontace(), PKN = [['pohledavky', 'Pohledávky za rodiči'], ['banka', 'Bankovní účet'], ['pokladna', 'Pokladna'], ['skolkovne', 'Výnos — školkovné'], ['stravne', 'Výnos — stravné'], ['akce', 'Akce a výlety (průběžně)'], ['pomucky', 'Pomůcky (průběžně)'], ['krouzek', 'Kroužky'], ['fond', 'Fond rodičů'], ['jine', 'Jiné'], ['vydaje', 'Výdaje z pokladny']];
+    V.predk = PKN.map(function (x) { return { k: x[1], v: PK[x[0]] }; });
+    return V;
+  }
+  fxDalsiMesic(m) { var y = +m.slice(0, 4), mm = +m.slice(5, 7); return (mm === 12 ? y + 1 : y) + '-' + (mm === 12 ? '01' : this.pad(mm + 1, 2)); }
+  fxOtevriNastaveni() {
+    if (this.state.role !== 'reditelka') { this.showToast('Nastavení plateb mění vedení školy.'); return; }
+    var FX = this.fx, kc = function (h) { return h == null ? '' : String(h / 100).replace('.', ','); }, PK = this.fxPredkontace(), df = { pocatek: kc(FX.pokladnaPocatek) };
+    Object.keys(PK).forEach(function (k) { df['pk_' + k] = PK[k]; });
+    this.setState({ dlg: 'fxNastaveni', df: df });
+  }
+
+  /* Okna rozšířených financí (obecný dialog ředitelny). */
+  fxDialog(dk, dlg, df, inp, group) {
+    var self = this, FX = this.fx, dnes = this.iso(this.today), role = this.state.role;
+    var num = function (v) { if (v == null || String(v).trim() === '') return null; var x = Number(String(v).replace(/\s|Kč/g, '').replace(',', '.')); return isNaN(x) || x < 0 ? NaN : Math.round(x * 100) / 100; };
+    var kidBy = {}; this.kids.forEach(function (k) { kidBy[k.id] = k; });
+    var hledej = function (q, filtr) {
+      q = String(q || '').toLowerCase();
+      return self.kids.filter(function (k) { return (!filtr || filtr(k)) && (!q || (k.first + ' ' + k.last + ' ' + (k.vs || '')).toLowerCase().indexOf(q) !== -1); }).slice(0, 8);
+    };
+    var vyberDite = function (key, filtr) {
+      var K = kidBy[df[key]];
+      if (K) return { label: 'Dítě', chips: [{ label: K.first + ' ' + K.last + ' · změnit', on: true, style: 'height: 34px; padding: 0 12px; border-radius: 17px; font-size: 13px; font-weight: 700; cursor: pointer; background: #E6EDF6; color: #1F3A5C; border: 2px solid #B4C6DD', pick: function () { var o = {}; o[key] = null; self.setDF(o); } }] };
+      return group('Dítě — vyberte', key, hledej(df.q, filtr).map(function (k) { return [k.id, k.first + ' ' + k.last + (k.vs ? ' · VS ' + k.vs : '')]; }));
+    };
+    if (dk === 'fxNastaveni') {
+      var poc = num(df.pocatek), bad = poc !== null && isNaN(poc);
+      var PKN = [['pohledavky', 'Pohledávky za rodiči'], ['banka', 'Bankovní účet'], ['pokladna', 'Pokladna'], ['skolkovne', 'Výnos — školkovné'], ['stravne', 'Výnos — stravné'], ['akce', 'Akce a výlety'], ['pomucky', 'Pomůcky'], ['krouzek', 'Kroužky'], ['fond', 'Fond rodičů'], ['jine', 'Jiné příjmy'], ['vydaje', 'Výdaje z pokladny']];
+      Object.assign(dlg, {
+        title: 'Pokladna a předkontace',
+        inputs2: [inp('Počáteční stav pokladny (Kč)', 'pocatek', '0', 'text', 'Hotovost v pokladně v den, kdy začnete evidovat doklady v aplikaci', poc !== null && isNaN(poc))]
+          .concat(PKN.map(function (x) { return inp('Předkontace — ' + x[1], 'pk_' + x[0], ''); })),
+        canSave: !bad,
+        summary: bad ? 'Částku pište jen číslem.' : 'Předkontaci si nastaví vaše účetní — použije se v exportu.',
+        saveLabel: 'Uložit',
+        save: function () {
+          if (bad) return;
+          var pk = {}; PKN.forEach(function (x) { var v = String(df['pk_' + x[0]] || '').trim(); if (v) pk[x[0]] = v; });
+          self.fxAkce('uloz_financni_ucetni', { p_predkontace: pk, p_pokladna_pocatek: poc || 0 }, function () { self.log('Pokladna a předkontace uloženy'); return 'Uloženo'; });
+        }
+      });
+    }
+    if (dk === 'fxPlatba') {
+      var c = num(df.castka), akceL = FX.akce.filter(function (a) { return a.ano.length; });
+      var komuO = [['all', 'Celá školka']].concat(this.classes.map(function (cl) { return ['c:' + cl.id, cl.name]; })).concat(akceL.length ? [['akce', 'Přihlášení na akci']] : []).concat([['vyber', 'Vybrané děti']]);
+      var akt = this.kids.filter(function (k) { return !k.ended; }), A = akceL.filter(function (a) { return a.id === df.akce; })[0];
+      var deti = df.komu === 'all' ? akt : /^c:/.test(df.komu || '') ? akt.filter(function (k) { return 'c:' + k.cls === df.komu; }) : df.komu === 'akce' ? (A ? akt.filter(function (k) { return A.ano.indexOf(k.id) !== -1; }) : []) : akt.filter(function (k) { return (df.deti || []).indexOf(k.id) !== -1; });
+      var ok = !!String(df.nazev || '').trim() && c > 0 && !!df.splatnost && df.splatnost >= dnes && deti.length > 0;
+      var choices = [group('Druh', 'druh', [['akce', 'Akce a výlety'], ['pomucky', 'Pomůcky'], ['krouzek', 'Kroužek'], ['fond', 'Fond rodičů'], ['jine', 'Jiné']]), group('Komu', 'komu', komuO)];
+      if (df.komu === 'akce') choices.push(group('Akce', 'akce', akceL.map(function (a) { return [a.id, a.nazev + ' · ' + self.cz(new Date(a.den + 'T00:00:00')) + ' · ' + a.ano.length + ' přihlášených']; })));
+      if (df.komu === 'vyber') choices.push(group('Děti (' + (df.deti || []).length + ')', 'deti', akt.filter(function (k) { return !df.q || (k.first + ' ' + k.last).toLowerCase().indexOf(String(df.q).toLowerCase()) !== -1; }).slice(0, 40).map(function (k) { return [k.id, k.first + ' ' + k.last]; }), true));
+      Object.assign(dlg, {
+        title: 'Nová platba',
+        inputs: [inp('Za co', 'nazev', 'Např. Výlet do ZOO Praha'), inp('Částka za dítě (Kč)', 'castka', 'Např. 250', 'text', c !== null && isNaN(c) ? 'Jen číslo' : '', c !== null && isNaN(c)), inp('Splatnost', 'splatnost', '', 'date')],
+        choices: choices,
+        inputs2: df.komu === 'vyber' ? [inp('Hledat dítě', 'q', 'Jméno')] : [],
+        canSave: ok,
+        summary: ok ? 'Předpis dostane ' + (deti.length === 1 ? '1 dítě' : deti.length + ' dětí') + ' · celkem ' + self.fmtH(Math.round(c * 100) * deti.length) + '. Rodiče ho uvidí v aplikaci i s QR kódem; přeplatek na kontě se započte.' : 'Vyplňte, za co, částku, splatnost a komu.',
+        saveLabel: ok ? 'Vystavit platbu' : 'Doplňte údaje',
+        save: function () {
+          if (!ok) return;
+          self.fxAkce('nova_hromadna_platba', { p_nazev: df.nazev.trim(), p_druh: df.druh, p_castka: c, p_splatnost: df.splatnost, p_deti: deti.map(function (k) { return k.id; }), p_akce: df.komu === 'akce' ? df.akce : null },
+            function (n) { self.log('Platba „' + df.nazev.trim() + '“: ' + n + ' předpisů'); return n ? 'Vystaveno předpisů: ' + n : 'Všichni už předpis za tuto akci mají'; });
+        }
+      });
+    }
+    if (dk === 'fxStorno') {
+      var P = null; Object.keys(this.predpisy).forEach(function (kid) { Object.keys(self.predpisy[kid]).forEach(function (key) { if (self.predpisy[kid][key].id === df.predpis) P = Object.assign({ kidId: kid }, self.predpisy[kid][key]); }); });
+      var okS = !!P && !!String(df.duvod || '').trim();
+      Object.assign(dlg, {
+        title: 'Stornovat předpis',
+        hasInfo: !!P, info: P ? [{ label: 'Dítě', value: (kidBy[P.kidId] || {}).first + ' ' + (kidBy[P.kidId] || {}).last }, { label: 'Předpis', value: (P.cislo ? P.cislo + ' · ' : '') + (P.nazev || P.key) }, { label: 'Částka', value: self.fmtH(P.castka) + (P.uhrazeno ? ' (uhrazeno ' + self.fmtH(P.uhrazeno) + ' — vrátí se na konto jako přeplatek)' : '') }] : [],
+        inputs: [inp('Důvod storna', 'duvod', 'Např. dítě nenastoupilo, chybná částka')],
+        hasWarn: true, warn: 'Nic se nemaže: předpis zůstane v historii jako stornovaný a v účetnictví vznikne protizápis. Zaplacené peníze zůstanou dítěti na kontě.',
+        canSave: okS, summary: okS ? 'Po stornu můžete vystavit správný předpis.' : 'Napište důvod.', saveLabel: okS ? 'Stornovat' : 'Napište důvod',
+        save: function () { if (!okS) return; self.fxAkce('storno_predpisu', { p_predpis: P.id, p_duvod: df.duvod.trim() }, function () { self.log('Storno předpisu ' + (P.cislo || P.key) + ': ' + df.duvod.trim()); return 'Předpis stornován'; }); }
+      });
+    }
+    if (dk === 'fxSleva') {
+      var hv = num(df.hodnota), typ = df.typ || 'osvobozeni';
+      var okH = typ === 'osvobozeni' || (hv > 0 && (typ !== 'procento' || hv <= 100));
+      var okL = !!kidBy[df.kid] && okH && !!df.od && (!df.do || df.do >= df.od) && !!String(df.duvod || '').trim();
+      Object.assign(dlg, {
+        title: 'Sleva nebo prominutí školkovného',
+        choices: [vyberDite('kid'), group('Druh', 'typ', [['osvobozeni', 'Prominout celé'], ['procento', 'Snížit o %'], ['castka', 'Snížit o částku']])],
+        inputs: (kidBy[df.kid] ? [] : [inp('Hledat dítě', 'q', 'Jméno nebo VS')]).concat(typ === 'osvobozeni' ? [] : [inp(typ === 'procento' ? 'Snížení (%)' : 'Snížení (Kč za měsíc)', 'hodnota', '', 'text', !okH && df.hodnota ? 'Neplatná hodnota' : '', !okH && !!df.hodnota)]),
+        inputs2: [inp('Platí od', 'od', '', 'date'), inp('Platí do (nepovinné)', 'do', '', 'date'), inp('Důvod', 'duvod', 'Např. sociální důvody (§ 6 odst. 7 vyhl. 14/2005 Sb.)'), inp('Rozhodnutí č. j.', 'rozhodnuti', 'Nepovinné')],
+        canSave: okL, summary: okL ? 'Uplatní se v předpisech vystavených odteď (už vystavené předpisy případně stornujte a vystavte znovu).' : 'Vyberte dítě, druh, platnost a napište důvod.',
+        saveLabel: okL ? 'Uložit' : 'Doplňte údaje',
+        save: function () {
+          if (!okL) return;
+          self.fxAkce('uloz_upravu', { p_dite: df.kid, p_typ: typ, p_hodnota: typ === 'osvobozeni' ? 0 : hv, p_od: df.od, p_do: df.do || null, p_duvod: df.duvod.trim(), p_rozhodnuti: df.rozhodnuti || '' }, function () { var k = kidBy[df.kid]; self.log('Sleva/prominutí: ' + k.first + ' ' + k.last + ' — ' + df.duvod.trim()); return 'Uloženo — platí pro další předpisy'; });
+        }
+      });
+    }
+    if (dk === 'fxPrijem') {
+      var cP = num(df.castka), K = kidBy[df.kid], okP = !!K && cP > 0 && !!df.datum && df.datum <= dnes;
+      Object.assign(dlg, {
+        title: 'Příjem hotově do pokladny',
+        choices: [vyberDite('kid')],
+        inputs: (K ? [] : [inp('Hledat dítě', 'q', 'Jméno nebo VS')]).concat([inp('Částka (Kč)', 'castka', K && self.kUhrade(K.id) ? 'K úhradě ' + self.fmtH(self.kUhrade(K.id)) : '', 'text', cP !== null && isNaN(cP) ? 'Jen číslo' : '', cP !== null && isNaN(cP)), inp('Datum', 'datum', '', 'date'), inp('Účel', 'ucel', ''), inp('Zaplatil(a)', 'osoba', 'Jméno rodiče')]),
+        canSave: okP, summary: okP ? 'Vystaví se příjmový pokladní doklad a platba se započte na konto dítěte.' : 'Vyberte dítě a napište částku.',
+        saveLabel: okP ? 'Přijmout a vystavit doklad' : 'Doplňte údaje',
+        save: function () {
+          if (!okP) return;
+          self.fxAkce('pokladna_prijem', { p_dite: K.id, p_castka: cP, p_datum: df.datum, p_ucel: df.ucel || 'Platba za školku', p_osoba: df.osoba || '' }, function (cis) { self.log('Pokladna: příjem ' + cis + ' — ' + K.first + ' ' + K.last); return 'Vystaven doklad ' + cis; })
+            .then(function (cis) { var p = cis && FX.pokladna.filter(function (x) { return x.cislo === cis; })[0]; if (p) self.fxTiskDokladu(p); });
+        }
+      });
+    }
+    if (dk === 'fxVydej') {
+      var cV = num(df.castka), okV = cV > 0 && !!String(df.ucel || '').trim() && !!df.datum && df.datum <= dnes;
+      Object.assign(dlg, {
+        title: 'Výdej z pokladny',
+        inputs: [inp('Částka (Kč)', 'castka', '', 'text', cV !== null && isNaN(cV) ? 'Jen číslo' : 'V pokladně je ' + self.fmtH(self.fxPokladnaZustatek()), cV !== null && isNaN(cV)), inp('Účel', 'ucel', 'Např. Vstupné do divadla'), inp('Datum', 'datum', '', 'date'), inp('Převzal(a)', 'osoba', 'Jméno')],
+        canSave: okV, summary: okV ? 'Vystaví se výdajový pokladní doklad.' : 'Napište částku a účel.',
+        saveLabel: okV ? 'Vydat a vystavit doklad' : 'Doplňte údaje',
+        save: function () {
+          if (!okV) return;
+          self.fxAkce('pokladna_vydej', { p_castka: cV, p_datum: df.datum, p_ucel: df.ucel.trim(), p_osoba: df.osoba || '' }, function (cis) { self.log('Pokladna: výdej ' + cis); return 'Vystaven doklad ' + cis; })
+            .then(function (cis) { var p = cis && FX.pokladna.filter(function (x) { return x.cislo === cis; })[0]; if (p) self.fxTiskDokladu(p); });
+        }
+      });
+    }
+    if (dk === 'fxVratka') {
+      var KV = kidBy[df.kid], sal = KV ? this.saldo(KV.id) : 0, cR = num(df.castka), banka = df.zpusob !== 'pokladna';
+      var okUcet = !banka || !!this.iban(df.ucet), okR = !!KV && cR > 0 && Math.round(cR * 100) <= sal && okUcet;
+      Object.assign(dlg, {
+        title: 'Vrátit přeplatek' + (KV ? ' · ' + KV.first + ' ' + KV.last : ''),
+        hasInfo: true, info: [{ label: 'Přeplatek na kontě', value: self.fmtH(Math.max(0, sal)) }],
+        choices: [group('Jak', 'zpusob', [['banka', 'Převodem na účet'], ['pokladna', 'Hotově z pokladny']])],
+        inputs: [inp('Částka (Kč)', 'castka', '', 'text', cR > 0 && Math.round(cR * 100) > sal ? 'Víc, než je přeplatek' : '', cR > 0 && Math.round(cR * 100) > sal)]
+          .concat(banka ? [inp('Účet rodiče', 'ucet', 'číslo/kód banky', 'text', df.ucet ? (okUcet ? 'Účet je platný' : 'Číslo účtu nesedí') : 'Předvyplní se z poslední platby, když je', df.ucet && !okUcet)] : []),
+        canSave: okR,
+        summary: okR ? (banka ? 'Vratka se připraví k odeslání — v záložce Přeplatky a vratky stáhnete hromadný příkaz pro banku.' : 'Vystaví se výdajový pokladní doklad.') : 'Zkontrolujte částku' + (banka ? ' a účet.' : '.'),
+        saveLabel: okR ? 'Vrátit ' + self.fmtH(Math.round(cR * 100)) : 'Doplňte údaje',
+        save: function () {
+          if (!okR) return;
+          self.fxAkce('vrat_preplatek', { p_dite: KV.id, p_castka: cR, p_zpusob: banka ? 'banka' : 'pokladna', p_ucet: banka ? String(df.ucet).trim() : '' }, function (cis) { self.log('Vratka ' + cis + ': ' + KV.first + ' ' + KV.last + ' ' + self.fmtH(Math.round(cR * 100))); return 'Vratka ' + cis + (banka ? ' připravena k odeslání' : ' vyplacena'); })
+            .then(function (cis) { if (cis && !banka) { var p = FX.pokladna.filter(function (x) { return x.kidId === KV.id && x.druh === 'vydej'; }).slice(-1)[0]; if (p) self.fxTiskDokladu(p); } });
+        }
+      });
+    }
+    if (dk === 'fxUzavrit') {
+      var m = df.obdobi;
+      Object.assign(dlg, {
+        title: 'Uzavřít ' + this.monthName(m) + ' ' + m.slice(0, 4),
+        hasWarn: true, warn: 'Po uzávěrce už do měsíce nic nepřibude: pozdě načtené platby, storna i opravy se zaúčtují do dalšího otevřeného měsíce. Export za uzavřený měsíc se už nezmění — pošlete ho účetní.' + (role === 'reditelka' ? '' : ' Znovu otevřít může jen ředitelka.'),
+        canSave: true, summary: 'Nejdřív zkontrolujte, že jsou načtené všechny výpisy a spárované platby.', saveLabel: 'Uzavřít a stáhnout export',
+        save: function () { self.fxAkce('uzavri_obdobi', { p_obdobi: m }, function () { self.log('Uzávěrka ' + m); setTimeout(function () { self.fxExport(m); }, 0); return self.monthName(m) + ' uzavřen — export se stahuje'; }); }
+      });
+    }
+  }
+
   majM() {
     if (this.srv) return this.majSrv || (this.majSrv = { kat: [], mist: [], pol: [], poh: [], kon: [], inv: null, invHist: [], invM: {}, zaz: {}, nal: [], nacteno: false });
     var S = this.store();
@@ -5319,7 +6121,10 @@ class Component extends DCLogic {
     };
 
     /* -------------------------------------------------- platby */
+    var FXon = !!(this.fx && this.fx.on);
     var pM = st.payMonth, F = this.fin, canPay = role === 'reditelka' || role === 'hospodarka';
+    var payKeys = self.srv && self.payKeys ? self.payKeys : this.monthKeys;
+    var fxv = this.fxVals(st, role, kids, curMonth);
     var STP = { zaplaceno: ['Zaplaceno', '#EDF4E4', '#2F5212'], castecne: ['Částečně', '#F7F0DA', '#5C4300'], otevreno: ['Čeká', '#FAEBE4', '#9A3412'] };
     var dnes = this.iso(this.today);
     var dluzniciNow = this.dluznici();
@@ -5340,12 +6145,12 @@ class Component extends DCLogic {
     };
     var upomenutoDnes = function (k) { return self.upominky.some(function (u) { return u.kidId === k.id && u.kdy === dnes; }); };
     var pay = {
-      months: (self.srv && self.payKeys ? self.payKeys : this.monthKeys).map(function (m) { var on = pM === m; return { label: self.monthName(m), on: on, style: chip(on, true), pick: function () { self.setState({ payMonth: m }); } }; }),
+      months: payKeys.map(function (m) { var on = pM === m; return { label: self.monthName(m), on: on, style: chip(on, true), pick: function () { self.setState({ payMonth: m }); } }; }),
       monthLabel: self.monthName(pM),
       filters: [['all', 'Všechny ' + payAll.length], ['unpaid', 'Nezaplacené ' + nOpen], ['paid', 'Zaplacené ' + (payAll.length - nOpen)], ['dluh', 'Po splatnosti ' + dluzniciNow.length]].map(function (f) {
         var on = st.payFilter === f[0]; return { label: f[1], on: on, style: chip(on, true), pick: function () { self.setState({ payFilter: f[0] }); } }; }),
       stats: [
-        { label: 'Předepsáno · ' + self.monthName(pM), value: self.fmtH(tDue), sub: payAll.length ? nDeti(payAll.length) + ' · splatnost ' + self.cz(new Date(self.splatnost(pM))) : 'zatím nevystaveno', style: zStat('#FFFFFF') },
+        { label: 'Předepsáno · ' + self.monthName(pM), value: self.fmtH(tDue), sub: payAll.length ? nDeti(payAll.length) + ' · splatnost ' + self.cz(new Date(payAll[0].p.splatnost + 'T00:00:00')) : 'zatím nevystaveno', style: zStat('#FFFFFF') },
         { label: 'Uhrazeno', value: self.fmtH(tPaid), sub: (payAll.length - nOpen) + ' z ' + payAll.length + ' zaplaceno celé', style: zStat('#EDF4E4') },
         { label: 'Zbývá uhradit', value: self.fmtH(tDue - tPaid), sub: nOpen ? nDeti(nOpen) + (nOpen === 1 ? ' ještě nemá' : ' ještě nemají') + ' zaplaceno' : 'vše uhrazeno', style: zStat(tDue - tPaid ? '#FAEBE4' : '#FFFFFF') },
         { label: 'Přeplatky na kontech', value: self.fmtH(kredit), sub: 'odečtou se z dalších předpisů', style: zStat('#EBF1FA') }
@@ -5356,6 +6161,16 @@ class Component extends DCLogic {
       issueNote: self.srv ? 'Platí se předem: školkovné a stravné za provozní dny měsíce (podle kalendáře v Nastavení). Obědy odhlášené včas se odečtou v dalším předpisu. Opakované vystavení nic nezdvojí.' : 'Stravné se počítá z docházky, proto se předpisy vystavují po skončení měsíce. Opakované vystavení nic nezdvojí.',
       issue: function () {
         if (!canPay) return;
+        if (FXon) {
+          if (self.srv && !self.finNastaveno) { if (role === 'reditelka') self.openFinSet(); else self.showToast('Ceny a účet školky nejdřív nastaví ředitelka.'); return; }
+          if (!lzeVystavit) { self.showToast('Předpisy jde vystavit nejdřív za příští měsíc.'); return; }
+          self.fxAkce('vystav_predpisy', { p_obdobi: pM }, function (n) {
+            self.log('Vystaveny předpisy za ' + self.monthName(pM) + ': ' + n);
+            var bezVs = kids.filter(function (k) { return !k.vs; }).length;
+            return (n ? 'Vystaveno předpisů: ' + n : 'Předpisy už jsou vystavené') + (bezVs ? ' · ' + bezVs + ' dětí nemá VS — doplňte ho v kartě, jinak se platba nespáruje' : '');
+          });
+          return;
+        }
         if (self.srv) {
           if (!self.finNastaveno) { if (role === 'reditelka') self.openFinSet(); else self.showToast('Ceny a účet školky nejdřív nastaví ředitelka.'); return; }
           if (!lzeVystavit) { self.showToast('Předpisy jde vystavit nejdřív za příští měsíc.'); return; }
@@ -5379,7 +6194,7 @@ class Component extends DCLogic {
         return { name: k.first + ' ' + k.last, cls: clsById[k.cls].name + (self.osvobozen(k) ? ' · osvobozen' : ''),
           vs: k.vs || 'chybí', vsStyle: 'font-variant-numeric: tabular-nums; ' + (vsErr ? 'color: #9A3412; font-weight: 700' : ''),
           total: self.fmtH(p.castka),
-          sub: (skol && skol.castka ? 'školkovné' : 'bez školkovného') + (strav ? ' + ' + strav.mn + ' ' + (strav.mn === 1 ? 'oběd' : strav.mn < 5 ? 'obědy' : 'obědů') + (strav.pozde ? ' (' + strav.pozde + '× pozdě omluveno)' : '') : '') + (vrat ? ' − ' + vrat.mn + ' ' + (vrat.mn === 1 ? 'odhlášený' : vrat.mn < 5 ? 'odhlášené' : 'odhlášených') : ''),
+          sub: (skol && skol.castka ? (/sníženo|prominuto/.test(skol.popis) ? 'upravené školkovné' : 'školkovné') : 'bez školkovného') + (strav ? ' + ' + strav.mn + ' ' + (strav.mn === 1 ? 'oběd' : strav.mn < 5 ? 'obědy' : 'obědů') + (strav.pozde ? ' (' + strav.pozde + '× pozdě omluveno)' : '') : '') + (vrat ? ' − ' + vrat.mn + ' ' + (vrat.mn === 1 ? 'odhlášený' : vrat.mn < 5 ? 'odhlášené' : 'odhlášených') : ''),
           saldo: self.fmtH(x.saldo), saldoStyle: 'font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (x.saldo < 0 ? '#9A3412' : x.saldo > 0 ? '#27407A' : '#5A5C60'),
           state: STP[p.stav][0] + (p.stav === 'castecne' ? ' · zbývá ' + self.fmtH(zb) : ''),
           stateStyle: 'justify-self: start; min-height: 26px; padding: 3px 10px; box-sizing: border-box; border-radius: 13px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; background: ' + STP[p.stav][1] + '; color: ' + STP[p.stav][2],
@@ -5435,6 +6250,7 @@ class Component extends DCLogic {
         { k: 'Omluvenka včas', v: 'do ' + F.omlDo + (F.omlDni ? (F.omlDni === 1 ? ' předchozího dne' : ', ' + F.omlDni + ' dny předem') : ' téhož dne') },
         { k: 'Splatnost', v: F.splatnost + (self.srv ? '. den v měsíci (platí se předem)' : '. den dalšího měsíce') }
       ],
+      fxOn: FXon && role === 'reditelka', fxSet: function () { self.fxOtevriNastaveni(); },
       onFile: function (e) {
         var f = e.target.files && e.target.files[0]; e.target.value = '';
         if (!f) return;
@@ -5452,7 +6268,9 @@ class Component extends DCLogic {
         self.log('Načten ukázkový výpis: ' + (r.pocty.presne + r.pocty.preplatek + r.pocty.nedoplatek) + ' spárováno');
         self.setState({ payDlg: { kind: 'import', name: 'ukazkovy-vypis.gpc', r: r, demoText: text } });
       },
+      exportLabel: FXon ? 'Export pro účetní (ZIP)' : 'Export pro účetnictví',
       export: function () {
+        if (FXon) { self.fxExport(pM); return; }
         var rows = ['Dítě;Třída;VS;Období;Předpis;Uhrazeno;Stav;Konto'];
         payAll.forEach(function (x) { rows.push([x.k.first + ' ' + x.k.last, clsById[x.k.cls].name, x.k.vs, pM, self.hKc(x.p.castka), self.hKc(x.p.uhrazeno), STP[x.p.stav][0], self.hKc(x.saldo)].join(';')); });
         rows.push(''); rows.push('Datum;Má dáti;Dal;Částka;Popis;Doklad');
@@ -5463,7 +6281,7 @@ class Component extends DCLogic {
     };
 
     /* Okna plateb: konto + QR, ruční spárování, výsledek importu */
-    var PDg = st.payDlg, payDlg = { open: !!PDg, isQr: false, isPair: false, isImport: false, close: function () { self.setState({ payDlg: null }); } };
+    var PDg = st.payDlg, payDlg = { open: !!PDg, isQr: false, isPair: false, isImport: false, fx: false, predpisy: [], canVratit: false, canSleva: false, close: function () { self.setState({ payDlg: null }); } };
     if (PDg && PDg.kind === 'qr') {
       var K = self.kids.filter(function (k) { return k.id === PDg.kidId; })[0];
       if (K) {
@@ -5478,6 +6296,19 @@ class Component extends DCLogic {
             var plus = p.dal === 'dite:' + K.id;
             return { d: self.cz(new Date(p.datum)), t: p.popis.replace(' — ' + K.first + ' ' + K.last, ''), a: (plus ? '+' : '−') + self.fmtH(p.castka), style: 'font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (plus ? '#2F5212' : '#3A3C40') };
           }),
+          fx: FXon && canPay,
+          predpisy: (function () {
+            var P = self.predpisy[K.id] || {};
+            return Object.keys(P).map(function (key) { return Object.assign({ key: key }, P[key]); }).sort(function (a, b) { return a.splatnost < b.splatnost ? 1 : -1; }).slice(0, 14).map(function (p) {
+              var S = STP[p.stav] || STP.otevreno;
+              return { t: (/^J:/.test(p.key) ? p.nazev : self.monthName(p.key) + ' ' + p.key.slice(0, 4)) + (p.cislo ? ' · ' + p.cislo : ''), sub: 'splatnost ' + self.cz(new Date(p.splatnost + 'T00:00:00')) + ' · ' + p.polozky.map(function (q) { return q.popis; }).join(', '),
+                a: self.fmtH(p.castka), state: S[0], stateStyle: 'display: inline-flex; height: 24px; padding: 0 8px; border-radius: 12px; align-items: center; font-size: 11px; font-weight: 800; white-space: nowrap; background: ' + S[1] + '; color: ' + S[2],
+                canStorno: true, storno: function () { self.setState({ payDlg: null, dlg: 'fxStorno', df: { predpis: p.id } }); } };
+            });
+          })(),
+          prijem: function () { self.setState({ payDlg: null, dlg: 'fxPrijem', df: { kid: K.id, datum: self.iso(self.today), ucel: 'Platba za školku', castka: due ? String(due / 100).replace('.', ',') : '' } }); },
+          canVratit: self.saldo(K.id) > 0, vratit: function () { self.setState({ payDlg: null, dlg: 'fxVratka', df: { kid: K.id, castka: String(self.saldo(K.id) / 100).replace('.', ','), zpusob: 'banka', ucet: self.fxUcetRodice(K.id) } }); },
+          canSleva: role === 'reditelka', sleva: function () { self.setState({ payDlg: null, dlg: 'fxSleva', df: { kid: K.id, typ: 'osvobozeni', od: self.iso(self.today).slice(0, 7) + '-01' } }); },
           copy: function () { try { navigator.clipboard.writeText(sp); self.showToast('Platební údaje zkopírovány'); } catch (er) { self.showToast('Kopírování nejde'); } } });
       }
     }
@@ -6276,6 +7107,7 @@ class Component extends DCLogic {
       });
     }
     if (dk && /^maj/.test(dk)) this.majDialog(dk, dlg, df, inp, group, area);
+    if (dk && /^fx/.test(dk)) this.fxDialog(dk, dlg, df, inp, group);
     if (dk === 'bankaSet') {
       var tok = String(df.token || '').replace(/\s/g, ''), maB = !!this.banka;
       var tokOk = /^[A-Za-z0-9]{20,200}$/.test(tok), okB = tokOk || (maB && !tok);
@@ -6446,7 +7278,7 @@ class Component extends DCLogic {
         return [{ title: 'Učitelé', sub: cnt(ped.length, 'pedagog', 'pedagogové', 'pedagogů') + ' · ředitelka, zástupkyně a učitelky', items: ped },
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
-      zap: zap, doch: doch, pay: pay, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, lo: lo, imp: imp, payDlg: payDlg,
+      zap: zap, doch: doch, pay: pay, fxv: fxv, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, lo: lo, imp: imp, payDlg: payDlg,
       maj: majLehky, dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }

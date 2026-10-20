@@ -498,6 +498,31 @@
     },
     async majetekRpc(fn, args) { return ok(await klient().rpc(fn, args || {})); },
 
+    /* --------------------------------------------- pokročilé finance
+       Doplňková data k platbám: druh a číslo předpisů, storna, účetní období
+       pohybů, slevy, pokladna, vratky, uzávěrky a akce s cenou. */
+    async nactiFinanceX() {
+      var vse = async function (dotaz) {
+        var out = [], od = 0;
+        for (;;) { var d = ok(await dotaz().range(od, od + 999)); out = out.concat(d || []); if (!d || d.length < 1000) return out; od += 1000; }
+      };
+      var od = new Date(); od.setDate(od.getDate() - 120);
+      var r = await Promise.all([
+        klient().from('financni_nastaveni').select('predkontace, pokladna_pocatek').maybeSingle(),
+        vse(function () { return klient().from('predpisy').select('id, dite_id, obdobi, castka, uhrazeno, stav, splatnost, vystaveno, druh, nazev, cislo, storno, storno_duvod, akce_id, predpis_polozky(poradi, druh, popis, mnozstvi, cena, castka)').order('splatnost').order('id'); }),
+        vse(function () { return klient().from('ucetni_pohyby').select('id, druh, obdobi_uctu').order('id'); }),
+        vse(function () { return klient().from('platby').select('id, zdroj').order('id'); }),
+        klient().from('fin_upravy').select('id, dite_id, typ, hodnota, plati_od, plati_do, duvod, rozhodnuti, vytvoreno, zruseno').order('vytvoreno', { ascending: false }),
+        vse(function () { return klient().from('pokladna').select('id, cislo, datum, druh, castka, dite_id, ucel, osoba, vytvoreno').order('datum').order('cislo'); }),
+        klient().from('fin_vratky').select('id, dite_id, castka, zpusob, ucet, cislo, stav, vytvoreno, odeslano').order('vytvoreno', { ascending: false }),
+        klient().from('fin_uzaverky').select('obdobi, uzavreno').order('obdobi'),
+        klient().from('akce').select('id, nazev, den, cena, trida_id, akce_odpovedi(dite_id, odpoved)').gt('cena', 0).gte('den', od.toISOString().slice(0, 10)).order('den')
+      ]);
+      var D = r.map(function (x) { return Array.isArray(x) ? x : ok(x); });
+      return { nastaveni: D[0], predpisy: D[1], pohyby: D[2], platby: D[3], upravy: D[4], pokladna: D[5], vratky: D[6], uzaverky: D[7], akce: D[8] };
+    },
+    async finRpc(fn, args) { return ok(await klient().rpc(fn, args || {})); },
+
     /* --------------------------------------------- ředitelna: data školky
        Načte vše, co ředitelna v ostrém provozu ukazuje (kartotéka, třídy,
        zaměstnanci, kniha úrazů, souhrn docházky, dnešek, zprávy). Rodná čísla
@@ -538,11 +563,13 @@
         /* napojení banky — bez migrace 2026-10-17-banka funkce není a panel se neukáže */
         fin ? klient().rpc('stav_napojeni_banky').then(function (x) { return x.error ? { data: false, error: null } : x; }) : prazdno,
         /* provozní kalendář (svátky a výjimky) na školní rok — bez migrace 2026-10-17c prázdno */
-        klient().rpc('kalendar_skoly_obdobi', { p_od: skolniRok().od, p_do: skolniRok().do }).then(function (x) { return x.error ? { data: false, error: null } : x; })
+        klient().rpc('kalendar_skoly_obdobi', { p_od: skolniRok().od, p_do: skolniRok().do }).then(function (x) { return x.error ? { data: false, error: null } : x; }),
+        /* pokročilé finance (migrace 2026-10-21-finance) — bez ní null a ředitelna jede po staru */
+        fin ? API.nactiFinanceX().then(function (x) { return { data: x, error: null }; }).catch(function () { return { data: null, error: null }; }) : prazdno
       ]);
       var D = r.map(ok);
       return { skola: D[0], tridy: D[1], deti: D[2], osobni: D[3], zamestnanci: D[4], ucitelTrida: D[5], urazy: D[6], souhrn: D[7], dnes: D[8], zpravy: D[9], porady: D[10], zadosti: D[11], zapisRocnik: D[12], dokumenty: D[13],
-        archiv: D[22], kalendar: D[24], fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21], banka: D[23] === false ? false : Array.isArray(D[23]) ? null : D[23] } : null };
+        archiv: D[22], kalendar: D[24], fin: fin ? { nastaveni: D[14][0] || null, sazby: D[15], predpisy: D[16], pohyby: D[17], platby: D[18], nespar: D[19], upominky: D[20], konta: D[21], banka: D[23] === false ? false : Array.isArray(D[23]) ? null : D[23], x: Array.isArray(D[25]) ? null : D[25] } : null };
     },
     /* Dítě: řádek deti + zákonní zástupci + pověřené osoby + souhlasy. */
     async ulozDite(id, radek, zastupci, poverene, souhlasy) {
