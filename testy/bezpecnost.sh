@@ -55,7 +55,8 @@ t "rodič Emy nezmění alergie Olivera" ERR $RODA "" "select uprav_udaje_rodice
 t "rodič Emy nezmění alergie Adama (B)" ERR $RODA "" "select uprav_udaje_rodicem('$ADAM', 'x');"
 # příští školní den (v pátek pondělí) — o víkendu omluva nic nevrací
 DALSI_DEN="(current_date + case extract(isodow from current_date)::int when 5 then 3 when 6 then 2 else 1 end)"
-t "rodič Emy omluví Emu" 1 $RODA "" "select count(*) from omluv_dite('$EMA', $DALSI_DEN + 7, $DALSI_DEN + 7, 'nemoc');"
+PROVOZ_ZA_TYDEN="(select min(g)::date from generate_series(current_date + 7, current_date + 21, interval '1 day') g where je_provozni_den('$A', g::date))"
+t "rodič Emy omluví Emu (provozní den za týden, ne svátek)" 1 $RODA "" "select count(*) from omluv_dite('$EMA', $PROVOZ_ZA_TYDEN, $PROVOZ_ZA_TYDEN, 'nemoc');"
 t "rodič nezapíše docházku napřímo" ERR $RODA "" "insert into dochazka (dite_id, den, stav, prichod) values ('$EMA', current_date + 30, 'pritomen', '08:00');"
 t "rodič nevidí účty zaměstnanců" 0 $RODA "" "select count(*) from uzivatele where role<>'rodic';"
 t "rodič nevolá zamestnanci_skoly" ERR $RODA "" "select count(*) from zamestnanci_skoly();"

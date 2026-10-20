@@ -2593,6 +2593,13 @@ class Component extends DCLogic {
     });
   }
   /* Provozní kalendář: uložit a načíst znovu (svátky a výjimky na školní rok). */
+  /* Buňka CSV pro Excel: středník, uvozovky a nové řádky v uvozovkách; text začínající
+     = + - @ (vzorec) dostane apostrof, aby ho Excel nespustil. Čísla zůstávají čísly. */
+  csvBunka(v) {
+    v = v == null ? '' : String(v);
+    if (/^[=+\-@\t\r]/.test(v) && !/^-?\d[\d\s]*([.,]\d+)?$/.test(v)) v = "'" + v;
+    return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
   kalSet(od, doDne, stav, pozn, hlaska) {
     var self = this, SV = window.SkolkaServer;
     if (this._kalBezi) return;
@@ -4189,7 +4196,7 @@ class Component extends DCLogic {
     var self = this, FX = this.fx, clsBy = {}, kidBy = {};
     this.classes.forEach(function (c) { clsBy[c.id] = c.name; });
     this.kids.forEach(function (k) { kidBy[k.id] = k; });
-    var csv = function (rows) { return '﻿' + rows.map(function (r) { return r.map(function (v) { v = v == null ? '' : String(v); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(';'); }).join('\r\n') + '\r\n'; };
+    var csv = function (rows) { return '﻿' + rows.map(function (r) { return r.map(function (v) { return self.csvBunka(v); }).join(';'); }).join('\r\n') + '\r\n'; };
     var kc = function (h) { return (h < 0 ? '-' : '') + Math.floor(Math.abs(h) / 100) + ',' + String(100 + Math.abs(h) % 100).slice(1); };
     var jm = function (id) { var k = kidBy[id]; return k ? k.first + ' ' + k.last : ''; };
     var vs = function (id) { var k = kidBy[id]; return k ? k.vs || '' : ''; };
@@ -5103,7 +5110,7 @@ class Component extends DCLogic {
         selMove: function () { self.setState({ dlg: 'majPresun', df: { ids: selIds } }); },
         selPrint: function () { self.setState({ majView: 'stitky', stitky: Object.assign({ preset: '3x8', start: 1, skola: true, nazev: true }, st.stitky || {}, { what: 'vybrane' }) }); },
         export: function () {
-          var esc = function (v) { v = v == null ? '' : String(v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+          var esc = function (v) { return self.csvBunka(v); };
           var out = ['Inventární číslo;Název;Kategorie;Druh;Místnost;Pořízeno;Pořizovací cena;Účetní druh;Stav;Sériové číslo;Dodavatel;Doklad;Financování;Původní číslo'];
           rows.forEach(function (p) { out.push([p.cislo, p.nazev, katN[p.kat], p.druh, mN(p.mist), p.porizeno, p.cena == null ? '' : String(p.cena).replace('.', ','), UD[p.ud], (ST[p.stav] || ST.ok)[0], p.seriove, p.dodavatel, p.doklad, p.financ, p.puvodni].map(esc).join(';')); });
           self.download({ name: 'majetek-' + today + '.csv', text: '﻿' + out.join('\r\n'), type: 'text/csv' });
@@ -6272,9 +6279,9 @@ class Component extends DCLogic {
       export: function () {
         if (FXon) { self.fxExport(pM); return; }
         var rows = ['Dítě;Třída;VS;Období;Předpis;Uhrazeno;Stav;Konto'];
-        payAll.forEach(function (x) { rows.push([x.k.first + ' ' + x.k.last, clsById[x.k.cls].name, x.k.vs, pM, self.hKc(x.p.castka), self.hKc(x.p.uhrazeno), STP[x.p.stav][0], self.hKc(x.saldo)].join(';')); });
+        payAll.forEach(function (x) { rows.push([x.k.first + ' ' + x.k.last, clsById[x.k.cls].name, x.k.vs, pM, self.hKc(x.p.castka), self.hKc(x.p.uhrazeno), STP[x.p.stav][0], self.hKc(x.saldo)].map(function (v) { return self.csvBunka(v); }).join(';')); });
         rows.push(''); rows.push('Datum;Má dáti;Dal;Částka;Popis;Doklad');
-        self.pohyby.filter(function (p) { return p.datum.slice(0, 7) === pM || p.doklad.slice(-7) === pM; }).forEach(function (p) { rows.push([p.datum, p.md, p.dal, self.hKc(p.castka), p.popis.replace(/;/g, ','), p.doklad].join(';')); });
+        self.pohyby.filter(function (p) { return p.datum.slice(0, 7) === pM || p.doklad.slice(-7) === pM; }).forEach(function (p) { rows.push([p.datum, p.md, p.dal, self.hKc(p.castka), p.popis, p.doklad].map(function (v) { return self.csvBunka(v); }).join(';')); });
         self.download({ name: 'platby-' + pM + '.csv', text: '﻿' + rows.join('\r\n'), type: 'text/csv' });
         self.log('Export plateb za ' + self.monthName(pM) + ' pro účetnictví');
       }

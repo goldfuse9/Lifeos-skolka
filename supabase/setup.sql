@@ -3630,7 +3630,7 @@ create or replace function zahaj_inventuru(p_k_datu date, p_komise text[] defaul
 language plpgsql security definer set search_path = public as $$
 declare s uuid; r uuid;
 begin
-  if moje_role() not in ('reditelka', 'zastupce') then raise exception 'Inventuru zahajuje vedení školy.'; end if;
+  if moje_role() is null or moje_role() not in ('reditelka', 'zastupce') then raise exception 'Inventuru zahajuje vedení školy.'; end if;
   s := moje_skola();
   if p_k_datu is null then raise exception 'Zadejte, k jakému dni se inventura dělá.'; end if;
   if exists (select 1 from inventury where skola_id = s and uzavrena is null) then raise exception 'Jedna inventura už probíhá — nejdřív ji uzavřete.'; end if;
@@ -3748,7 +3748,7 @@ create or replace function uzavri_inventuru(p_inventura uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare s uuid; x int;
 begin
-  if moje_role() not in ('reditelka', 'zastupce') then raise exception 'Inventuru uzavírá vedení školy.'; end if;
+  if moje_role() is null or moje_role() not in ('reditelka', 'zastupce') then raise exception 'Inventuru uzavírá vedení školy.'; end if;
   s := moje_skola();
   if not exists (select 1 from inventury where id = p_inventura and skola_id = s and uzavrena is null) then raise exception 'Inventura neprobíhá.'; end if;
   select count(*) into x from inventura_mistnosti where inventura_id = p_inventura and hotovo is null;
@@ -4196,7 +4196,7 @@ create or replace function uloz_upravu(p_dite uuid, p_typ text, p_hodnota numeri
 language plpgsql security definer set search_path = public as $$
 declare s uuid; r uuid;
 begin
-  if moje_role() not in ('reditelka', 'zastupce') then raise exception 'O snížení nebo prominutí úplaty rozhoduje ředitelka.'; end if;
+  if moje_role() is null or moje_role() not in ('reditelka', 'zastupce') then raise exception 'O snížení nebo prominutí úplaty rozhoduje ředitelka.'; end if;
   s := moje_skola();
   if not exists (select 1 from deti where id = p_dite and skola_id = s) then raise exception 'Dítě do školky nepatří.'; end if;
   insert into fin_upravy (skola_id, dite_id, typ, hodnota, plati_od, plati_do, duvod, rozhodnuti)
@@ -4205,7 +4205,7 @@ begin
 end $$;
 create or replace function zrus_upravu(p_id uuid) returns void language plpgsql security definer set search_path = public as $$
 begin
-  if moje_role() not in ('reditelka', 'zastupce') then raise exception 'O snížení nebo prominutí úplaty rozhoduje ředitelka.'; end if;
+  if moje_role() is null or moje_role() not in ('reditelka', 'zastupce') then raise exception 'O snížení nebo prominutí úplaty rozhoduje ředitelka.'; end if;
   update fin_upravy set zruseno = now() where id = p_id and skola_id = moje_skola() and zruseno is null;
   if not found then raise exception 'Úprava nenalezena.'; end if;
 end $$;
@@ -4309,7 +4309,7 @@ create or replace function otevri_obdobi(p_obdobi text) returns void
 language plpgsql security definer set search_path = public as $$
 declare s uuid;
 begin
-  if moje_role() not in ('reditelka', 'zastupce') then raise exception 'Uzávěrku otevírá jen vedení školy.'; end if;
+  if moje_role() is null or moje_role() not in ('reditelka', 'zastupce') then raise exception 'Uzávěrku otevírá jen vedení školy.'; end if;
   s := moje_skola();
   if exists (select 1 from fin_uzaverky where skola_id = s and obdobi > p_obdobi) then raise exception 'Otevřít jde jen poslední uzavřený měsíc.'; end if;
   delete from fin_uzaverky where skola_id = s and obdobi = p_obdobi;
