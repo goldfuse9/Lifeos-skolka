@@ -170,6 +170,14 @@
     k.log.sort(function (a, b) { return String(a.t).padStart(5, '0') < String(b.t).padStart(5, '0') ? -1 : 1; });
   }
 
+  /* Lék / podání ze serveru → tvar pro desky (časy 'HH:MM'). */
+  function lekZeServeru(l) {
+    return Object.assign({}, l, { casy: (l.casy || []).map(function (c) { return String(c).slice(0, 5); }).sort() });
+  }
+  function podaniZeServeru(p) {
+    return Object.assign({}, p, { planovano: p.planovano ? String(p.planovano).slice(0, 5) : null });
+  }
+
   async function denTridy(ids) {
     var den = dnes();
     var res = await Promise.all([
@@ -404,13 +412,44 @@
     sleduj(tridaId, priZmene) {
       var t = null, kanal = klient().channel('trida-' + tridaId);
       var hned = function () { clearTimeout(t); t = setTimeout(priZmene, 250); };
-      ['dochazka', 'vyzvednuti', 'udalosti_ditete'].forEach(function (tab) {
+      ['dochazka', 'vyzvednuti', 'udalosti_ditete', 'podani_leku', 'leky_ve_skolce'].forEach(function (tab) {
         kanal.on('postgres_changes', { event: '*', schema: 'public', table: tab }, hned);
       });
       try { kanal.subscribe(); } catch (e) { /* bez realtime — obnoví se po návratu do okna */ }
       var vid = function () { if (document.visibilityState === 'visible') hned(); };
       document.addEventListener('visibilitychange', vid);
       return function () { document.removeEventListener('visibilitychange', vid); try { klient().removeChannel(kanal); } catch (e) { /* nic */ } };
+    },
+
+    /* ------------------------------------------- zdraví: léky ve školce */
+    /* Léky, které rodiče poslali z LifeOS, dnešní podání a postup při potížích
+       pro děti tablet. Bez migrace zdraví (stará databáze) prázdné. */
+    async zdraviDeti(ids) {
+      var prazdne = { leky: [], podani: [], zdravi: [] };
+      if (!ids.length) return prazdne;
+      var r = await Promise.all([
+        klient().from('leky_ve_skolce').select('id, dite_id, nazev, davka, casy, pri_potizich, pokyn, do_dne, ulozeni, souhlas_jmeno, souhlas_kdy').in('dite_id', ids).order('nazev'),
+        klient().from('podani_leku').select('id, dite_id, lek_id, nazev, davka, planovano, stav, duvod, poznamka, cas, zapsal, zapsal_jmeno, zruseno').eq('den', dnes()).in('dite_id', ids).order('cas'),
+        klient().from('zdravi_ditete').select('dite_id, omezeni, postup').in('dite_id', ids)
+      ]);
+      if (r.some(function (x) { return x.error && /does not exist|schema cache|42P01|PGRST205/i.test((x.error.message || '') + ' ' + (x.error.code || '')); })) return prazdne;
+      return { leky: ok(r[0]).map(lekZeServeru), podani: ok(r[1]).map(podaniZeServeru), zdravi: ok(r[2]) };
+    },
+    /* Podáno / nepodáno. planovano = čas z rozpisu ('10:00'), null = při potížích. */
+    async zapisPodani(lekId, stav, duvod, poznamka, planovano) {
+      return ok(await klient().rpc('zapis_podani', { p_lek: lekId, p_stav: stav, p_duvod: duvod || null, p_poznamka: poznamka || null, p_planovano: planovano ? cas(planovano) : null }));
+    },
+    async zrusPodani(id) { return ok(await klient().rpc('zrus_podani', { p_id: id })); },
+    async ulozUlozeniLeku(lekId, kde) { return ok(await klient().rpc('uloz_ulozeni_leku', { p_lek: lekId, p_ulozeni: kde || '' })); },
+    /* Ředitelna: všechny léky školky (s dítětem a třídou) a kniha podání za období. */
+    async lekySkoly() {
+      var r = await klient().from('leky_ve_skolce').select('id, dite_id, nazev, davka, casy, pri_potizich, pokyn, do_dne, ulozeni, souhlas_jmeno, souhlas_kdy, deti(jmeno, prijmeni, trida_id, ukonceno)').order('nazev');
+      if (r.error && /does not exist|schema cache|42P01|PGRST205/i.test((r.error.message || '') + ' ' + (r.error.code || ''))) return null;
+      var z = await klient().from('zdravi_ditete').select('dite_id, omezeni, postup');
+      return { leky: ok(r).map(lekZeServeru), zdravi: z.error ? [] : z.data };
+    },
+    async knihaPodani(od, doDne) {
+      return ok(await klient().from('podani_leku').select('id, dite_id, lek_id, nazev, davka, den, planovano, stav, duvod, poznamka, cas, zapsal_jmeno, zruseno, deti(jmeno, prijmeni, trida_id)').gte('den', od).lte('den', doDne).order('cas').limit(2000)).map(podaniZeServeru);
     },
 
     /* --------------------------------------------------------- jídelna */

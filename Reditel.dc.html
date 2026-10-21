@@ -32,7 +32,7 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
 <div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F8F9F7; font-family: 'Plus Jakarta Sans', sans-serif; color: #17181A; display: flex; overflow: hidden; position: relative">
 
   <!-- ============================================================ MENU -->
-  <nav aria-label="Ředitelna" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #E5E7E4">
+  <nav aria-label="Ředitelna" style="width: 248px; flex-shrink: 0; box-sizing: border-box; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #E5E7E4; overflow-y: auto">
     <div style="padding: 0 10px 6px; display: flex; flex-direction: column; gap: 2px">
       <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{{school.name}}</span>
       <span style="font-size: 13px; color: #5A5C60">Ředitelna · {{year}}</span>
@@ -1733,7 +1733,118 @@ input::placeholder,textarea::placeholder{color:#8A8C90}
         <div style="padding: 12px 20px; font-size: 13px; line-height: 18px; color: #5A5C60; border-top: 1px solid #EEF0ED">Úrazy zapisují učitelky na tabletu. Klepnutím na jméno otevřete detail a zapíšete, kolik dní dítě chybělo. Od 2 dnů je potřeba záznam o úrazu pro ČŠI a pojišťovnu (do 5. dne dalšího měsíce). Rodičům jde zápis jen do mobilní aplikace — kde ji rodiče nemají, tlačítko nejde.</div>
       </section>
     </sc-if>
+      <!-- ========================================================== ZDRAVÍ A LÉKY -->
+    <sc-if value="{{is.zdravi}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1; min-height: 0">
+        <sc-if value="{{zd.hasNote}}" hint-placeholder-val="{{false}}">
+          <div role="status" style="padding: 12px 16px; border-radius: 16px; background: #F7F0DA; color: #5C4300; font-size: 14px; line-height: 20px">{{zd.note}}</div>
+        </sc-if>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <sc-for list="{{zd.filtry}}" as="f" hint-placeholder-count="4">
+            <button type="button" aria-pressed="{{f.on}}" onClick="{{f.pick}}" style="{{f.style}}"><sc-if value="{{f.hasDot}}" hint-placeholder-val="{{false}}"><span style="{{f.dot}}"></span></sc-if>{{f.label}}</button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 18px; flex-grow: 1; min-height: 0">
+          <section aria-label="Děti se zdravotními údaji" style="flex-grow: 1; min-width: 0; background: #FFFFFF; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+            <div style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr) minmax(0, 1.6fr) minmax(0, 1.4fr) 128px; gap: 12px; padding: 14px 20px 12px; border-bottom: 1px solid #EEF0ED; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #5A5C60">
+              <span>Dítě</span><span>Třída</span><span>Léky ve školce</span><span>Alergie a omezení</span><span>Dohoda</span>
+            </div>
+            <div style="flex-grow: 1; min-height: 0; overflow-y: auto">
+              <sc-for list="{{zd.rows}}" as="r" hint-placeholder-count="5">
+                <button type="button" onClick="{{r.open}}" aria-label="Zdraví: {{r.name}}" style="width: 100%; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr) minmax(0, 1.6fr) minmax(0, 1.4fr) 128px; gap: 12px; align-items: center; padding: 12px 20px; border: 0; border-bottom: 1px solid #F3F4F2; background: transparent; text-align: left; cursor: pointer; color: #17181A; min-height: 62px; font-family: inherit">
+                  <span style="display: flex; flex-direction: column; align-items: flex-start"><span style="font-size: 15px; font-weight: 700">{{r.name}}</span><sc-if value="{{r.plan}}" hint-placeholder-val="{{false}}"><span style="margin-top: 3px; height: 20px; padding: 0 8px; border-radius: 10px; background: #FBE4E2; color: #9A2A22; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center">při potížích</span></sc-if></span>
+                  <span style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="{{r.dot}}"></span>{{r.cls}}</span>
+                  <span style="display: flex; flex-direction: column; font-size: 14px"><span style="font-weight: 700">{{r.med}}</span><span style="color: #5A5C60; font-size: 13px">{{r.when}}</span></span>
+                  <span style="font-size: 14px; color: #2B2E33">{{r.allergy}}</span>
+                  <span style="{{r.dealStyle}}">{{r.deal}}</span>
+                </button>
+              </sc-for>
+              <sc-if value="{{zd.noRows}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 28px 20px; font-size: 15px; color: #5A5C60">Zatím žádné dítě nemá léky ani zdravotní pokyny. Rodiče je posílají z aplikace LifeOS přepínačem „Podávat ve školce“ u léku.</div>
+              </sc-if>
+            </div>
+            <div style="padding: 12px 20px; font-size: 13px; line-height: 18px; color: #5A5C60; border-top: 1px solid #EEF0ED">Lék i pokyn mění jen rodič v LifeOS (s potvrzením dohody). Školka doplní, kde je lék uložen — klepněte na dítě.</div>
+          </section>
+          <aside style="width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto">
+            <section aria-label="Potřebuje pozornost" style="background: #FFFFFF; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+              <h2 style="margin: 0; font-size: 18px; font-weight: 800">Potřebuje pozornost</h2>
+              <sc-for list="{{zd.warn}}" as="w" hint-placeholder-count="2">
+                <button type="button" onClick="{{w.open}}" style="{{w.style}}"><span style="{{w.dotStyle}}"></span><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 700">{{w.title}}</span><span style="font-size: 13px; color: #5A5C60">{{w.sub}}</span></span></button>
+              </sc-for>
+              <sc-if value="{{zd.noWarn}}" hint-placeholder-val="{{false}}"><div style="font-size: 14px; color: #5A5C60">Vše v pořádku.</div></sc-if>
+            </section>
+            <section aria-label="Kniha podání dnes" style="background: #FFFFFF; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+                <h2 style="margin: 0; font-size: 18px; font-weight: 800">Kniha podání · dnes</h2>
+                <span style="font-size: 13px; color: #5A5C60">{{zd.dnesSouhrn}}</span>
+              </div>
+              <sc-for list="{{zd.dnes}}" as="l" hint-placeholder-count="3">
+                <div style="display: flex; gap: 12px; align-items: center; min-height: 48px; border-bottom: 1px solid #EEF0ED">
+                  <span style="width: 44px; font-size: 14px; font-weight: 800; flex-shrink: 0">{{l.t}}</span>
+                  <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px; font-weight: 700">{{l.who}}</span><span style="font-size: 12px; color: #5A5C60">{{l.what}}</span></span>
+                  <span style="{{l.style}}">{{l.state}}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{zd.noDnes}}" hint-placeholder-val="{{false}}"><div style="font-size: 14px; color: #5A5C60">Dnes zatím nic.</div></sc-if>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px">
+                <button type="button" onClick="{{zd.tisk}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Tisk: tento měsíc</button>
+                <button type="button" onClick="{{zd.tiskMinuly}}" style="height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid #E5E7E4; background: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer; color: #17181A">Minulý měsíc</button>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
   </main>
+
+  <!-- ============================================================ ZDRAVÍ: DETAIL DÍTĚTE -->
+  <sc-if value="{{zd.det.open}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(23,24,26,0.38); display: flex; align-items: center; justify-content: center; z-index: 6">
+      <div role="dialog" aria-label="Zdraví: {{zd.det.title}}" style="width: 640px; max-height: 820px; background: #FFFFFF; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(23,24,26,0.25)">
+        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 20px 20px 14px 24px; border-bottom: 1px solid #EEF0ED">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+            <div style="font-size: 13px; font-weight: 600; color: #5A5C60">{{zd.det.kicker}}</div>
+            <div style="font-size: 24px; font-weight: 800">{{zd.det.title}}</div>
+          </div>
+          <button type="button" onClick="{{zd.det.close}}" aria-label="Zavřít" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #F3F4F2; display: flex; align-items: center; justify-content: center; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17181A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 18px 24px; display: flex; flex-direction: column; gap: 14px">
+          <sc-if value="{{zd.det.hasPostup}}" hint-placeholder-val="{{false}}"><div style="padding: 10px 14px; border-radius: 16px; background: #FBE4E2; color: #7A2E1B; font-size: 14px; line-height: 20px"><b>Při potížích:</b> {{zd.det.postup}}</div></sc-if>
+          <sc-if value="{{zd.det.hasOmezeni}}" hint-placeholder-val="{{false}}"><div style="padding: 10px 14px; border-radius: 16px; background: #EEF0ED; font-size: 14px; line-height: 20px"><b>Omezení:</b> {{zd.det.omezeni}}</div></sc-if>
+          <sc-for list="{{zd.det.leky}}" as="l" hint-placeholder-count="1">
+            <div style="border: 1px solid #E5E7E4; border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+              <div style="font-size: 17px; font-weight: 800">{{l.title}}</div>
+              <div style="font-size: 14px; color: #2B2E33">{{l.when}}</div>
+              <sc-if value="{{l.hasPokyn}}" hint-placeholder-val="{{false}}"><div style="font-size: 14px; line-height: 20px"><b>Pokyn:</b> {{l.pokyn}}</div></sc-if>
+              <div style="font-size: 13px; color: #5A5C60">{{l.souhlas}}</div>
+              <sc-if value="{{l.notEditing}}" hint-placeholder-val="{{true}}">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><span style="font-size: 14px"><b>Kde je:</b> {{l.kde}}</span><button type="button" onClick="{{l.edit}}" style="height: 34px; padding: 0 12px; border-radius: 17px; border: 2px solid #E5E7E4; background: #FFFFFF; font-size: 13px; font-weight: 800; cursor: pointer; color: #17181A">Změnit</button></div>
+              </sc-if>
+              <sc-if value="{{l.editing}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <input aria-label="Kde je lék uložen" maxlength="80" value="{{l.kdeVal}}" onInput="{{l.onKde}}" onChange="{{l.onKde}}" placeholder="Např. skříňka ve třídě, lednice v kuchyni" style="flex-grow: 1; height: 44px; border-radius: 14px; border: 1px solid #E5E7E4; padding: 0 14px; font-size: 15px; color: #17181A">
+                  <button type="button" onClick="{{l.save}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 0; background: #DCE6F2; color: #1F3A5C; font-size: 14px; font-weight: 800; cursor: pointer">Uložit</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{zd.det.noLeky}}" hint-placeholder-val="{{false}}"><div style="font-size: 14px; color: #5A5C60">Rodič neposlal žádný lék k podávání ve školce.</div></sc-if>
+          <sc-if value="{{zd.det.hasHist}}" hint-placeholder-val="{{false}}">
+            <div style="font-size: 12px; font-weight: 700; color: #5A5C60; text-transform: uppercase; letter-spacing: 0.06em">Poslední podání</div>
+            <sc-for list="{{zd.det.historie}}" as="h" hint-placeholder-count="3">
+              <div style="display: flex; gap: 12px; align-items: center; min-height: 44px; border-bottom: 1px solid #EEF0ED">
+                <span style="width: 92px; font-size: 13px; font-weight: 700; flex-shrink: 0">{{h.t}}</span>
+                <span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><span style="font-size: 14px">{{h.what}}</span><span style="font-size: 12px; color: #5A5C60">{{h.by}}</span></span>
+                <span style="{{h.style}}">{{h.state}}</span>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 
   <!-- ============================================================ FORMULÁŘE -->
   <sc-if value="{{dlg.open}}" hint-placeholder-val="{{false}}">
@@ -2320,10 +2431,184 @@ class Component extends DCLogic {
     var self = this;
     if (!this.srv) return;
     this.majNacti().catch(function () { /* majetek se zkusí znovu při otevření */ });
+    if (this.state.role === 'reditelka' || this.state.role === 'zastupce') this.zdNacti();
     this.nactiZpravy();
     this._stopZpr = window.SkolkaServer.sledujZpravy(function () { self.nactiZpravy(); });
   }
   componentWillUnmount() { if (this._stopZpr) this._stopZpr(); }
+
+  /* ================================================ ZDRAVÍ A LÉKY
+     Léky a postup při potížích posílají rodiče z LifeOS (jen se souhlasem);
+     podání zapisují učitelky na tabletu. Ředitelna vidí přehled, upozornění
+     a knihu podání k tisku. Měnit lék může jen rodič; školka doplní, kde je. */
+  zdNacti() {
+    var self = this, SV = window.SkolkaServer;
+    if (!this.srv) return Promise.resolve();
+    var d = this.today, od = this.iso(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+    if (!this.zdS) this.zdS = { loading: true, leky: [], zdravi: {}, kniha: [] };
+    return Promise.all([SV.lekySkoly(), SV.knihaPodani(od, this.iso(d))]).then(function (r) {
+      if (!r[0]) { self.zdS = { chybi: true, leky: [], zdravi: {}, kniha: [] }; self.setState({}); return; }
+      var z = {};
+      (r[0].zdravi || []).forEach(function (x) { z[x.dite_id] = x; });
+      self.zdS = { leky: r[0].leky, zdravi: z, kniha: r[1] };
+      self.setState({});
+    }).catch(function (e) {
+      var m = SV.chyba(e);
+      self.zdS = /does not exist|schema cache/i.test(String((e && e.message) || '')) ? { chybi: true, leky: [], zdravi: {}, kniha: [] } : { chyba: m, leky: [], zdravi: {}, kniha: [] };
+      self.setState({});
+    });
+  }
+  /* Data stránky: ostrý provoz ze serveru, zkušební provoz ukázka (podání
+     z ukázkového tabletu ve stejném okně). */
+  zdData() {
+    if (this.srv) return this.zdS || { loading: true, leky: [], zdravi: {}, kniha: [] };
+    var self = this, d = this.today;
+    var najdi = function (jm) { return self.kids.filter(function (k) { return k.first === jm && !k.ended; })[0]; };
+    var ema = najdi('Ema'), mat = najdi('Matyáš'), oli = najdi('Oliver'), luk = najdi('Lukáš');
+    var za = function (n) { return self.iso(self.addDays(d, n)); };
+    var leky = [];
+    if (ema) leky.push({ id: 'ul-ema', dite_id: ema.id, nazev: 'Ventolin', davka: '1 vdech', casy: ['10:00'], pri_potizich: true, pokyn: 'Při dušnosti 2 vdechy. Když se do 10 minut nezlepší, volejte nám.', do_dne: null, ulozeni: 'skříňka ve třídě', souhlas_jmeno: 'Petra Králová', souhlas_kdy: za(-18) + 'T08:00:00' });
+    if (mat) leky.push({ id: 'ul-matyas', dite_id: mat.id, nazev: 'Bepanthen mast', davka: 'tence na kůži', casy: ['12:30'], pri_potizich: false, pokyn: null, do_dne: za(4), ulozeni: null, souhlas_jmeno: 'Lukáš Horák', souhlas_kdy: za(-7) + 'T07:40:00' });
+    if (oli) leky.push({ id: 'ul-oliver', dite_id: oli.id, nazev: 'Epipen junior', davka: '1 pero do stehna', casy: [], pri_potizich: true, pokyn: 'Při otoku rtů nebo dušnosti hned podat, volat 155 a nám.', do_dne: null, ulozeni: 'lékárnička ve třídě', souhlas_jmeno: 'Jan Novák', souhlas_kdy: za(-45) + 'T07:30:00' });
+    var zdravi = {};
+    if (oli) zdravi[oli.id] = { dite_id: oli.id, omezeni: null, postup: 'Arašídy: při otoku rtů nebo dušnosti podat Epipen, volat 155 a rodiče.' };
+    if (luk) zdravi[luk.id] = { dite_id: luk.id, omezeni: 'bez sportu do 30. 10.', postup: null };
+    var mapa = { ema: ema, matyas: mat, oliver: oli };
+    var S = typeof window !== 'undefined' && window.__skolka && window.__skolka.zdravi ? window.__skolka.zdravi.podani : [];
+    var dnes = this.iso(d);
+    var kniha = (ema ? [
+      { id: 'uk1', dite_id: ema.id, lek_id: 'ul-ema', nazev: 'Ventolin', davka: '1 vdech', den: za(-2), planovano: '10:00', stav: 'podano', cas: za(-2) + 'T10:03:00', zapsal_jmeno: 'Alena Benešová' },
+      { id: 'uk2', dite_id: ema.id, lek_id: 'ul-ema', nazev: 'Ventolin', davka: '1 vdech', den: za(-1), planovano: '10:00', stav: 'nepodano', duvod: 'odmitlo', cas: za(-1) + 'T10:06:00', zapsal_jmeno: 'Alena Benešová' }
+    ] : []).concat((S || []).filter(function (p) { return mapa[p.dite_id]; }).map(function (p) {
+      return Object.assign({}, p, { dite_id: mapa[p.dite_id].id, den: dnes });
+    }));
+    return { leky: leky, zdravi: zdravi, kniha: kniha };
+  }
+  /* Kniha podání za měsíc (0 = tento, -1 = minulý) k tisku nebo do PDF. */
+  zdTisk(posun) {
+    var self = this, Z = this.zdData(), d = new Date(this.today.getFullYear(), this.today.getMonth() + (posun || 0), 1);
+    var od = this.iso(d), doD = this.iso(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+    var MES = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+    var e = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var byId = {}; this.kids.forEach(function (k) { byId[k.id] = k; });
+    var DUV = { odmitlo: 'odmítlo', neni: 'nebylo ve třídě', chybi: 'lék chyběl' };
+    var rows = Z.kniha.filter(function (p) { return p.den >= od && p.den <= doD; }).map(function (p) {
+      var k = byId[p.dite_id], cas = new Date(p.cas);
+      return '<tr' + (p.zruseno ? ' class="zr"' : '') + '><td>' + e(self.cz(self.parseIsoZd(p.den))) + '</td><td>' + e(isNaN(cas) ? '' : cas.getHours() + ':' + self.pad(cas.getMinutes(), 2)) + (p.planovano ? '<br><small>rozpis ' + e(String(p.planovano).replace(/^0/, '')) + '</small>' : '<br><small>při potížích</small>') + '</td><td>'
+        + e(k ? k.first + ' ' + k.last : (p.deti ? p.deti.jmeno + ' ' + p.deti.prijmeni : '')) + '</td><td>' + e(p.nazev + (p.davka ? ' · ' + p.davka : '')) + '</td><td>'
+        + (p.stav === 'podano' ? 'podáno' : 'nepodáno · ' + e(DUV[p.duvod] || '')) + (p.poznamka ? '<br><small>' + e(p.poznamka) + '</small>' : '') + (p.zruseno ? '<br><small>zrušeno jako omyl</small>' : '') + '</td><td>' + e(p.zapsal_jmeno || '') + '</td></tr>';
+    });
+    var body = '<h1>Kniha podání léků</h1><p class="sub">' + e(MES[d.getMonth()] + ' ' + d.getFullYear()) + ' · léky podle pokynů rodičů (souhlas potvrzený v aplikaci LifeOS)</p>'
+      + (rows.length ? '<table class="kn"><thead><tr><th>Den</th><th>Čas</th><th>Dítě</th><th>Lék a dávka</th><th>Stav</th><th>Zapsal(a)</th></tr></thead><tbody>' + rows.join('') + '</tbody></table>' : '<p>V tomto měsíci není zapsané žádné podání.</p>');
+    var css = 'table.kn th,table.kn td{width:auto;font:9.5pt/1.35 system-ui,sans-serif}table.kn th{background:#F3F4F2}table.kn small{color:#555}tr.zr td{color:#888;text-decoration:line-through}tr.zr small{text-decoration:none}.sub{font:10pt system-ui,sans-serif;color:#444;margin:0 0 10px}';
+    this.printDoc('Kniha podání léků — ' + MES[d.getMonth()] + ' ' + d.getFullYear(), body, css);
+  }
+  parseIsoZd(s) { var a = String(s || '').split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
+  zdUlozKde(l, kde) {
+    var self = this;
+    var hotovo = function () { l.ulozeni = (kde || '').trim() || null; self.setState({ zdKde: null }); self.showToast('Uloženo: ' + (l.ulozeni || 'bez místa')); };
+    if (!this.srv) { hotovo(); return; }
+    window.SkolkaServer.ulozUlozeniLeku(l.id, kde).then(hotovo).catch(function (e) { self.showToast(window.SkolkaServer.chyba(e)); });
+  }
+  /* Přehled, upozornění a detail dítěte pro stránku Zdraví a léky. */
+  zdVals(st, clsById) {
+    var self = this, Z = this.zdData(), d = this.today, dnes = this.iso(d), tyden = this.iso(this.addDays(d, -7)), za7 = this.iso(this.addDays(d, 7));
+    var kids = this.kids.filter(function (k) { return !k.ended; }), byId = {};
+    kids.forEach(function (k) { byId[k.id] = k; });
+    var hm = function (c) { return String(c || '').slice(0, 5).replace(/^0/, ''); };
+    var dCz = function (iso) { var x = self.parseIsoZd(String(iso).slice(0, 10)); return x.getDate() + '. ' + (x.getMonth() + 1) + '.'; };
+    var platne = Z.leky.filter(function (l) { return byId[l.dite_id] && !(l.do_dne && l.do_dne < dnes); });
+    var kdy = function (l) { return [l.casy.length ? 'denně ' + l.casy.map(hm).join(', ') : '', l.pri_potizich ? 'při potížích' : '', l.do_dne ? 'do ' + dCz(l.do_dne) : ''].filter(Boolean).join(' · '); };
+    /* upozornění */
+    var warn = [];
+    platne.forEach(function (l) {
+      var k = byId[l.dite_id], jm = k.first + ' ' + k.last;
+      if (l.do_dne && l.do_dne <= za7) warn.push({ dot: '#8A8C90', bg: '#F8F9F7', title: jm + ' — ' + l.nazev + ' do ' + dCz(l.do_dne), sub: 'Pak podávání samo skončí.', kid: k.id });
+      var ne = Z.kniha.filter(function (p) { return p.lek_id === l.id && !p.zruseno && p.den >= tyden; });
+      var nep = ne.filter(function (p) { return p.stav === 'nepodano'; });
+      var posl = ne.slice().sort(function (a, b) { return a.cas < b.cas ? 1 : -1; })[0];
+      if (posl && posl.stav === 'nepodano' && posl.duvod === 'chybi') warn.push({ dot: '#D9534F', bg: '#FCF4EF', title: jm + ' — ' + l.nazev + ' chybí', sub: 'Učitelka ho nemohla podat. Rodiče dostali prosbu, ať ho donesou.', kid: k.id });
+      else if (nep.length >= 2) warn.push({ dot: '#E39B1B', bg: '#FCF4EF', title: jm + ' — ' + nep.length + '× nepodáno za týden', sub: l.nazev + ' · rodiče to vidí v aplikaci.', kid: k.id });
+      if (!l.ulozeni) warn.push({ dot: '#2F6FDB', bg: '#F8F9F7', title: jm + ' — kde je ' + l.nazev + '?', sub: 'Doplňte, kde lék ve školce je (skříňka, lednice…).', kid: k.id });
+    });
+    warn.forEach(function (w) { w.open = function () { self.setState({ zdKid: w.kid, zdKde: null }); }; w.dotStyle = 'width: 8px; height: 8px; border-radius: 4px; margin-top: 7px; flex-shrink: 0; background: ' + w.dot; w.style = 'display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; border: 0; text-align: left; cursor: pointer; color: #17181A; background: ' + w.bg; });
+    /* tabulka dětí */
+    var filtr = st.zdFiltr || 'vse';
+    var maLek = {};
+    platne.forEach(function (l) { maLek[l.dite_id] = true; });
+    var rowsKids = kids.filter(function (k) { return maLek[k.id] || Z.zdravi[k.id] || (k.alergie || '').trim(); })
+      .filter(function (k) { return filtr === 'vse' || (filtr === 'lek' ? maLek[k.id] : k.cls === filtr); })
+      .sort(function (a, b) { return (maLek[b.id] ? 1 : 0) - (maLek[a.id] ? 1 : 0) || (a.last + a.first).localeCompare(b.last + b.first, 'cs'); });
+    var rows = rowsKids.map(function (k) {
+      var ls = platne.filter(function (l) { return l.dite_id === k.id; }), z = Z.zdravi[k.id] || {};
+      var c = clsById[k.cls];
+      var sou = ls.map(function (l) { return l.souhlas_kdy; }).filter(Boolean).sort()[0];
+      return {
+        name: k.first + ' ' + k.last, plan: ls.some(function (l) { return l.pri_potizich; }) || !!z.postup,
+        cls: c ? c.name : '', dot: 'width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; background: ' + (c ? c.color : '#C9C7BF'),
+        med: ls.length ? ls.map(function (l) { return l.nazev + (l.davka ? ' · ' + l.davka : ''); }).join(', ') : '—',
+        when: ls.map(kdy).join(' / '),
+        allergy: [(k.alergie || '').trim(), z.omezeni || '', z.postup ? 'postup při potížích' : ''].filter(Boolean).join(' · ') || '—',
+        deal: ls.length ? 'potvrzeno ' + dCz(sou) : '—',
+        dealStyle: 'justify-self: start; height: 26px; padding: 0 10px; border-radius: 13px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; white-space: nowrap; ' + (ls.length ? 'background: #EDF4E4; color: #2F5212' : 'color: #8A8C90'),
+        open: function () { self.setState({ zdKid: k.id, zdKde: null }); }
+      };
+    });
+    var filtry = [['vse', 'Všechny', null]].concat(this.classes.map(function (c) { return [c.id, c.name, c.color]; })).concat([['lek', 'Jen s lékem ve školce · ' + Object.keys(maLek).length, null]]).map(function (f) {
+      var on = filtr === f[0];
+      return { label: f[1], hasDot: !!f[2], dot: 'width: 10px; height: 10px; border-radius: 5px; background: ' + (f[2] || 'transparent'), on: on ? 'true' : 'false',
+        pick: function () { self.setState({ zdFiltr: f[0] }); },
+        style: 'height: 40px; padding: 0 14px; border-radius: 20px; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: ' + (on ? '#1F3A5C' : '#17181A') + '; ' + (on ? 'background: #E6EDF6; border: 2px solid #9DB3D6' : 'background: #FFFFFF; border: 1px solid #E5E7E4') };
+    });
+    var DUV = { odmitlo: 'odmítlo', neni: 'nebylo ve třídě', chybi: 'lék chyběl' };
+    var tm = function (iso) { var x = new Date(iso); return isNaN(x) ? '' : x.getHours() + ':' + self.pad(x.getMinutes(), 2); };
+    var podSt = function (p) {
+      var c = p.zruseno ? ['#F3F4F2', '#5A5C60', 'zrušeno'] : p.stav === 'podano' ? ['#EDF4E4', '#2F5212', 'podáno'] : ['#FAEBE4', '#9A3412', 'nepodáno'];
+      return { label: c[2], style: 'height: 24px; padding: 0 9px; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; flex-shrink: 0; background: ' + c[0] + '; color: ' + c[1] };
+    };
+    var dnesPod = Z.kniha.filter(function (p) { return p.den === dnes; }).map(function (p) {
+      var k = byId[p.dite_id], s2 = podSt(p);
+      return { t: tm(p.cas), who: (k ? k.first + ' ' + k.last.charAt(0) + '.' : ''), what: p.nazev + (p.davka ? ' ' + p.davka : '') + (p.duvod ? ' · ' + DUV[p.duvod] : '') + (p.zapsal_jmeno ? ' · ' + p.zapsal_jmeno : ''), state: s2.label, style: s2.style };
+    });
+    var dnesPlan = 0;
+    platne.forEach(function (l) { dnesPlan += l.casy.length; });
+    var hotovoDnes = Z.kniha.filter(function (p) { return p.den === dnes && !p.zruseno && p.planovano; }).length;
+    /* detail dítěte */
+    var det = { open: false };
+    var dk = st.zdKid ? byId[st.zdKid] : null;
+    if (dk) {
+      var z2 = Z.zdravi[dk.id] || {};
+      det = {
+        open: true, title: dk.first + ' ' + dk.last, kicker: (clsById[dk.cls] ? 'Třída ' + clsById[dk.cls].name : '') + (dk.alergie ? ' · alergie: ' + dk.alergie : ''),
+        hasOmezeni: !!z2.omezeni, omezeni: z2.omezeni || '', hasPostup: !!z2.postup, postup: z2.postup || '',
+        leky: Z.leky.filter(function (l) { return l.dite_id === dk.id; }).map(function (l) {
+          var ed = !!(st.zdKde && st.zdKde.id === l.id);
+          return { title: l.nazev + (l.davka ? ' · ' + l.davka : ''), when: kdy(l) || '—', hasPokyn: !!l.pokyn, pokyn: l.pokyn || '',
+            souhlas: 'Dohoda: ' + l.souhlas_jmeno + ', ' + dCz(l.souhlas_kdy) + ' (v aplikaci LifeOS)',
+            kde: l.ulozeni || 'není vyplněno', editing: ed, notEditing: !ed,
+            kdeVal: ed ? st.zdKde.v : '', onKde: function (e) { self.setState({ zdKde: { id: l.id, v: e.target.value } }); },
+            edit: function () { self.setState({ zdKde: { id: l.id, v: l.ulozeni || '' } }); },
+            save: function () { self.zdUlozKde(l, self.state.zdKde ? self.state.zdKde.v : ''); } };
+        }),
+        historie: Z.kniha.filter(function (p) { return p.dite_id === dk.id; }).slice(-12).reverse().map(function (p) {
+          var s3 = podSt(p);
+          return { t: dCz(p.den) + ' ' + tm(p.cas), what: p.nazev + (p.planovano ? ' · rozpis ' + hm(p.planovano) : ' · při potížích') + (p.duvod ? ' · ' + DUV[p.duvod] : '') + (p.poznamka ? ' · ' + p.poznamka : ''), by: p.zapsal_jmeno || '', state: s3.label, style: s3.style };
+        }),
+        close: function () { self.setState({ zdKid: null, zdKde: null }); }
+      };
+      det.hasLeky = det.leky.length > 0; det.noLeky = !det.hasLeky; det.hasHist = det.historie.length > 0;
+    }
+    return {
+      count: warn.length, warn: warn, hasWarn: warn.length > 0, noWarn: warn.length === 0,
+      rows: rows, hasRows: rows.length > 0, noRows: rows.length === 0, filtry: filtry,
+      dnes: dnesPod, hasDnes: dnesPod.length > 0, noDnes: dnesPod.length === 0,
+      dnesSouhrn: dnesPlan ? hotovoDnes + ' z ' + dnesPlan + ' v rozpisu' : '',
+      hasNote: !!(Z.loading || Z.chybi || Z.chyba),
+      note: Z.loading ? 'Načítám…' : Z.chybi ? 'Databáze školky ještě nemá úpravu pro zdraví (migrace 2026-10-22-zdravi). Po jejím spuštění se tu ukážou léky, které rodiče pošlou z LifeOS.' : Z.chyba || '',
+      tisk: function () { self.zdTisk(0); }, tiskMinuly: function () { self.zdTisk(-1); },
+      det: det
+    };
+  }
   nactiZpravy() {
     var self = this, SV = window.SkolkaServer;
     return SV.zpravy().then(function (d) {
@@ -5550,7 +5835,7 @@ class Component extends DCLogic {
     /* Ostrý provoz: stránky, které ještě nejsou napojené na server, se neukazují
        (jinak by ukazovaly ukázkovou školku a „ukládaly“ jen do prohlížeče). */
     var SRV_SKRYT = ['web'];
-    var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); return !ALLOW || ALLOW.indexOf(p) !== -1; };
+    var allowed = function (p) { if (self.srv && SRV_SKRYT.indexOf(p) !== -1) return false; if (p === 'jidelna' && !board('jidelna')) return false; if (p === 'pristupy') return !SU || SU.smiSpravovat(); if (p === 'lifeos') return SRVON && (role === 'reditelka' || role === 'zastupce'); if (p === 'zdravi') return role === 'reditelka' || role === 'zastupce'; return !ALLOW || ALLOW.indexOf(p) !== -1; };
     var canEdit = role === 'reditelka';
     /* Děti, které teď chodí (nástup už byl, docházka neukončená). */
     var kids = this.kids.filter(function (k) { return !k.ended && (!k.zahajeni || k.zahajeni <= todayIso); });
@@ -5584,9 +5869,10 @@ class Component extends DCLogic {
     /* Menu po skupinách: děti → školka → rodiče a veřejnost → peníze → povinná evidence → nastavení. */
     var majLehky = this.majVals(st, role, st.page !== 'majetek');
     var zpVl = this.zpVlakna(), zpNove = zpVl.reduce(function (a, v) { return a + v.nove.length; }, 0);
+    var zdV = this.zdVals(st, clsById);
     var NAV0 = [
       ['prehled', 'Přehled', ''],
-      ['#', 'Děti', 'deti'], ['deti', 'Kartotéka dětí', kids.length], ['dochazka', 'Docházka', neoml.length || ''], ['zapis', 'Zápis do školky', ''],
+      ['#', 'Děti', 'deti'], ['deti', 'Kartotéka dětí', kids.length], ['dochazka', 'Docházka', neoml.length || ''], ['zapis', 'Zápis do školky', ''], ['zdravi', 'Zdraví a léky', zdV.count || ''],
       ['#', 'Školka', 'skolka'], ['tridy', 'Třídy', CL.length], ['ucitele', 'Učitelé', this.teachers.length], ['porady', 'Porady', ''], ['jidelna', 'Školní jídelna', ''], ['majetek', 'Majetek', majLehky.attCount || ''],
       ['#', 'Rodiče', 'rodice'], ['zpravy', this.srv ? 'Zprávy' : 'Zprávy rodičům', zpNove || ''], ['lifeos', 'Rodiče v LifeOS', ''], ['web', 'Webové stránky', webMissing || ''],
       ['#', 'Peníze', 'penize'], ['platby', 'Platby', unpaidPrev.length || ''],
@@ -5610,7 +5896,7 @@ class Component extends DCLogic {
           dotStyle: 'width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; background: ' + (nb ? nb[0] : '#C9C7BF') };
       }
       var on = st.page === n[0];
-      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web', 'zpravy', 'majetek'].indexOf(n[0]) !== -1 && n[2] !== '';
+      var warn = ['matrika', 'urazy', 'dochazka', 'platby', 'web', 'zpravy', 'majetek', 'zdravi'].indexOf(n[0]) !== -1 && n[2] !== '';
       return {
         isHead: false, isItem: true, label: n[1], count: String(n[2]), hasCount: n[2] !== '', current: on ? 'page' : 'false',
         countStyle: 'min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box; border-radius: 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; '
@@ -5620,7 +5906,7 @@ class Component extends DCLogic {
       };
     });
     var is = {};
-    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'dokumenty', 'archiv', 'nastaveni', 'pristupy', 'lifeos', 'majetek'].forEach(function (p) { is[p] = st.page === p; });
+    ['prehled', 'deti', 'zapis', 'dochazka', 'platby', 'zpravy', 'web', 'ucitele', 'tridy', 'porady', 'matrika', 'urazy', 'dokumenty', 'archiv', 'nastaveni', 'pristupy', 'lifeos', 'majetek', 'zdravi'].forEach(function (p) { is[p] = st.page === p; });
 
     var DNY = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
     var today = this.today;
@@ -5644,11 +5930,13 @@ class Component extends DCLogic {
       nastaveni: ['Údaje, ze kterých se skládá matrika, web, dokumenty i platby', 'Nastavení školky', '', null],
       dokumenty: ['Povinné dokumenty školy — předvyplněné z údajů školky', 'Dokumenty', '', null],
       lifeos: ['Ostrý provoz · data ze serveru', 'Rodiče v LifeOS', '', null],
+      zdravi: ['Co rodiče sdílí z LifeOS · jen pro péči ve školce', 'Zdraví a léky', 'Kniha podání · tisk', function () { self.zdTisk(0); }],
       pristupy: ['Kdo se kam přihlásí · jeden člověk = jeden přístup', 'Přístupy', '+ Nový přístup', function () { self.setState({ prNew: { jmeno: '', email: '', kod: 'ucitelka', trida: '', err: '' } }); }]
     };
     var P = PAGES[st.page];
     var page = { kicker: P[0], title: P[1], hasAction: !!P[2] && canEdit, actionLabel: P[2], action: P[3] || function () {} };
     if (st.page === 'majetek') page.hasAction = majLehky.can && !majLehky.loading && !st.majId && !st.majView;
+    if (st.page === 'zdravi') page.hasAction = true;
 
     /* -------------------------------------------------- přehled */
     // Docházka „dnes“ je v ředitelně ukázková (skutečná přijde z tabletů tříd).
@@ -7286,7 +7574,7 @@ class Component extends DCLogic {
           { title: 'Asistenti a chůvy', sub: cnt(asst.length, 'člověk', 'lidé', 'lidí') + ' · pomáhají ve třídách', items: asst }].filter(function (g) { return g.items.length; });
       })(), classCards: classCards, mat: mat, urazy: urazy,
       zap: zap, doch: doch, pay: pay, fxv: fxv, msg: msg, por: por, arch: arch, me: me, web: web, set: set, docsP: docsP, preview: preview, pr: pr, lo: lo, imp: imp, payDlg: payDlg,
-      maj: majLehky, dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
+      maj: majLehky, zd: zdV, dlg: dlg, toast: { show: !!st.toast, text: st.toast || '' }
     };
   }
 }
